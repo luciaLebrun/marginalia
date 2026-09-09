@@ -20,7 +20,16 @@ export default defineConfig({
       // Only measure what we actually unit-test. UI is covered by Playwright
       // from phase 5; counting it here would produce a misleading number.
       include: ["src/lib/**/*.ts", "src/db/index.ts"],
-      exclude: ["**/*.test.ts", "**/fixtures/**", "src/db/migrations/**"],
+      // Kept in step with sonar.coverage.exclusions so the local number and
+      // the CI number tell the same story. These are configuration objects
+      // with no branching logic to cover.
+      exclude: [
+        "**/*.test.ts",
+        "**/fixtures/**",
+        "src/db/migrations/**",
+        "src/lib/auth.ts",
+        "src/lib/auth-client.ts",
+      ],
     },
   },
 });

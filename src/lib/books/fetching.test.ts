@@ -109,11 +109,10 @@ describe("fetchWork", () => {
   it("gives up on a redirect cycle instead of looping forever", async () => {
     const a = { key: "/works/OLaW", type: { key: "/type/redirect" }, location: "/works/OLbW" };
     const b = { key: "/works/OLbW", type: { key: "/type/redirect" }, location: "/works/OLaW" };
-    fetchMock.mockImplementation((url: string) =>
-      url.includes("/search.json")
-        ? Promise.resolve(res(searchFixture))
-        : Promise.resolve(res(url.includes("OLaW") ? a : b)),
-    );
+    fetchMock.mockImplementation((url: string) => {
+      if (url.includes("/search.json")) return Promise.resolve(res(searchFixture));
+      return Promise.resolve(res(url.includes("OLaW") ? a : b));
+    });
 
     await expect(fetchWork("OLaW")).resolves.toBeNull();
   });
