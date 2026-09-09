@@ -15,11 +15,11 @@ jobs:
     name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
@@ -49,7 +49,7 @@ jobs:
           GOOGLE_CLIENT_SECRET: placeholder
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: coverage/lcov.info
@@ -59,19 +59,33 @@ jobs:
     name: SonarQube Cloud
     runs-on: ubuntu-latest
     needs: quality
+    # The secrets context is not available in a job-level `if`, so it is lifted
+    # into env here and each step guards on it. Until SonarQube Cloud is set up,
+    # this job reports a skip instead of a red X.
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Report missing token
+        if: env.SONAR_TOKEN == ''
+        run: |
+          echo "::notice title=SonarQube Cloud skipped::SONAR_TOKEN is not set." \
+            "Create the project at https://sonarcloud.io, then add SONAR_TOKEN" \
+            "to the repository secrets and set sonar.organization in" \
+            "sonar-project.properties."
+
+      - uses: actions/checkout@v7
+        if: env.SONAR_TOKEN != ''
         with:
           # Sonar needs full history to attribute "new code" correctly.
           fetch-depth: 0
 
       - name: Download coverage
-        uses: actions/download-artifact@v4
+        if: env.SONAR_TOKEN != ''
+        uses: actions/download-artifact@v8
         with:
           name: coverage
           path: coverage
 
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v7
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        if: env.SONAR_TOKEN != ''
+        uses: SonarSource/sonarqube-scan-action@v8
