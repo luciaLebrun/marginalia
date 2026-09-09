@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import googleFixture from "../../../tests/fixtures/google-books-dune.json";
-import { mergeGoogleVolume } from "./google-books";
+import { buildQuery, mergeGoogleVolume } from "./google-books";
 import type { BookDetail } from "./types";
 
 const base: BookDetail = {
@@ -41,5 +41,21 @@ describe("mergeGoogleVolume", () => {
       items: [{ volumeInfo: { pageCount: 0 } }],
     });
     expect(merged.pageCount).toBeUndefined();
+  });
+});
+
+describe("buildQuery", () => {
+  it("prefers the ISBN, which is an exact match", () => {
+    expect(buildQuery({ ...base, isbn13: "9780441013593" })).toBe(
+      "isbn:9780441013593",
+    );
+  });
+
+  it("falls back to title narrowed by the first author", () => {
+    expect(buildQuery(base)).toBe("intitle:Dune+inauthor:Frank Herbert");
+  });
+
+  it("omits the author clause when there is no author", () => {
+    expect(buildQuery({ ...base, authors: [] })).toBe("intitle:Dune");
   });
 });
