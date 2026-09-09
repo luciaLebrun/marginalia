@@ -79,6 +79,13 @@ the same reason `getDb()` is.
   hook is what stops them getting an account. It fails closed — missing,
   unknown, expired and already-used codes all reject. A throwing `before` hook
   aborts the whole sign-up, verified in `auth-gate.integration.test.ts`.
+- **Invite codes come from the CSPRNG, never `Math.random()`.** V8 implements
+  `Math.random` with xorshift128+, whose internal state is recoverable from a
+  handful of outputs — someone legitimately sent two or three codes could
+  predict the next ones. `secureRandomInt()` uses `crypto.getRandomValues` with
+  rejection sampling (the 29-character alphabet does not divide 256, so plain
+  `% 29` would bias the early letters and shrink the keyspace). A unit test
+  asserts `Math.random` is never called.
 - **Claiming a code is a single atomic UPDATE** (`SET used_at = now() WHERE
   used_at IS NULL`), not read-then-write. The race test proves exactly one of
   five concurrent claims wins. Never "fix" this into a select followed by an
