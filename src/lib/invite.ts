@@ -22,10 +22,41 @@ const ALPHABET = "ABCDEFGHJKMNPQRSTWXYZ23456789";
 const GROUP = 4;
 const GROUPS = 2;
 
-/** Codes look like "K7QM-3XPT". Case-insensitive, dashes optional on input. */
+/**
+ * A uniform integer in [0, max) from the platform CSPRNG.
+ *
+ * Invite codes are the only thing gating access to this app, so `Math.random()`
+ * is not acceptable here: V8 implements it with xorshift128+, whose internal
+ * state can be recovered from a handful of observed outputs. Someone who was
+ * legitimately sent two or three codes could then predict the next ones.
+ *
+ * Uses rejection sampling rather than `% max`. The alphabet has 29 characters
+ * and 256 is not a multiple of 29, so plain modulo would make the first few
+ * letters measurably likelier and shrink the real keyspace.
+ */
+export function secureRandomInt(max: number): number {
+  if (!Number.isInteger(max) || max < 1 || max > 256) {
+    throw new RangeError(`secureRandomInt supports 1..256, got ${max}`);
+  }
+
+  // Largest multiple of `max` that fits in a byte; anything above is rejected.
+  const limit = Math.floor(256 / max) * max;
+  const buf = new Uint8Array(1);
+
+  for (;;) {
+    crypto.getRandomValues(buf);
+    if (buf[0] < limit) return buf[0] % max;
+  }
+}
+
+/**
+ * Codes look like "K7QM-3XPT". Case-insensitive, dashes optional on input.
+ *
+ * `randomInt` is injectable so tests can be deterministic. Production must use
+ * the default — see secureRandomInt.
+ */
 export function generateInviteCode(
-  randomInt: (max: number) => number = (max) =>
-    Math.floor(Math.random() * max),
+  randomInt: (max: number) => number = secureRandomInt,
 ): string {
   const groups: string[] = [];
   for (let g = 0; g < GROUPS; g++) {

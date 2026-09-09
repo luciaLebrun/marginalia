@@ -43,6 +43,11 @@ placeholder `DATABASE_URL`. Flag any top-level `drizzle(...)` or query.
 `(userId, bookId)` — rereads are separate rows. If a change adds one, that is a
 bug, not a fix.
 
+**8. Anything security-sensitive that touches the invite gate.** Invite codes
+are the only barrier to entry. Flag `Math.random()` anywhere near credential or
+code generation, a claim that reads before it writes instead of a single atomic
+UPDATE, and any widening of what `enforceInvite()` accepts.
+
 ## Output
 
 For each finding: file and line, severity (blocking / should-fix / nit), what

@@ -1,8 +1,68 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { generateInviteCode, normalizeInviteCode } from "./invite";
+import {
+  generateInviteCode,
+  normalizeInviteCode,
+  secureRandomInt,
+} from "./invite";
+
+describe("secureRandomInt", () => {
+  it("stays in range", () => {
+    for (let i = 0; i < 500; i++) {
+      const n = secureRandomInt(29);
+      expect(n).toBeGreaterThanOrEqual(0);
+      expect(n).toBeLessThan(29);
+    }
+  });
+
+  it("rejects out-of-range bytes rather than folding them with modulo", () => {
+    // 256 is not a multiple of 29, so bytes 232..255 must be discarded. If they
+    // were folded with `% 29` instead, 0..23 would be measurably likelier and
+    // the real keyspace would shrink.
+    const bytes = [255, 240, 232, 231]; // three rejects, then one accept
+    let call = 0;
+    const spy = vi
+      .spyOn(globalThis.crypto, "getRandomValues")
+      .mockImplementation(((buf: Uint8Array) => {
+        buf[0] = bytes[Math.min(call++, bytes.length - 1)];
+        return buf;
+      }) as typeof crypto.getRandomValues);
+
+    expect(secureRandomInt(29)).toBe(231 % 29);
+    expect(spy).toHaveBeenCalledTimes(4);
+    spy.mockRestore();
+  });
+
+  it("covers the whole alphabet range given enough draws", () => {
+    const seen = new Set<number>();
+    for (let i = 0; i < 3000; i++) seen.add(secureRandomInt(29));
+    expect(seen.size).toBe(29);
+  });
+
+  it("refuses a range it cannot serve from one byte", () => {
+    expect(() => secureRandomInt(0)).toThrow(RangeError);
+    expect(() => secureRandomInt(257)).toThrow(RangeError);
+    expect(() => secureRandomInt(1.5)).toThrow(RangeError);
+  });
+});
 
 describe("generateInviteCode", () => {
+  it("draws from the CSPRNG, never Math.random", () => {
+    // Invite codes are the only gate on this app. Math.random is xorshift128+
+    // in V8 and its state is recoverable from a few observed outputs, so a
+    // regression here is a security regression, not a style one.
+    const mathSpy = vi.spyOn(Math, "random");
+    const cryptoSpy = vi.spyOn(globalThis.crypto, "getRandomValues");
+
+    generateInviteCode();
+
+    expect(cryptoSpy).toHaveBeenCalled();
+    expect(mathSpy).not.toHaveBeenCalled();
+
+    mathSpy.mockRestore();
+    cryptoSpy.mockRestore();
+  });
+
   it("produces the K7QM-3XPT shape", () => {
     expect(generateInviteCode()).toMatch(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/);
   });
