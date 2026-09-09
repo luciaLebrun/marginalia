@@ -43,8 +43,19 @@ Base `https://openlibrary.org`. No API key. Read endpoints are public.
 - `description` is either a bare string or `{ type, value }`. Use
   `normalizeDescription()`.
 - `covers` can contain `-1` as a "no cover" sentinel. Filter it.
-- Keys come back as `/works/OL893415W`; we store `OL893415W`. Use
+- Keys come back as `/works/OL893414W`; we store `OL893414W`. Use
   `stripWorkPrefix()`.
+- **Redirect stubs.** Open Library merges duplicate works and leaves a
+  `/type/redirect` at the old key, carrying only a `location`. These are common
+  and have no title, authors or covers. `fetchWork()` follows them (max 3 hops,
+  cycle-safe) and returns the *resolved* `olWorkKey` — always store that, not
+  the key you asked for. `OL893415W` → `OL893414W` is a live example, asserted
+  by `pnpm smoke:books`.
+- **null vs throw.** `fetchWork()` returns `null` only when the work genuinely
+  does not exist (404) or a redirect chain is broken. It *throws*
+  `OpenLibraryError` (or a transport error) when Open Library is unreachable.
+  Never conflate them: "book not found" and "search unavailable" are different
+  screens.
 
 Open Library asks callers to cache and to identify themselves. We send a
 descriptive `User-Agent` and `next: { revalidate: 86400 }`. Keep both.
@@ -59,7 +70,9 @@ authoritative for identity: key, title, authors.
 ## When Open Library is down
 
 It is Internet Archive infrastructure and has recurring outages of 30–45
-minutes. That is designed for, not worked around:
+minutes, plus frequent connection-level failures (`ECONNRESET`, connect
+timeouts) even while it is nominally up. That is designed for, not worked
+around:
 
 - `book` rows are the record. Existing diaries, profiles and reviews are pure
   Postgres reads and keep working.
@@ -75,4 +88,9 @@ tested without touching the network; test the fetch wrappers with a stubbed
 `global.fetch`.
 
 `pnpm smoke:books` is the opt-in live check — run it after changing a fetch path
-or when you suspect the upstream schema shifted.
+or when you suspect the upstream schema shifted. It retries generously (8
+attempts) because the upstream drops connections routinely; a red smoke run
+should mean something actually changed.
+
+The app itself does **not** retry. In a serverless request path retries just
+burn the user's time — there, degrade to a "search unavailable" state instead.

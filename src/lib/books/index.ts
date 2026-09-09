@@ -6,6 +6,6 @@
  * the caching, User-Agent, normalization and the CoverID rule stay in one place.
  */
 export { coverUrl, type CoverSize } from "./covers";
-export { searchBooks, fetchWork } from "./openlibrary";
+export { searchBooks, fetchWork, OpenLibraryError } from "./openlibrary";
 export { enrich } from "./google-books";
 export type { BookSummary, BookDetail } from "./types";
