@@ -40,3 +40,10 @@ data.
 - Unit tests run against recorded fixtures in `tests/fixtures/`, never the live
   API, so an upstream outage cannot turn a PR red. `pnpm smoke:books` is the
   opt-in live check.
+- Work keys are not stable identifiers. Open Library merges duplicate works and
+  leaves a `/type/redirect` stub behind, so a key already stored in `book` can
+  become a stub later. `fetchWork()` follows redirects and returns the resolved
+  key; store that one. Verified live: `OL893415W` → `OL893414W`.
+- `fetchWork()` distinguishes "no such book" (returns null) from "Open Library
+  is unreachable" (throws `OpenLibraryError` or a transport error), because the
+  UI owes the reader a different answer in each case.

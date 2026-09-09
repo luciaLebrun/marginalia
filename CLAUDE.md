@@ -53,7 +53,19 @@ when openlibrary.org is down — which, being Internet Archive infrastructure, i
 periodically is. Never put an external API call on the path of rendering a
 profile or an existing review.
 
-**4. Nothing reaches the database at module scope.**
+**4. Work keys can be redirect stubs. Always resolve through `fetchWork()`.**
+Open Library merges duplicate works and leaves a `/type/redirect` stub at the
+old key, holding only a `location`. A stub has no title, authors or covers, so
+a caller that does not follow it creates a book titled after its own key. Any
+key can become one at any time, *including one already saved in `book`*. Trust
+the resolved `olWorkKey` that `fetchWork()` returns over the one you passed in.
+
+**5. `fetchWork()` returning null means "no such book". A throw means "Open
+Library is down".**
+Do not collapse the two — the UI must show "not found" and "temporarily
+unavailable" differently. `OpenLibraryError` carries the status.
+
+**6. Nothing reaches the database at module scope.**
 `next build` runs with a placeholder `DATABASE_URL`. Use `getDb()` from
 `src/db`, which constructs lazily. A top-level `drizzle(...)` call breaks CI.
 
