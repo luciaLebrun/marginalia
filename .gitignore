@@ -34,6 +34,14 @@ yarn-error.log*
 .env*
 !.env.example
 
+# Claude Code: the shared config IS committed on purpose (CLAUDE.md,
+# .claude/skills, .claude/agents, .claude/settings.json) — it is project
+# documentation. These two are per-machine and must not be:
+#   settings.local.json accumulates permissions approved on one developer's
+#   machine, and config.local.json is Impeccable's per-machine override.
+.claude/settings.local.json
+.impeccable/config.local.json
+
 # vercel
 .vercel
 
