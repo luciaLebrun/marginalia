@@ -1,0 +1,16 @@
+{
+  "key": "/works/OL893415W",
+  "title": "Dune",
+  "description": {
+    "type": "/type/text",
+    "value": "Set on the desert planet Arrakis, Dune is the story of the boy Paul Atreides, heir to a noble family tasked with ruling an inhospitable world where the only thing of value is the spice melange.\r\n\r\n----------\r\nContains: Dune"
+  },
+  "covers": [-1, 240727, 8100921],
+  "subject_places": ["Arrakis"],
+  "authors": [
+    { "author": { "key": "/authors/OL79034A" }, "type": { "key": "/type/author_role" } }
+  ],
+  "type": { "key": "/type/work" },
+  "latest_revision": 47,
+  "revision": 47
+}
