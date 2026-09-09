@@ -40,15 +40,24 @@ it judges the diff, not the whole repo, so it is a realistic bar.
 
 `develop` → `main` **is** the release. There is no release branch.
 
+`main` is protected and requires a PR, so a release is a PR from `develop` into
+`main` — a local `git merge` into `main` would be rejected on push:
+
 ```bash
-git checkout main && git pull
-git merge --no-ff develop
+gh pr create --base main --head develop --title "release: v0.2.0 — ..."
+# wait for CI + the Sonar gate, then:
+gh pr merge <n> --merge          # --merge, never --squash: keep the history
+
+git checkout main && git pull --ff-only
 git tag -a v0.2.0 -m "v0.2.0 — book page and log form"
-git push origin main --tags
+git push origin v0.2.0
 ```
 
 Semver: patch for fixes, minor for features, major only on a breaking data
 change. Tag *after* the merge lands, not before.
+
+Never `--squash` a release: it would flatten `develop` into one commit and make
+the next `develop` → `main` merge conflict with itself.
 
 ## Hotfixes
 
@@ -58,7 +67,9 @@ by the next `develop` → `main` merge.
 ```bash
 git checkout -b hotfix/cover-403 main
 # ... fix, PR into main, merge, tag vX.Y.Z+1 ...
-git checkout develop && git merge --no-ff main && git push
+
+# back-merge — also a PR, since develop is protected too
+gh pr create --base develop --head main --title "chore: back-merge hotfix/cover-403"
 ```
 
 ## Notes
@@ -66,7 +77,9 @@ git checkout develop && git merge --no-ff main && git push
 - The repo's `.gitconfig` sets `merge.ff = false`, so merges keep an explicit
   merge commit. That is intentional — it is what makes the two-trunk history
   readable.
-- Never commit directly to `main` or `develop`.
-- Never force-push either branch.
+- Never commit directly to `main` or `develop`. Both are protected: a PR is
+  required and both CI checks must pass. Force pushes and deletions are blocked.
+- Protection is set with `enforce_admins: false`, so the repo owner *can*
+  bypass it. Do not — the point is that the checks ran.
 - Deployment is Vercel's Git integration, not a workflow. There is no
   `deploy.yml` and there should not be one.
