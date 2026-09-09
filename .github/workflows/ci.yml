@@ -35,6 +35,15 @@ jobs:
 
       - name: Test with coverage
         run: pnpm test:coverage
+        env:
+          # Optional. When a DATABASE_URL secret exists, the integration suite
+          # runs against it and coverage reflects the database code; when it is
+          # absent those tests skip themselves and the unit suite still passes.
+          #
+          # Point this at a dedicated Neon BRANCH, never production — the
+          # integration tests write and delete rows. Neon Free allows 10
+          # branches; creating one for CI is what they are for.
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Build
         run: pnpm build
