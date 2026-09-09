@@ -69,6 +69,30 @@ unavailable" differently. `OpenLibraryError` carries the status.
 `next build` runs with a placeholder `DATABASE_URL`. Use `getDb()` from
 `src/db`, which constructs lazily. A top-level `drizzle(...)` call breaks CI.
 
+## Auth
+
+Better Auth, Google OAuth only, gated by invite codes. `getAuth()` is lazy for
+the same reason `getDb()` is.
+
+- **The invite gate is the only thing protecting this app.** Google will
+  authenticate anyone on earth; `enforceInvite()` in the `user.create.before`
+  hook is what stops them getting an account. It fails closed — missing,
+  unknown, expired and already-used codes all reject. A throwing `before` hook
+  aborts the whole sign-up, verified in `auth-gate.integration.test.ts`.
+- **Claiming a code is a single atomic UPDATE** (`SET used_at = now() WHERE
+  used_at IS NULL`), not read-then-write. The race test proves exactly one of
+  five concurrent claims wins. Never "fix" this into a select followed by an
+  update.
+- The code crosses the Google round-trip in a short-lived httpOnly cookie
+  (`INVITE_COOKIE`), because OAuth gives us no way to carry a form field.
+- `transaction: false` on the Drizzle adapter is required: the neon-http driver
+  sends one HTTP request per statement and cannot hold a transaction open. The
+  consequence is that a code is burned if user creation then fails — the safer
+  direction to fail in for a closed POC.
+- Integration tests hit the real database and **skip** when `DATABASE_URL` is
+  missing or a placeholder, so CI stays green without one. Run them with
+  `pnpm test:integration`. They must always clean up after themselves.
+
 ## Conventions
 
 - **Open Library keys are stored bare**: `OL893415W`, never `/works/OL893415W`.

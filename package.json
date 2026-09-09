@@ -15,9 +15,11 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit push",
-    "smoke:books": "node --experimental-strip-types scripts/smoke-books.mts"
+    "smoke:books": "node --experimental-strip-types scripts/smoke-books.mts",
+    "test:integration": "vitest run src/lib/invite.integration.test.ts"
   },
   "dependencies": {
+    "@better-auth/drizzle-adapter": "^1.7.3",
     "@neondatabase/serverless": "^1.1.0",
     "better-auth": "^1.7.3",
     "drizzle-orm": "^0.45.2",
