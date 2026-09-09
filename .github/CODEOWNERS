@@ -1,0 +1,10 @@
+# Everything, by default.
+*                       @luciaLebrun
+
+# Agent-executed configuration. A change here alters what an AI assistant is
+# instructed and permitted to do in this repo, so it deserves a deliberate
+# read rather than a skim — the same care as a change to a CI workflow.
+/.claude/               @luciaLebrun
+/CLAUDE.md              @luciaLebrun
+/AGENTS.md              @luciaLebrun
+/.github/workflows/     @luciaLebrun
