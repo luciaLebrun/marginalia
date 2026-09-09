@@ -17,6 +17,8 @@
  */
 import { fetchWork, searchBooks } from "../src/lib/books/openlibrary.ts";
 import { coverUrl } from "../src/lib/books/covers.ts";
+import { bandColorFromCover } from "../src/lib/cover-color.ts";
+import { fallbackBand, meetsAA, readableOn } from "../src/lib/color.ts";
 
 const QUERY = process.argv[2] ?? "dune herbert";
 
@@ -103,6 +105,23 @@ if (!redirected.title || redirected.title === REDIRECT_KEY) {
 }
 console.log(
   `✓ redirect ${REDIRECT_KEY} → ${redirected.olWorkKey} "${redirected.title}"`,
+);
+
+// The band colour is derived from real cover art, so synthetic pixel tests
+// cannot prove it works on the jackets Open Library actually serves.
+const band = await retry("band colour", () =>
+  bandColorFromCover(withCover.coverId),
+).catch(() => null);
+
+const resolved = band ?? fallbackBand(withCover.olWorkKey);
+const foreground = readableOn(resolved);
+
+if (!/^#[0-9A-F]{6}$/.test(resolved)) fail(`band colour "${resolved}" is not a hex colour`);
+if (!meetsAA(resolved, foreground, true)) {
+  fail(`band ${resolved} with text ${foreground} does not clear WCAG AA`);
+}
+console.log(
+  `✓ band ${resolved} ${band ? "from cover art" : "(fallback)"}, text ${foreground}, clears AA`,
 );
 
 console.log("\nAll book-data smoke checks passed.");

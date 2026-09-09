@@ -1,4 +1,4 @@
-import type { BookDetail, BookSummary } from "./types";
+import type { BookDetail, BookSummary } from "./types.ts";
 
 const ORIGIN = "https://openlibrary.org";
 
