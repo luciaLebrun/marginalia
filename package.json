@@ -43,5 +43,11 @@
     "vitest": "^5.0.0"
   },
   "packageManager": "pnpm@10.5.0",
-  "description": "A reading diary — log, rate and review the books you read."
+  "description": "A reading diary \u2014 log, rate and review the books you read.",
+  "pnpm": {
+    "overrides": {
+      "@esbuild-kit/esm-loader": "npm:tsx@^4.23.13",
+      "@esbuild-kit/core-utils": "npm:tsx@^4.23.13"
+    }
+  }
 }
