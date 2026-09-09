@@ -85,11 +85,49 @@ unavailable" differently. `OpenLibraryError` carries the status.
   that public pages point `src` at their CDN, and it keeps us off Vercel Hobby's
   image-transformation quota for images we do not own.
 
+## Frontend, UX review and optimisation → use Impeccable
+
+All UI work on this project goes through the **Impeccable** skill rather than
+ad-hoc design judgement. `PRODUCT.md` holds the confirmed product truth it
+reads; do not restate or contradict it elsewhere.
+
+| Task | Command |
+|---|---|
+| Plan a screen before coding | `impeccable shape` |
+| Build a new surface | Impeccable new-work flow |
+| **UX design review** | `impeccable critique <target>` |
+| Accessibility / responsive / perf audit | `impeccable audit <target>` |
+| **Front-end optimisation** | `impeccable optimize <target>` |
+| Final pass before a release | `impeccable polish <target>` |
+| Spacing, rhythm, hierarchy | `impeccable layout <target>` |
+| Empty and first-run states | `impeccable onboard <target>` |
+| Errors, i18n, edge cases | `impeccable harden <target>` |
+| Record the design system once UI exists | `impeccable document` |
+
+Workflow settings already recorded, do not re-ask: `.impeccable/config.json`
+sets `buildPath: "code"` (build directly; ambition goes in the direction
+contract and is audited at the finish).
+
+After finishing changed UI, run the mechanical detector once:
+`.claude/skills/impeccable/scripts/impeccable detect --json <changed targets>`
+
+DESIGN.md does not exist yet — there is no real UI. It gets created by the
+first new-work flow, not written by hand.
+
+The two project review agents in `.claude/agents/` (`ui-reviewer`,
+`schema-reviewer`) are cheap pre-PR checks for project-specific rules. They do
+not replace `impeccable critique` or `impeccable audit`, which own design
+quality and the technical audit respectively.
+
 ## Git flow
 
 `main` (protected, production, tagged `vX.Y.Z`) · `develop` (default, preview) ·
 `feature/MRG-###-slug` → PR into `develop` · `hotfix/slug` → PR into `main`,
 **then back-merged into `develop`**.
+
+**Merge method:** squash feature and hotfix PRs; use a real merge commit for
+the release (`develop` → `main`) and the back-merge. Squashing a release makes
+the two trunks diverge permanently — see the `gitflow` skill.
 
 Branch names carry the backlog ID. The backlog lives in Obsidian at
 `~/Documents/Notes/Marginalia/Backlog.md`. See the `gitflow` and `backlog`
@@ -105,5 +143,7 @@ src/lib/books/    the ONLY door to Open Library / Google Books
 src/lib/auth.ts   Better Auth config
 tests/fixtures/   recorded API responses
 docs/             architecture.md + adr/   ← decisions live here, not in Obsidian
+PRODUCT.md        confirmed product truth, read by Impeccable
+.impeccable/      Impeccable workflow config
 scripts/          smoke-books.mts
 ```

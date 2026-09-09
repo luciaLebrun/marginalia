@@ -24,6 +24,35 @@ git checkout -b feature/MRG-012-book-page
 The `MRG-###` comes from `~/Documents/Notes/Marginalia/Backlog.md`. One backlog
 item, one branch. If there is no backlog item, add one first.
 
+## Merging
+
+**Feature PRs into `develop`: squash and merge.** One backlog item becomes one
+commit on `develop`, so the history reads as a list of changes rather than of
+working steps.
+
+```bash
+gh pr merge <n> --squash --delete-branch
+```
+
+**Release PRs (`develop` → `main`) and hotfix back-merges: a real merge commit.**
+
+```bash
+gh pr merge <n> --merge
+```
+
+Squashing a release would write a *new* commit onto `main` that is not a merge
+of `develop`, so the two trunks permanently diverge: the next release PR
+re-lists every commit already shipped and conflicts with itself. In a two-trunk
+model this is the one place squash is genuinely destructive. Same reasoning for
+a hotfix back-merge — `main` must remain an ancestor of `develop`.
+
+| PR | Merge method |
+|---|---|
+| `feature/*` → `develop` | `--squash` |
+| `hotfix/*` → `main` | `--squash` |
+| `develop` → `main` (release) | `--merge` |
+| `main` → `develop` (back-merge) | `--merge` |
+
 ## Opening a PR
 
 Target `develop` (or `main` for a hotfix). Before pushing:
@@ -46,7 +75,7 @@ it judges the diff, not the whole repo, so it is a realistic bar.
 ```bash
 gh pr create --base main --head develop --title "release: v0.2.0 — ..."
 # wait for CI + the Sonar gate, then:
-gh pr merge <n> --merge          # --merge, never --squash: keep the history
+gh pr merge <n> --merge          # --merge, never --squash — see Merging above
 
 git checkout main && git pull --ff-only
 git tag -a v0.2.0 -m "v0.2.0 — book page and log form"
@@ -56,8 +85,7 @@ git push origin v0.2.0
 Semver: patch for fixes, minor for features, major only on a breaking data
 change. Tag *after* the merge lands, not before.
 
-Never `--squash` a release: it would flatten `develop` into one commit and make
-the next `develop` → `main` merge conflict with itself.
+Never `--squash` a release — see the Merging table above.
 
 ## Hotfixes
 
