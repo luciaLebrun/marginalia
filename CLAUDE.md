@@ -24,8 +24,31 @@ pnpm e2e              # playwright, desktop + mobile projects
 
 pnpm db:generate      # drizzle-kit generate — write a migration from schema.ts
 pnpm db:migrate       # drizzle-kit migrate  — apply migrations
-pnpm db:studio        # drizzle-kit studio
+pnpm db:studio        # drizzle-kit studio, against .env.local
+pnpm db:studio:preview  # …against .env.preview
+pnpm db:studio:prod     # …against .env.production
 ```
+
+### Looking at a deployed environment's data
+
+Vercel stores `DATABASE_URL` as a Secret, so it cannot be read back — not from
+the dashboard and not from `vercel env pull`, which returns `[SENSITIVE]`. Get
+the connection string from the **Neon** dashboard instead, per branch, and put
+it in a gitignored `.env.preview` or `.env.production`:
+
+```
+DATABASE_URL=postgresql://…   # that branch's pooled connection string
+```
+
+Then `pnpm db:studio:preview` or `pnpm db:studio:prod`. The file exists so the
+string never reaches your shell history or a process listing; `.env*` is
+already gitignored. A one-off `DATABASE_URL="…" pnpm db:studio` also works —
+`drizzle.config.ts` loads `.env.local` without overriding what is already in
+the environment, so the inline value wins.
+
+**Which branch is which is worth checking rather than assuming.** Preview and
+local sharing one branch is how seeded development fixtures ended up publicly
+readable on a deployed URL — see MRG-046.
 
 ## Stack
 
