@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import searchFixture from "../../../tests/fixtures/openlibrary-search-dune.json";
 import workFixture from "../../../tests/fixtures/openlibrary-work-dune.json";
 import googleFixture from "../../../tests/fixtures/google-books-dune.json";
+import redirectFixture from "../../../tests/fixtures/openlibrary-work-redirect.json";
 import { fetchWork, searchBooks } from "./openlibrary";
 import { enrich } from "./google-books";
 import type { BookDetail } from "./types";
@@ -89,13 +90,77 @@ describe("fetchWork", () => {
     expect(detail!.authors).toEqual([]);
   });
 
-  it("returns null when the work itself cannot be fetched", async () => {
+  it("follows a redirect stub to the surviving work", async () => {
+    // OL893415W is a real redirect to OL893414W. Without following it we would
+    // create a book row titled "OL893415W" with no author and no cover.
+    fetchMock.mockImplementation((url: string) => {
+      if (url.includes("/search.json")) return Promise.resolve(res(searchFixture));
+      if (url.includes("OL893415W")) return Promise.resolve(res(redirectFixture));
+      return Promise.resolve(res(workFixture));
+    });
+
+    const detail = await fetchWork("OL893415W");
+    expect(detail!.title).toBe("Dune");
+    // The resolved key wins over the one the caller passed in.
+    expect(detail!.olWorkKey).toBe("OL893414W");
+    expect(detail!.description).toContain("Arrakis");
+  });
+
+  it("gives up on a redirect cycle instead of looping forever", async () => {
+    const a = { key: "/works/OLaW", type: { key: "/type/redirect" }, location: "/works/OLbW" };
+    const b = { key: "/works/OLbW", type: { key: "/type/redirect" }, location: "/works/OLaW" };
+    fetchMock.mockImplementation((url: string) => {
+      if (url.includes("/search.json")) return Promise.resolve(res(searchFixture));
+      return Promise.resolve(res(url.includes("OLaW") ? a : b));
+    });
+
+    await expect(fetchWork("OLaW")).resolves.toBeNull();
+  });
+
+  it("gives up on a redirect chain that is too long", async () => {
+    let n = 0;
     fetchMock.mockImplementation((url: string) =>
       url.includes("/search.json")
         ? Promise.resolve(res(searchFixture))
-        : Promise.reject(new Error("work down")),
+        : Promise.resolve(
+            res({
+              key: `/works/OL${n}W`,
+              type: { key: "/type/redirect" },
+              location: `/works/OL${++n}W`,
+            }),
+          ),
     );
-    await expect(fetchWork("OL893415W")).resolves.toBeNull();
+
+    await expect(fetchWork("OL0W")).resolves.toBeNull();
+  });
+
+  it("returns null for a work that genuinely does not exist (404)", async () => {
+    fetchMock.mockImplementation((url: string) =>
+      Promise.resolve(
+        url.includes("/search.json") ? res(searchFixture) : res(null, false, 404),
+      ),
+    );
+    await expect(fetchWork("OL000000W")).resolves.toBeNull();
+  });
+
+  it("throws when Open Library is erroring, so 'down' is not shown as 'not found'", async () => {
+    fetchMock.mockImplementation((url: string) =>
+      Promise.resolve(
+        url.includes("/search.json") ? res(searchFixture) : res(null, false, 503),
+      ),
+    );
+    await expect(fetchWork("OL893414W")).rejects.toThrow(/503/);
+  });
+
+  it("throws when the connection itself fails", async () => {
+    // Open Library fails at the connection level often enough that this is the
+    // common case, not the exotic one.
+    fetchMock.mockImplementation((url: string) =>
+      url.includes("/search.json")
+        ? Promise.resolve(res(searchFixture))
+        : Promise.reject(new TypeError("fetch failed")),
+    );
+    await expect(fetchWork("OL893414W")).rejects.toThrow(/fetch failed/);
   });
 });
 

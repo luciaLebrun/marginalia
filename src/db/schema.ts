@@ -31,6 +31,14 @@ export const user = pgTable(
     username: text("username"),
     bio: text("bio"),
 
+    /**
+     * When this reader last opened their diary. Entries created after it are
+     * new to them, which is what makes the ink-in animation mean something.
+     * Held here rather than in browser storage so a second device, a private
+     * window or a cleared store all agree.
+     */
+    lastSeenAt: timestamp("last_seen_at"),
+
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -128,6 +136,13 @@ export const book = pgTable(
      * per IP per 5 minutes and will 403 on a busy grid. See src/lib/books/covers.ts.
      */
     coverId: integer("cover_id"),
+
+    /**
+     * Band colour derived from the cover art once, at upsert, and stored.
+     * Null means the cover was monochrome, absent or undecodable — the UI then
+     * falls back to a stable category colour. Never computed at render time.
+     */
+    coverColor: text("cover_color"),
 
     isbn13: text("isbn13"),
     pageCount: integer("page_count"),

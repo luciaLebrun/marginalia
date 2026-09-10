@@ -1,4 +1,4 @@
-import type { BookDetail } from "./types";
+import type { BookDetail } from "./types.ts";
 
 const ORIGIN = "https://www.googleapis.com/books/v1";
 const ONE_WEEK = 60 * 60 * 24 * 7;
@@ -42,6 +42,18 @@ export function mergeGoogleVolume(
 }
 
 /**
+ * An ISBN is an exact match, so prefer it. Otherwise fall back to title,
+ * narrowed by the first author when we have one.
+ */
+export function buildQuery(detail: BookDetail): string {
+  if (detail.isbn13) return `isbn:${detail.isbn13}`;
+
+  const author = detail.authors[0];
+  const byAuthor = author ? `+inauthor:${author}` : "";
+  return `intitle:${detail.title}${byAuthor}`;
+}
+
+/**
  * Best-effort enrichment. Google Books is a nice-to-have on a free quota of
  * ~1000 requests/day, so every failure path returns the input unchanged —
  * enrichment must never be able to fail a book page.
@@ -53,9 +65,7 @@ export async function enrich(detail: BookDetail): Promise<BookDetail> {
   // Only worth a request when we are actually missing something.
   if (detail.description && detail.pageCount) return detail;
 
-  const q = detail.isbn13
-    ? `isbn:${detail.isbn13}`
-    : `intitle:${detail.title}${detail.authors[0] ? `+inauthor:${detail.authors[0]}` : ""}`;
+  const q = buildQuery(detail);
 
   try {
     const res = await fetch(

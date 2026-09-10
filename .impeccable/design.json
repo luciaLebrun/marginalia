@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-10T00:00:00.000Z",
+  "title": "Design System: Marginalia",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "oklch(95.8% 0.012 91.5)",
+        "tonalRamp": ["#14110B", "#2B2922", "#45423B", "#605D56", "#7D7A72", "#A19E96", "#C7C4BB", "#EEEBE2"]
+      },
+      "paper-sunk": {
+        "role": "neutral",
+        "displayName": "Sunk Paper",
+        "canonical": "oklch(92.2% 0.018 89.4)",
+        "tonalRamp": ["#151108", "#2C291F", "#464238", "#625D52", "#7E7A6E", "#A39E92", "#C9C4B7", "#F0EBDE"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(18.9% 0.009 75.1)",
+        "tonalRamp": ["#14110D", "#2C2824", "#45423D", "#615D58", "#7E7A74", "#A29E98", "#C8C3BE", "#EFEAE4"]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Soft Ink",
+        "canonical": "oklch(45.7% 0.018 76.9)",
+        "tonalRamp": ["#161108", "#2E281F", "#484138", "#645C52", "#81796F", "#A59D92", "#CBC3B7", "#F2EADE"]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Hairline Rule",
+        "canonical": "#16130F26",
+        "tonalRamp": ["#16130F0D", "#16130F1A", "#16130F26", "#16130F33", "#16130F4D", "#16130F66", "#16130F99", "#16130FCC"]
+      },
+      "band-fiction": {
+        "role": "primary",
+        "displayName": "Penguin Orange",
+        "canonical": "oklch(63.4% 0.197 37.4)",
+        "tonalRamp": ["#490000", "#6B0000", "#8E0000", "#B10E00", "#D53D00", "#FF6636", "#FF8E5F", "#FFB686"]
+      },
+      "band-crime": {
+        "role": "secondary",
+        "displayName": "Crime Green",
+        "canonical": "oklch(51.5% 0.102 169.6)",
+        "tonalRamp": ["#001D0A", "#003720", "#005339", "#007054", "#278E70", "#53B394", "#7BDAB9", "#A3FFE0"]
+      },
+      "band-pelican": {
+        "role": "tertiary",
+        "displayName": "Pelican Cyan",
+        "canonical": "oklch(65.5% 0.122 222.6)",
+        "tonalRamp": ["#001637", "#003153", "#004D70", "#006B8F", "#0089AE", "#27AED5", "#5AD5FD", "#85FDFF"]
+      }
+    },
+    "typographyMeta": {
+      "wordmark": { "displayName": "Wordmark", "purpose": "MARGINALIA on the masthead colour band. Archivo at wdth 118, tracked 0.34em. This voice belongs to the wordmark only." },
+      "display": { "displayName": "Display", "purpose": "The reader's name in the masthead field band. 2.25rem, 3.5rem at 640px." },
+      "headline": { "displayName": "Headline", "purpose": "The year on a year rule. 1.75rem, 2.25rem at 640px." },
+      "title": { "displayName": "Title", "purpose": "A book title in an entry's record band. Small on purpose; the jacket identifies the book." },
+      "body": { "displayName": "Body", "purpose": "Empty-shelf guidance and signed-out copy. Rare; this surface is a record, not an article." },
+      "label": { "displayName": "Band Label", "purpose": "Content carried on a band: author, Add, Reread, tally, count. Archivo at wdth 88, caps, 0.14em. Never a kicker above a heading." },
+      "meta": { "displayName": "Meta", "purpose": "Dates, counts, Unrated, reading span. Soft ink, tabular figures." }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "band-ink",
+        "value": "clip-path inset(0 100% 0 0) -> inset(0 0 0 0); 620ms cubic-bezier(0.16, 1, 0.3, 1) backwards",
+        "purpose": "The system's only authored animation. An entry's colour band inks in from the spine edge, gated to entries new since the reader's server-side lastSeenAt AND to the band's first intersection with the viewport. Wrapped in prefers-reduced-motion: no-preference; bands render visible from the server so nothing is ever hidden."
+      },
+      {
+        "name": "state-colour",
+        "value": "transition: color, background-color",
+        "purpose": "Every other state change is colour only. Hover and focus never move, lift, or blur."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "40rem" },
+      { "name": "lg", "value": "64rem" },
+      { "name": "xl", "value": "80rem" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Entry Card",
+      "kind": "card",
+      "refersTo": "entry-card",
+      "description": "The tri-band diary cell: colour band carrying the author, a 2:3 jacket well on sunk paper, and a record band with title, rating and date.",
+      "html": "<article class=\"ds-entry\"><div class=\"ds-entry-band\"><span class=\"ds-label ds-entry-author\">URSULA K. LE GUIN</span><span class=\"ds-label ds-entry-reread\">Reread</span></div><div class=\"ds-entry-well\"><div class=\"ds-entry-nocover\">A Wizard of Earthsea<span>Ursula K. Le Guin</span></div></div><div class=\"ds-entry-record\"><h3 class=\"ds-entry-title\">A Wizard of Earthsea</h3><div class=\"ds-entry-meta\"><span class=\"ds-entry-rating\">★★★★★</span><time class=\"ds-entry-date\">30 Mar</time></div></div></article>",
+      "css": ".ds-entry { display: flex; flex-direction: column; width: 232px; border: 1px solid rgba(22,19,15,0.15); background: #F4F1E8; color: #16130F; border-radius: 0; font-family: Archivo, ui-sans-serif, system-ui, sans-serif; font-variant-numeric: tabular-nums; } .ds-label { text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600; font-stretch: 88%; font-size: 0.6875rem; line-height: 1; } .ds-entry-band { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; background: #7FA8C0; color: #16130F; } .ds-entry-author { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .ds-entry-reread { flex-shrink: 0; opacity: 0.8; } .ds-entry-well { aspect-ratio: 2 / 3; overflow: hidden; background: #EAE5D8; display: flex; align-items: center; justify-content: center; padding: 16px 12px; } .ds-entry-nocover { text-align: center; font-size: 0.8125rem; line-height: 1.35; font-weight: 500; color: #5D564C; } .ds-entry-nocover span { display: block; margin-top: 4px; font-weight: 400; } .ds-entry-record { display: flex; flex: 1; flex-direction: column; gap: 6px; border-top: 1px solid rgba(22,19,15,0.15); padding: 8px 10px; } .ds-entry-title { margin: 0; font-size: 0.8125rem; line-height: 1.25; font-weight: 600; text-wrap: balance; } .ds-entry-meta { margin-top: auto; padding-top: 4px; display: flex; align-items: center; justify-content: space-between; gap: 8px; } .ds-entry-rating { font-size: 0.75rem; letter-spacing: 1px; color: #16130F; } .ds-entry-date { font-size: 0.6875rem; font-weight: 500; color: #5D564C; }"
+    },
+    {
+      "name": "Log Cell",
+      "kind": "button",
+      "refersTo": "log-cell",
+      "description": "The primary action shaped as an entry, holding the grid's first position. Floods with the fiction band on hover and focus; colour only, nothing moves.",
+      "html": "<a class=\"ds-log\" href=\"#\"><span class=\"ds-log-band ds-label\">Add</span><span class=\"ds-log-well\"><svg width=\"34\" height=\"34\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\" stroke-linecap=\"square\"/></svg></span><span class=\"ds-log-record\">Log a book</span></a>",
+      "css": ".ds-log { display: flex; flex-direction: column; width: 232px; border: 1px solid #16130F; background: #F4F1E8; color: #16130F; text-decoration: none; border-radius: 0; font-family: Archivo, ui-sans-serif, system-ui, sans-serif; transition: background-color 0.15s, color 0.15s; } .ds-log .ds-label { text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600; font-stretch: 88%; font-size: 0.6875rem; line-height: 1; } .ds-log-band { background: #16130F; color: #F4F1E8; padding: 8px 10px; } .ds-log-well { aspect-ratio: 2 / 3; display: flex; align-items: center; justify-content: center; color: #16130F; transition: color 0.15s; } .ds-log-record { flex: 1; border-top: 1px solid #16130F; padding: 8px 10px; font-size: 0.8125rem; line-height: 1.25; font-weight: 600; transition: color 0.15s; } .ds-log:hover, .ds-log:focus-visible { background: #E8501B; } .ds-log:hover .ds-log-well, .ds-log:hover .ds-log-record, .ds-log:focus-visible .ds-log-well, .ds-log:focus-visible .ds-log-record { color: #16130F; } .ds-log:focus-visible { outline: 2px solid #16130F; outline-offset: 2px; }"
+    },
+    {
+      "name": "Masthead",
+      "kind": "nav",
+      "refersTo": "masthead-band-colour",
+      "description": "The tri-band at page scale: colour band with the wordmark, paper band with the reader's name and reading span, ink band with the tally. Differentiated by ground, not by size.",
+      "html": "<header class=\"ds-masthead\"><div class=\"ds-mh-colour\"><p class=\"ds-wordmark\">Marginalia</p><p class=\"ds-label ds-mh-tag\">A reading diary</p></div><div class=\"ds-mh-field\"><h1 class=\"ds-mh-name\">Lucia</h1><p class=\"ds-mh-span\">2025–2026</p></div><div class=\"ds-mh-record\"><p class=\"ds-label\">11 books logged</p></div></header>",
+      "css": ".ds-masthead { font-family: Archivo, ui-sans-serif, system-ui, sans-serif; font-variant-numeric: tabular-nums; } .ds-masthead .ds-label { text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600; font-stretch: 88%; font-size: 0.6875rem; line-height: 1; } .ds-mh-colour { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 20px 24px; background: #E8501B; color: #16130F; } .ds-wordmark { margin: 0; text-transform: uppercase; letter-spacing: 0.34em; font-weight: 700; font-stretch: 118%; line-height: 1; font-size: 1.375rem; } .ds-mh-tag { opacity: 0.8; margin: 0; } .ds-mh-field { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; padding: 28px 24px; background: #F4F1E8; } .ds-mh-name { margin: 0; font-size: 3.5rem; line-height: 0.95; font-weight: 600; letter-spacing: -0.02em; color: #16130F; } .ds-mh-span { margin: 0; font-size: 1.25rem; font-weight: 500; color: #5D564C; } .ds-mh-record { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 24px; background: #16130F; color: #F4F1E8; } .ds-mh-record p { margin: 0; }"
+    },
+    {
+      "name": "Year Rule",
+      "kind": "custom",
+      "refersTo": "year-rule",
+      "description": "A full-width ruled band opening each year group. A band, not a hairline, because chronology is the shelf's organising structure.",
+      "html": "<div class=\"ds-year\"><h2 class=\"ds-year-n\">2026</h2><span class=\"ds-year-c\">6 books</span></div>",
+      "css": ".ds-year { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; border-top: 1px solid #16130F; border-bottom: 1px solid #16130F; background: #EAE5D8; padding: 8px 12px; font-family: Archivo, ui-sans-serif, system-ui, sans-serif; font-variant-numeric: tabular-nums; } .ds-year-n { margin: 0; font-size: 2.25rem; line-height: 1; font-weight: 600; letter-spacing: -0.02em; color: #16130F; } .ds-year-c { text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600; font-stretch: 88%; font-size: 0.6875rem; line-height: 1; color: #5D564C; }"
+    },
+    {
+      "name": "Rating",
+      "kind": "custom",
+      "refersTo": "entry-band-record",
+      "description": "Five drawn marks with half-steps by clipping the filled path. The unfilled state is the same shape at 30% opacity, never a different mark.",
+      "html": "<span class=\"ds-rating\" role=\"img\" aria-label=\"3.5 out of 5\"><svg width=\"11\" height=\"11\" viewBox=\"0 0 12 12\" aria-hidden=\"true\"><path d=\"M6 0.75 L7.6 4.4 L11.4 4.8 L8.5 7.4 L9.4 11.2 L6 9.2 L2.6 11.2 L3.5 7.4 L0.6 4.8 L4.4 4.4 Z\" fill=\"currentColor\"/></svg><svg width=\"11\" height=\"11\" viewBox=\"0 0 12 12\" aria-hidden=\"true\"><path d=\"M6 0.75 L7.6 4.4 L11.4 4.8 L8.5 7.4 L9.4 11.2 L6 9.2 L2.6 11.2 L3.5 7.4 L0.6 4.8 L4.4 4.4 Z\" fill=\"currentColor\"/></svg><svg width=\"11\" height=\"11\" viewBox=\"0 0 12 12\" aria-hidden=\"true\"><path d=\"M6 0.75 L7.6 4.4 L11.4 4.8 L8.5 7.4 L9.4 11.2 L6 9.2 L2.6 11.2 L3.5 7.4 L0.6 4.8 L4.4 4.4 Z\" fill=\"currentColor\"/></svg><svg width=\"11\" height=\"11\" viewBox=\"0 0 12 12\" aria-hidden=\"true\"><path d=\"M6 0.75 L7.6 4.4 L11.4 4.8 L8.5 7.4 L9.4 11.2 L6 9.2 L2.6 11.2 L3.5 7.4 L0.6 4.8 L4.4 4.4 Z\" fill=\"currentColor\" opacity=\"0.3\"/><defs><clipPath id=\"dsHalf\"><rect x=\"0\" y=\"0\" width=\"6\" height=\"12\"/></clipPath></defs><path d=\"M6 0.75 L7.6 4.4 L11.4 4.8 L8.5 7.4 L9.4 11.2 L6 9.2 L2.6 11.2 L3.5 7.4 L0.6 4.8 L4.4 4.4 Z\" fill=\"currentColor\" clip-path=\"url(#dsHalf)\"/></svg><svg width=\"11\" height=\"11\" viewBox=\"0 0 12 12\" aria-hidden=\"true\"><path d=\"M6 0.75 L7.6 4.4 L11.4 4.8 L8.5 7.4 L9.4 11.2 L6 9.2 L2.6 11.2 L3.5 7.4 L0.6 4.8 L4.4 4.4 Z\" fill=\"currentColor\" opacity=\"0.3\"/></svg></span>",
+      "css": ".ds-rating { display: inline-flex; align-items: center; gap: 3px; color: #16130F; }"
+    },
+    {
+      "name": "Shelf Grid",
+      "kind": "custom",
+      "refersTo": "entry-card",
+      "description": "Whole-cell repack at 2 / 3 / 4 / 6 columns with a 1px hairline gap. Unfilled positions in a partial row are ruled by a non-repeating gradient tiled to the column count; real cells paint over it.",
+      "html": "<div class=\"ds-shelf\"><div class=\"ds-shelf-cell\"></div><div class=\"ds-shelf-cell\"></div><div class=\"ds-shelf-cell\"></div></div>",
+      "css": ".ds-shelf { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 1px; background-color: #F4F1E8; background-image: linear-gradient(to right, rgba(22,19,15,0.15) 0 1px, transparent 1px); background-repeat: repeat-x; background-size: calc((100% + 1px) / 2) 100%; } @media (min-width: 40rem) { .ds-shelf { grid-template-columns: repeat(3, minmax(0, 1fr)); background-size: calc((100% + 1px) / 3) 100%; } } @media (min-width: 64rem) { .ds-shelf { grid-template-columns: repeat(4, minmax(0, 1fr)); background-size: calc((100% + 1px) / 4) 100%; } } @media (min-width: 80rem) { .ds-shelf { grid-template-columns: repeat(6, minmax(0, 1fr)); background-size: calc((100% + 1px) / 6) 100%; } } .ds-shelf-cell { aspect-ratio: 2 / 3; border: 1px solid rgba(22,19,15,0.15); background: #EAE5D8; }"
+    },
+    {
+      "name": "Browser Surfaces",
+      "kind": "custom",
+      "refersTo": "entry-card",
+      "description": "Selection, caret, focus ring and scrollbar, themed to paper and ink. Surfaces we did not draw still belong to the design.",
+      "html": "<div class=\"ds-surfaces\"><p>Select this line to see the fiction band as the selection highlight.</p><input class=\"ds-input\" value=\"Caret picks up the band colour\" /></div>",
+      "css": ".ds-surfaces { font-family: Archivo, ui-sans-serif, system-ui, sans-serif; color: #16130F; background: #F4F1E8; padding: 16px; } .ds-surfaces ::selection { background: #E8501B; color: #16130F; } .ds-input { width: 100%; margin-top: 12px; padding: 8px 10px; border: 1px solid #16130F; border-radius: 0; background: #F4F1E8; color: #16130F; caret-color: #E8501B; font: inherit; font-size: 0.9375rem; } .ds-input:focus-visible { outline: 2px solid #16130F; outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Tri-band",
+    "overview": "Marginalia is drawn as a paperback cover system, not as an app skin. The reference is the mid-century Penguin/Pelican grid: a paper ground, flat opaque ink, one typeface doing every job through weight and width, and a rigid three-band frame — colour, field, record — that carries every object on the page. The frame is applied at two scales: each diary entry is a tri-band cell, and the masthead is the same three bands run at page width. A shelf of four books and a shelf of four hundred read as the same designed object because the frame never varies.\n\nThe density is printed rather than app-like. Cells butt against each other on a 1px hairline, band padding is 8-10px, and there is no card gutter, no elevation, no rounding to soften a join. The one colour that varies is each entry's own band, derived from that book's cover art; everything else on the page is paper, ink, soft ink, or sunk paper. What the world refuses is recorded in the build itself: no dark mode (this is printed paper, and paper does not invert), no shadows, no gradient shading, no second typeface, and no decorative imagery — the book jackets are the only pictures and they arrive from Open Library at unpredictable ratio and quality, so the system holds them in a fixed frame rather than trusting them.\n\nBecause both phone and laptop are equally primary (PRODUCT.md), the shelf repacks whole cells at 2 / 3 / 4 / 6 columns rather than degrading into a list on one of them. And because the production database is genuinely empty, the empty shelf is the first-run surface a real reader meets, designed as one full tri-band cell that is the action — never mocked up with invented entries, ratings, or activity.",
+    "keyCharacteristics": [
+      "A three-band frame — colour / field / record — at both cell and page scale",
+      "Paper ground, flat ink, hairline rules, zero elevation",
+      "One family (Archivo variable), differentiated by weight and by width axis",
+      "Band foreground chosen by WCAG contrast at render time, never fixed",
+      "Tabular figures everywhere: this page is a record of dates and ratings",
+      "Exactly one authored motion moment on the whole surface"
+    ],
+    "rules": [
+      { "name": "The Readable Band Rule", "body": "No band ever has a fixed foreground. readableOn() compares the WCAG contrast of ink and paper against the band and returns the winner. This is not a nicety: bands are derived from arbitrary cover art, and paper on the fiction orange is 3.32:1 and fails AA. The same helper decides the masthead, the entry bands, and the \"Add\" cell's hover state.", "section": "colors" },
+      { "name": "The Conditioned Ink Rule", "body": "A colour lifted from a jacket is never used raw. conditionBand() floors saturation at 0.35 and clamps lightness into 0.28-0.62, so near-white paper borders, near-black spines, and washed-out scans all land as deliberate flat ink rather than as whatever the scanner captured.", "section": "colors" },
+      { "name": "The Stable Colour Rule", "body": "A fallback band is a deterministic hash of the Open Library work key, never random and never per-render. A shelf that reshuffles its own colours between visits reads as broken, not lively.", "section": "colors" },
+      { "name": "The Browser-Surface Rule", "body": "Surfaces we did not draw still belong to the design. Selection, caret, scrollbar track and thumb, and the focus ring are all themed to paper and ink; none may be left at the OS default.", "section": "colors" },
+      { "name": "The One Family Rule", "body": "Archivo alone. New weight, new width, new tracking, new case — never a new face. A second family breaks the system this entire surface is built on.", "section": "typography" },
+      { "name": "The Tabular Record Rule", "body": "font-variant-numeric: tabular-nums is set on body and inherited everywhere. This page is a column of dates and ratings, and proportional digits make that column ripple.", "section": "typography" },
+      { "name": "The Band Voice Rule", "body": "Condensed tracked-out caps are the voice of content carried on a band — an author, a state, a count. They are never used as a kicker or eyebrow above a heading, and never as body copy.", "section": "typography" },
+      { "name": "The Edge-to-Edge Rule", "body": "Bands span the full viewport width. Never inset a band inside a container to make it look like a card.", "section": "layout" },
+      { "name": "The Ruled Signature Rule", "body": "An incomplete row shows ruled empty slots. Never centre a short row, never stretch cells to fill it, and never insert placeholder cards to square it off.", "section": "layout" },
+      { "name": "The Flat Ink Rule", "body": "Every surface is flat at every state. Hover and focus change colour (the \"Add\" cell floods with the fiction band), never height, never blur, never a shadow. Nothing on this page casts light.", "section": "elevation" },
+      { "name": "The One Moment Rule", "body": "The entire surface has exactly one authored animation: an entry's colour band inks in from the spine edge via a clip-path wipe, 620ms on cubic-bezier(0.16, 1, 0.3, 1), animation-fill-mode: backwards. It is gated twice — to entries created since the reader's server-side lastSeenAt, and to the band's first intersection with the viewport. The band renders visible from the server, so with no JS or under prefers-reduced-motion: reduce nothing is hidden and nothing moves.", "section": "components" }
+    ],
+    "dos": [
+      "Do build every new object out of the three bands — colour, field, record — at whatever scale the object needs.",
+      "Do pass every band colour through conditionBand() and every band foreground through readableOn(). Contrast is decided by the helper, never by eye.",
+      "Do keep hairlines at {colors.rule} (ink at 15%) and reserve solid ink borders for the primary action and the year rule.",
+      "Do set numbers in tabular figures; the record is a column of dates and ratings.",
+      "Do use Archivo's width axis for voice: wide for the wordmark (wdth 118), condensed for band labels (wdth 88).",
+      "Do design empty and no-cover states as real settings with real copy — an unfilled slot is ruled, a coverless book gets a typographic jacket.",
+      "Do theme browser surfaces (selection, caret, scrollbar, focus ring) whenever a new one appears.",
+      "Do hold both 390px and 1440px as finished layouts; whole-cell repack, never a list fallback."
+    ],
+    "donts": [
+      "Don't add a box-shadow, an elevation layer, or a lift-on-hover anywhere. Depth is tonal only.",
+      "Don't use a gradient as shading, tint, or decoration. The one gradient in this system draws the shelf's column rules and is a ruling device.",
+      "Don't introduce a second typeface, including for numerals, code, or quotes.",
+      "Don't round a corner past the 2px ceiling, and prefer 0 — nothing shipped uses even 2px.",
+      "Don't hard-code a foreground colour on a coloured band, and don't assume paper reads on the fiction orange (3.32:1, fails AA).",
+      "Don't build a dark mode or invert the ground. This world is printed paper.",
+      "Don't use the condensed tracked-out caps as a kicker or eyebrow above a heading; that voice belongs to content carried on a band.",
+      "Don't use a glyph character, an icon font, or an emoji as an icon or a rating mark. Icons are authored SVG paths.",
+      "Don't invent entries, ratings, reviews, counts, or activity to populate a design. The production database is empty; every state must be honest to that.",
+      "Don't add a second animated moment. If something must move, replace the band wipe rather than joining it."
+    ]
+  }
+}

@@ -1,4 +1,4 @@
-import type { BookDetail, BookSummary } from "./types";
+import type { BookDetail, BookSummary } from "./types.ts";
 
 const ORIGIN = "https://openlibrary.org";
 
@@ -96,6 +96,26 @@ export function normalizeDescription(value: unknown): string | undefined {
   return undefined;
 }
 
+/**
+ * Open Library merges duplicate works and leaves a `/type/redirect` stub at the
+ * old key, holding nothing but a `location` pointing at the surviving work.
+ *
+ * These are common, and a stub has no title, authors, description or covers —
+ * so a caller that does not follow them creates a book row titled after its own
+ * key. Any work key can become one at any time, including one we already saved.
+ *
+ * Returns the target key ("OL893414W") or null if this is not a redirect.
+ */
+export function redirectTarget(body: unknown): string | null {
+  const work = (body ?? {}) as {
+    type?: { key?: unknown };
+    location?: unknown;
+  };
+  if (work.type?.key !== "/type/redirect") return null;
+  if (typeof work.location !== "string" || !work.location) return null;
+  return stripWorkPrefix(work.location);
+}
+
 /** Pure. Merge a /works/{key}.json body onto a summary we already have. */
 export function normalizeWorkResponse(
   summary: BookSummary,
@@ -113,6 +133,25 @@ export function normalizeWorkResponse(
   };
 }
 
+/**
+ * Thrown when Open Library answers with an error status. Carries the status so
+ * callers can tell "this book does not exist" (404) from "Open Library is
+ * having a bad day" (5xx, or a transport failure, which surfaces as a plain
+ * TypeError from fetch). Those two need very different UI.
+ */
+export class OpenLibraryError extends Error {
+  // Declared and assigned separately rather than as a constructor parameter
+  // property: `node --experimental-strip-types` (used by scripts/*.mts) only
+  // erases types, and a parameter property needs real code generation.
+  status: number;
+
+  constructor(status: number, url: string) {
+    super(`Open Library ${status} for ${url}`);
+    this.name = "OpenLibraryError";
+    this.status = status;
+  }
+}
+
 async function fetchJson(url: string, revalidate: number): Promise<unknown> {
   const res = await fetch(url, {
     headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
@@ -121,7 +160,7 @@ async function fetchJson(url: string, revalidate: number): Promise<unknown> {
     next: { revalidate },
   });
   if (!res.ok) {
-    throw new Error(`Open Library ${res.status} for ${url}`);
+    throw new OpenLibraryError(res.status, url);
   }
   return res.json();
 }
@@ -140,25 +179,54 @@ export async function searchBooks(
   return normalizeSearchResponse(await fetchJson(url, ONE_DAY));
 }
 
-/** Fetch one work by its bare key ("OL45804W"). */
+/** How many redirect hops to follow before giving up. Chains are short. */
+const MAX_REDIRECTS = 3;
+
+/**
+ * Fetch one work by its bare key ("OL893414W"), following redirect stubs.
+ *
+ * Returns null when the work genuinely does not exist (404), when a redirect
+ * chain loops, or when it is longer than MAX_REDIRECTS. **Throws** when Open
+ * Library is unreachable or erroring, so the caller can show "temporarily
+ * unavailable" rather than a misleading "book not found".
+ */
 export async function fetchWork(olWorkKey: string): Promise<BookDetail | null> {
-  const key = stripWorkPrefix(olWorkKey);
+  let key = stripWorkPrefix(olWorkKey);
+  const seen = new Set<string>();
 
-  // A work page has no author names or publish year, so we get the summary
-  // from search (which does) and the description from the work endpoint.
-  const [summaries, work] = await Promise.all([
-    searchBooks(`key:/works/${key}`, 1).catch(() => [] as BookSummary[]),
-    fetchJson(`${ORIGIN}/works/${key}.json`, ONE_DAY).catch(() => null),
-  ]);
+  // Resolve redirects first, so the search below runs against the real key.
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    if (seen.has(key)) return null; // cycle
+    seen.add(key);
 
-  if (!work) return null;
+    let body: unknown;
+    try {
+      body = await fetchJson(`${ORIGIN}/works/${key}.json`, ONE_DAY);
+    } catch (error) {
+      // A missing work is a real answer; anything else is our problem to report.
+      if (error instanceof OpenLibraryError && error.status === 404) return null;
+      throw error;
+    }
 
-  const title = (work as { title?: unknown }).title;
-  const summary: BookSummary = summaries[0] ?? {
-    olWorkKey: key,
-    title: typeof title === "string" ? title : key,
-    authors: [],
-  };
+    const target = redirectTarget(body);
+    if (!target) {
+      // A real work. Its endpoint carries the description and covers but no
+      // author names or publish year, so pair it with a search on the same key.
+      const summaries = await searchBooks(`key:/works/${key}`, 1).catch(
+        () => [] as BookSummary[],
+      );
+      const title = (body as { title?: unknown }).title;
+      const summary: BookSummary = summaries[0] ?? {
+        olWorkKey: key,
+        title: typeof title === "string" ? title : key,
+        authors: [],
+      };
+      // Always trust the resolved key over whatever the caller passed in.
+      return normalizeWorkResponse({ ...summary, olWorkKey: key }, body);
+    }
 
-  return normalizeWorkResponse(summary, work);
+    key = target;
+  }
+
+  return null; // too many hops
 }

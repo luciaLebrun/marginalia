@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import searchFixture from "../../../tests/fixtures/openlibrary-search-dune.json";
 import workFixture from "../../../tests/fixtures/openlibrary-work-dune.json";
+import redirectFixture from "../../../tests/fixtures/openlibrary-work-redirect.json";
 import {
   normalizeDescription,
   normalizeSearchResponse,
   normalizeWorkResponse,
   pickIsbn13,
+  redirectTarget,
   stripWorkPrefix,
 } from "./openlibrary";
 
@@ -117,5 +119,29 @@ describe("normalizeWorkResponse", () => {
     const detail = normalizeWorkResponse(summary, {});
     expect(detail.description).toBeUndefined();
     expect(detail.title).toBe("Dune");
+  });
+});
+
+describe("redirectTarget", () => {
+  it("returns the bare target key for a real redirect stub", () => {
+    // Open Library leaves these behind whenever it merges duplicate works.
+    expect(redirectTarget(redirectFixture)).toBe("OL893414W");
+  });
+
+  it("returns null for a real work", () => {
+    expect(redirectTarget(workFixture)).toBeNull();
+  });
+
+  it("returns null for a redirect with no location", () => {
+    expect(redirectTarget({ type: { key: "/type/redirect" } })).toBeNull();
+    expect(
+      redirectTarget({ type: { key: "/type/redirect" }, location: "" }),
+    ).toBeNull();
+  });
+
+  it("tolerates junk", () => {
+    expect(redirectTarget(null)).toBeNull();
+    expect(redirectTarget({})).toBeNull();
+    expect(redirectTarget({ type: "redirect", location: "/works/OL1W" })).toBeNull();
   });
 });

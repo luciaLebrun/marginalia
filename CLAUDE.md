@@ -30,6 +30,11 @@ PostgreSQL on Neon · Better Auth (Google OAuth) · Zod · Vitest.
 Hosting: Vercel Hobby. `main` → production, `develop` → preview, via Vercel's
 Git integration (there is deliberately no deploy workflow).
 
+`vercel.json` sets the build command to `pnpm db:migrate && pnpm build`, so each
+environment migrates the database it points at before building — see ADR 0005.
+A destructive migration must therefore be split across two deploys: expand
+first, contract once nothing reads the old shape.
+
 ## Architectural invariants
 
 These four rules are the ones that are easy to break and expensive to unbreak.
@@ -53,9 +58,52 @@ when openlibrary.org is down — which, being Internet Archive infrastructure, i
 periodically is. Never put an external API call on the path of rendering a
 profile or an existing review.
 
-**4. Nothing reaches the database at module scope.**
+**4. Work keys can be redirect stubs. Always resolve through `fetchWork()`.**
+Open Library merges duplicate works and leaves a `/type/redirect` stub at the
+old key, holding only a `location`. A stub has no title, authors or covers, so
+a caller that does not follow it creates a book titled after its own key. Any
+key can become one at any time, *including one already saved in `book`*. Trust
+the resolved `olWorkKey` that `fetchWork()` returns over the one you passed in.
+
+**5. `fetchWork()` returning null means "no such book". A throw means "Open
+Library is down".**
+Do not collapse the two — the UI must show "not found" and "temporarily
+unavailable" differently. `OpenLibraryError` carries the status.
+
+**6. Nothing reaches the database at module scope.**
 `next build` runs with a placeholder `DATABASE_URL`. Use `getDb()` from
 `src/db`, which constructs lazily. A top-level `drizzle(...)` call breaks CI.
+
+## Auth
+
+Better Auth, Google OAuth only, gated by invite codes. `getAuth()` is lazy for
+the same reason `getDb()` is.
+
+- **The invite gate is the only thing protecting this app.** Google will
+  authenticate anyone on earth; `enforceInvite()` in the `user.create.before`
+  hook is what stops them getting an account. It fails closed — missing,
+  unknown, expired and already-used codes all reject. A throwing `before` hook
+  aborts the whole sign-up, verified in `auth-gate.integration.test.ts`.
+- **Invite codes come from the CSPRNG, never `Math.random()`.** V8 implements
+  `Math.random` with xorshift128+, whose internal state is recoverable from a
+  handful of outputs — someone legitimately sent two or three codes could
+  predict the next ones. `secureRandomInt()` uses `crypto.getRandomValues` with
+  rejection sampling (the 29-character alphabet does not divide 256, so plain
+  `% 29` would bias the early letters and shrink the keyspace). A unit test
+  asserts `Math.random` is never called.
+- **Claiming a code is a single atomic UPDATE** (`SET used_at = now() WHERE
+  used_at IS NULL`), not read-then-write. The race test proves exactly one of
+  five concurrent claims wins. Never "fix" this into a select followed by an
+  update.
+- The code crosses the Google round-trip in a short-lived httpOnly cookie
+  (`INVITE_COOKIE`), because OAuth gives us no way to carry a form field.
+- `transaction: false` on the Drizzle adapter is required: the neon-http driver
+  sends one HTTP request per statement and cannot hold a transaction open. The
+  consequence is that a code is burned if user creation then fails — the safer
+  direction to fail in for a closed POC.
+- Integration tests hit the real database and **skip** when `DATABASE_URL` is
+  missing or a placeholder, so CI stays green without one. Run them with
+  `pnpm test:integration`. They must always clean up after themselves.
 
 ## Conventions
 
@@ -73,11 +121,49 @@ profile or an existing review.
   that public pages point `src` at their CDN, and it keeps us off Vercel Hobby's
   image-transformation quota for images we do not own.
 
+## Frontend, UX review and optimisation → use Impeccable
+
+All UI work on this project goes through the **Impeccable** skill rather than
+ad-hoc design judgement. `PRODUCT.md` holds the confirmed product truth it
+reads; do not restate or contradict it elsewhere.
+
+| Task | Command |
+|---|---|
+| Plan a screen before coding | `impeccable shape` |
+| Build a new surface | Impeccable new-work flow |
+| **UX design review** | `impeccable critique <target>` |
+| Accessibility / responsive / perf audit | `impeccable audit <target>` |
+| **Front-end optimisation** | `impeccable optimize <target>` |
+| Final pass before a release | `impeccable polish <target>` |
+| Spacing, rhythm, hierarchy | `impeccable layout <target>` |
+| Empty and first-run states | `impeccable onboard <target>` |
+| Errors, i18n, edge cases | `impeccable harden <target>` |
+| Record the design system once UI exists | `impeccable document` |
+
+Workflow settings already recorded, do not re-ask: `.impeccable/config.json`
+sets `buildPath: "code"` (build directly; ambition goes in the direction
+contract and is audited at the finish).
+
+After finishing changed UI, run the mechanical detector once:
+`.claude/skills/impeccable/scripts/impeccable detect --json <changed targets>`
+
+DESIGN.md does not exist yet — there is no real UI. It gets created by the
+first new-work flow, not written by hand.
+
+The two project review agents in `.claude/agents/` (`ui-reviewer`,
+`schema-reviewer`) are cheap pre-PR checks for project-specific rules. They do
+not replace `impeccable critique` or `impeccable audit`, which own design
+quality and the technical audit respectively.
+
 ## Git flow
 
 `main` (protected, production, tagged `vX.Y.Z`) · `develop` (default, preview) ·
 `feature/MRG-###-slug` → PR into `develop` · `hotfix/slug` → PR into `main`,
 **then back-merged into `develop`**.
+
+**Merge method:** squash feature and hotfix PRs; use a real merge commit for
+the release (`develop` → `main`) and the back-merge. Squashing a release makes
+the two trunks diverge permanently — see the `gitflow` skill.
 
 Branch names carry the backlog ID. The backlog lives in Obsidian at
 `~/Documents/Notes/Marginalia/Backlog.md`. See the `gitflow` and `backlog`
@@ -93,5 +179,7 @@ src/lib/books/    the ONLY door to Open Library / Google Books
 src/lib/auth.ts   Better Auth config
 tests/fixtures/   recorded API responses
 docs/             architecture.md + adr/   ← decisions live here, not in Obsidian
+PRODUCT.md        confirmed product truth, read by Impeccable
+.impeccable/      Impeccable workflow config
 scripts/          smoke-books.mts
 ```

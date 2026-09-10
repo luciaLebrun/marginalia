@@ -1,0 +1,9 @@
+{
+  "location": "/works/OL893414W",
+  "key": "/works/OL893415W",
+  "type": { "key": "/type/redirect" },
+  "latest_revision": 29,
+  "revision": 29,
+  "created": { "type": "/type/datetime", "value": "2009-12-09T06:52:50.872607" },
+  "last_modified": { "type": "/type/datetime", "value": "2026-07-25T12:46:42.414666" }
+}

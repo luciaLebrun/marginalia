@@ -14,12 +14,20 @@ jobs:
   quality:
     name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
+    env:
+      # Optional. When a DATABASE_URL secret exists, migrations are applied to
+      # it and the integration suite runs against it; when it is absent those
+      # tests skip themselves and the unit suite still passes.
+      #
+      # Point this at a dedicated Neon BRANCH, never production — the
+      # integration tests write and delete rows, and the step below migrates it.
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: pnpm
@@ -33,15 +41,23 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      # Without this, the CI database drifts behind the schema and every
+      # migration breaks the integration suite until someone migrates that
+      # branch by hand. Idempotent: drizzle-kit skips what is already applied.
+      - name: Apply migrations
+        if: env.DATABASE_URL != ''
+        run: pnpm db:migrate
+
       - name: Test with coverage
         run: pnpm test:coverage
 
       - name: Build
         run: pnpm build
         env:
-          # Build-time placeholders. The app must not require a live database
-          # to compile — if this breaks, something is reaching the DB at module
-          # scope instead of at request time.
+          # Build-time placeholders, overriding the job-level DATABASE_URL. The
+          # app must not require a live database to compile — if this breaks,
+          # something is reaching the DB at module scope instead of at request
+          # time.
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
           BETTER_AUTH_SECRET: placeholder-secret-for-build-only
           BETTER_AUTH_URL: http://localhost:3000
@@ -49,7 +65,7 @@ jobs:
           GOOGLE_CLIENT_SECRET: placeholder
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: coverage
           path: coverage/lcov.info
@@ -73,7 +89,7 @@ jobs:
             "to the repository secrets and set sonar.organization in" \
             "sonar-project.properties."
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: env.SONAR_TOKEN != ''
         with:
           # Sonar needs full history to attribute "new code" correctly.
@@ -81,11 +97,11 @@ jobs:
 
       - name: Download coverage
         if: env.SONAR_TOKEN != ''
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: coverage
           path: coverage
 
       - name: SonarQube Scan
         if: env.SONAR_TOKEN != ''
-        uses: SonarSource/sonarqube-scan-action@v8
+        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
