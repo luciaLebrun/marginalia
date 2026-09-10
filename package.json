@@ -14,6 +14,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
+    "db:studio:preview": "node --env-file=.env.preview node_modules/drizzle-kit/bin.cjs studio",
+    "db:studio:prod": "node --env-file=.env.production node_modules/drizzle-kit/bin.cjs studio",
     "db:push": "drizzle-kit push",
     "smoke:books": "node --experimental-strip-types scripts/smoke-books.mts",
     "test:integration": "vitest run src/**/*.integration.test.ts",
