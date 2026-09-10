@@ -21,7 +21,7 @@ export interface Rgb {
 export function hexToRgb(hex: string): Rgb | null {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
   if (!m) return null;
-  const n = parseInt(m[1], 16);
+  const n = Number.parseInt(m[1], 16);
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
 }
 
@@ -76,7 +76,7 @@ export function meetsAA(background: string, foreground: string, large = false): 
 export function fallbackBand(olWorkKey: string): string {
   let hash = 0;
   for (let i = 0; i < olWorkKey.length; i++) {
-    hash = (hash * 31 + olWorkKey.charCodeAt(i)) >>> 0;
+    hash = (hash * 31 + (olWorkKey.codePointAt(i) ?? 0)) >>> 0;
   }
   return CATEGORY_BANDS[hash % CATEGORY_BANDS.length];
 }

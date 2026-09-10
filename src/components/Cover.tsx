@@ -15,11 +15,11 @@ export function Cover({
   coverId,
   title,
   authors,
-}: {
+}: Readonly<{
   coverId: number | null;
   title: string;
   authors: string[];
-}) {
+}>) {
   const src = coverUrl(coverId, "M");
 
   if (!src) {

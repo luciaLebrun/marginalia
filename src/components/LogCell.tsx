@@ -7,7 +7,7 @@ import Link from "next/link";
  * shelf reads as one card that is entirely this action — not as a blank page
  * with a button stranded above it.
  */
-export function LogCell({ emphatic }: { emphatic?: boolean }) {
+export function LogCell({ emphatic }: Readonly<{ emphatic?: boolean }>) {
   return (
     <Link
       href="/search"

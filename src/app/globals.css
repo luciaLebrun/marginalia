@@ -31,6 +31,9 @@
     background: var(--color-paper);
     /* The band colours are strong; keep the overscroll gutter on paper. */
     overscroll-behavior-y: none;
+    /* Scrollbar themed here rather than in a second html rule. */
+    scrollbar-color: var(--color-ink-soft) var(--color-paper-sunk);
+    scrollbar-width: thin;
   }
 
   body {
@@ -52,11 +55,6 @@
   :focus-visible {
     outline: 2px solid var(--color-ink);
     outline-offset: 2px;
-  }
-
-  html {
-    scrollbar-color: var(--color-ink-soft) var(--color-paper-sunk);
-    scrollbar-width: thin;
   }
 
   ::-webkit-scrollbar {

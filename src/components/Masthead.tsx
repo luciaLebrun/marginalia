@@ -5,10 +5,15 @@
 export function Masthead({
   name,
   count,
-}: {
+}: Readonly<{
   name: string | null;
   count: number;
-}) {
+}>) {
+  const tally =
+    count === 0
+      ? "No books logged yet"
+      : `${count} ${count === 1 ? "book" : "books"} logged`;
+
   return (
     <header className="border-b border-ink">
       <div className="bg-band-fiction px-4 py-3 sm:px-6">
@@ -19,11 +24,7 @@ export function Masthead({
         <h1 className="text-[1.75rem] leading-none font-semibold tracking-tight sm:text-[2.25rem]">
           {name ?? "Your reading"}
         </h1>
-        <p className="text-[0.8125rem] font-medium text-ink-soft">
-          {count === 0
-            ? "No books logged yet"
-            : `${count} ${count === 1 ? "book" : "books"} logged`}
-        </p>
+        <p className="text-[0.8125rem] font-medium text-ink-soft">{tally}</p>
       </div>
     </header>
   );

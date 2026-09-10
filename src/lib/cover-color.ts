@@ -1,6 +1,6 @@
 import jpeg from "jpeg-js";
 
-import { CATEGORY_BANDS, conditionBand, rgbToHex, rgbToHsl } from "./color.ts";
+import { conditionBand, rgbToHex, rgbToHsl } from "./color.ts";
 
 /**
  * Derive a band colour from a book's cover art.
@@ -109,4 +109,4 @@ export async function bandColorFromCover(
   }
 }
 
-export { CATEGORY_BANDS };
+export { CATEGORY_BANDS } from "./color.ts";
