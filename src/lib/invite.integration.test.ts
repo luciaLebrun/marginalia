@@ -7,7 +7,7 @@ import {
   claimInviteCode,
   createInviteCodes,
   isInviteCodeUsable,
-  listInviteCodes,
+  listInvitesWithState,
   releaseInviteCode,
 } from "./invite";
 
@@ -76,8 +76,8 @@ describe.skipIf(!hasRealDb)("invite codes (integration)", () => {
     await claimInviteCode(code);
     await attributeInviteCode(code, OWNER);
 
-    const row = (await listInviteCodes(OWNER)).find((r) => r.code === code);
-    expect(row?.usedBy).toBe(OWNER);
+    const row = (await listInvitesWithState(OWNER)).find((r) => r.code === code);
+    expect(row?.state).toBe("spent");
     expect(row?.usedAt).toBeInstanceOf(Date);
   });
 

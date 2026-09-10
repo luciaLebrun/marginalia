@@ -16,7 +16,7 @@
     "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit push",
     "smoke:books": "node --experimental-strip-types scripts/smoke-books.mts",
-    "test:integration": "vitest run src/lib/invite.integration.test.ts",
+    "test:integration": "vitest run src/**/*.integration.test.ts",
     "seed:dev": "node --env-file=.env.local --experimental-strip-types scripts/seed-dev.mts",
     "shot": "node scripts/screenshot.mjs",
     "e2e": "playwright test",

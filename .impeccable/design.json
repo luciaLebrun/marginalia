@@ -34,6 +34,12 @@
         "canonical": "#16130F26",
         "tonalRamp": ["#16130F0D", "#16130F1A", "#16130F26", "#16130F33", "#16130F4D", "#16130F66", "#16130F99", "#16130FCC"]
       },
+      "alarm": {
+        "role": "accent",
+        "displayName": "Alarm Red",
+        "canonical": "oklch(43.5% 0.163 32.2)",
+        "tonalRamp": ["#2E0500", "#4A0A02", "#690F06", "#8A1A0D", "#AE3223", "#CE5B4A", "#E88878", "#FFB8AA"]
+      },
       "band-fiction": {
         "role": "primary",
         "displayName": "Penguin Orange",
@@ -55,12 +61,14 @@
     },
     "typographyMeta": {
       "wordmark": { "displayName": "Wordmark", "purpose": "MARGINALIA on the masthead colour band. Archivo at wdth 118, tracked 0.34em. This voice belongs to the wordmark only." },
-      "display": { "displayName": "Display", "purpose": "The reader's name in the masthead field band. 2.25rem, 3.5rem at 640px." },
-      "headline": { "displayName": "Headline", "purpose": "The year on a year rule. 1.75rem, 2.25rem at 640px." },
+      "display": { "displayName": "Display", "purpose": "The reader's name in the masthead field band and 'Your account' on the sheet. 2.25rem at the base step." },
+      "display-lg": { "displayName": "Display (wide viewport)", "purpose": "The same display voice at 3.5rem from 640px up. A recorded step, not an ad-hoc size." },
+      "headline": { "displayName": "Headline", "purpose": "The year on a year rule, and the door's proposition. 1.75rem, 2.25rem at 640px." },
+      "field": { "displayName": "Field", "purpose": "The value voice: every editable value in the system at 1.375rem — account name, handle and note, the claim handle, the delete confirmation, an invite-code character (1.75rem at 640px in the door mask), and the masthead reading span at 640px. Values are set larger than their labels." },
       "title": { "displayName": "Title", "purpose": "A book title in an entry's record band. Small on purpose; the jacket identifies the book." },
-      "body": { "displayName": "Body", "purpose": "Empty-shelf guidance and signed-out copy. Rare; this surface is a record, not an article." },
-      "label": { "displayName": "Band Label", "purpose": "Content carried on a band: author, Add, Reread, tally, count. Archivo at wdth 88, caps, 0.14em. Never a kicker above a heading." },
-      "meta": { "displayName": "Meta", "purpose": "Dates, counts, Unrated, reading span. Soft ink, tabular figures." }
+      "body": { "displayName": "Body", "purpose": "Empty-shelf guidance, the door's explanation, the delete fence's consequences. Rare; this surface is a record, not an article." },
+      "label": { "displayName": "Band Label", "purpose": "Content carried on a band or a control: author, Add, Reread, tally, count, field label, invite state, every account-surface button. Archivo at wdth 88, caps, 0.14em. Never a kicker above a heading." },
+      "meta": { "displayName": "Meta", "purpose": "Dates, counts, Unrated, reading span. Soft ink, tabular figures. Hints and inline errors sit one step up at 0.8125rem." }
     },
     "shadows": [],
     "motion": [
@@ -73,6 +81,11 @@
         "name": "state-colour",
         "value": "transition: color, background-color",
         "purpose": "Every other state change is colour only. Hover and focus never move, lift, or blur."
+      },
+      {
+        "name": "state-opacity",
+        "value": "transition: opacity; disabled controls at 0.5-0.6",
+        "purpose": "A submitting or unavailable control dims and, when unavailable, is ruled through. No spinner, no skeleton, no movement."
       }
     ],
     "breakpoints": [
@@ -104,7 +117,7 @@
       "refersTo": "masthead-band-colour",
       "description": "The tri-band at page scale: colour band with the wordmark, paper band with the reader's name and reading span, ink band with the tally. Differentiated by ground, not by size.",
       "html": "<header class=\"ds-masthead\"><div class=\"ds-mh-colour\"><p class=\"ds-wordmark\">Marginalia</p><p class=\"ds-label ds-mh-tag\">A reading diary</p></div><div class=\"ds-mh-field\"><h1 class=\"ds-mh-name\">Lucia</h1><p class=\"ds-mh-span\">2025–2026</p></div><div class=\"ds-mh-record\"><p class=\"ds-label\">11 books logged</p></div></header>",
-      "css": ".ds-masthead { font-family: Archivo, ui-sans-serif, system-ui, sans-serif; font-variant-numeric: tabular-nums; } .ds-masthead .ds-label { text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600; font-stretch: 88%; font-size: 0.6875rem; line-height: 1; } .ds-mh-colour { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 20px 24px; background: #E8501B; color: #16130F; } .ds-wordmark { margin: 0; text-transform: uppercase; letter-spacing: 0.34em; font-weight: 700; font-stretch: 118%; line-height: 1; font-size: 1.375rem; } .ds-mh-tag { opacity: 0.8; margin: 0; } .ds-mh-field { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; padding: 28px 24px; background: #F4F1E8; } .ds-mh-name { margin: 0; font-size: 3.5rem; line-height: 0.95; font-weight: 600; letter-spacing: -0.02em; color: #16130F; } .ds-mh-span { margin: 0; font-size: 1.25rem; font-weight: 500; color: #5D564C; } .ds-mh-record { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 24px; background: #16130F; color: #F4F1E8; } .ds-mh-record p { margin: 0; }"
+      "css": ".ds-masthead { font-family: Archivo, ui-sans-serif, system-ui, sans-serif; font-variant-numeric: tabular-nums; } .ds-masthead .ds-label { text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600; font-stretch: 88%; font-size: 0.6875rem; line-height: 1; } .ds-mh-colour { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 20px 24px; background: #E8501B; color: #16130F; } .ds-wordmark { margin: 0; text-transform: uppercase; letter-spacing: 0.34em; font-weight: 700; font-stretch: 118%; line-height: 1; font-size: 1.375rem; } .ds-mh-tag { opacity: 0.8; margin: 0; } .ds-mh-field { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; padding: 28px 24px; background: #F4F1E8; } .ds-mh-name { margin: 0; font-size: 3.5rem; line-height: 0.95; font-weight: 600; letter-spacing: -0.02em; color: #16130F; } .ds-mh-span { margin: 0; font-size: 1.375rem; font-weight: 500; color: #5D564C; } .ds-mh-record { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 24px; background: #16130F; color: #F4F1E8; } .ds-mh-record p { margin: 0; }"
     },
     {
       "name": "Year Rule",
@@ -113,6 +126,38 @@
       "description": "A full-width ruled band opening each year group. A band, not a hairline, because chronology is the shelf's organising structure.",
       "html": "<div class=\"ds-year\"><h2 class=\"ds-year-n\">2026</h2><span class=\"ds-year-c\">6 books</span></div>",
       "css": ".ds-year { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; border-top: 1px solid #16130F; border-bottom: 1px solid #16130F; background: #EAE5D8; padding: 8px 12px; font-family: Archivo, ui-sans-serif, system-ui, sans-serif; font-variant-numeric: tabular-nums; } .ds-year-n { margin: 0; font-size: 2.25rem; line-height: 1; font-weight: 600; letter-spacing: -0.02em; color: #16130F; } .ds-year-c { text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600; font-stretch: 88%; font-size: 0.6875rem; line-height: 1; color: #5D564C; }"
+    },
+    {
+      "name": "Field Row",
+      "kind": "input",
+      "refersTo": "field-row",
+      "description": "One row of the account sheet: band-voice label, value at the field step on a 2px ruled line capped at 34rem, hint below. No box, no fill, no radius. Hairline at rest, solid ink on focus, alarm when the field failed.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-field-label\" for=\"ds-handle\">Handle</label><div class=\"ds-field-line\"><span class=\"ds-field-prefix\" aria-hidden=\"true\">@</span><input class=\"ds-field-input\" id=\"ds-handle\" type=\"text\" value=\"lucia\" autocomplete=\"off\" spellcheck=\"false\" /></div><p class=\"ds-field-hint\">The public address of your diary.</p></div>",
+      "css": ".ds-field { border-bottom: 1px solid var(--color-rule, rgba(22,19,15,0.15)); padding: 20px 24px; background: var(--color-paper, #F4F1E8); color: var(--color-ink, #16130F); font-family: Archivo, ui-sans-serif, system-ui, sans-serif; font-variant-numeric: tabular-nums; } .ds-field-label { display: block; text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600; font-stretch: 88%; font-size: 0.6875rem; line-height: 1; color: var(--color-ink-soft, #5D564C); } .ds-field-line { display: flex; align-items: baseline; max-width: 34rem; margin-top: 8px; border-bottom: 2px solid var(--color-rule, rgba(22,19,15,0.15)); transition: border-color 0.15s; } .ds-field-line:focus-within { border-bottom-color: var(--color-ink, #16130F); } .ds-field-prefix { padding-right: 2px; font-size: 1.375rem; color: var(--color-ink-soft, #5D564C); } .ds-field-input { width: 100%; padding: 4px 0; border: 0; background: transparent; color: inherit; font: inherit; font-size: 1.375rem; line-height: 1.375; font-weight: 600; letter-spacing: -0.01em; outline: none; } .ds-field-hint { max-width: 38rem; margin: 8px 0 0; font-size: 0.8125rem; line-height: 1.6; color: var(--color-ink-soft, #5D564C); } .ds-field[data-invalid] .ds-field-line { border-bottom-color: var(--color-alarm, #951D10); } .ds-field[data-invalid] .ds-field-hint { color: var(--color-alarm, #951D10); }"
+    },
+    {
+      "name": "Code Cells",
+      "kind": "custom",
+      "refersTo": "code-cell",
+      "description": "Eight drawn cells with a drawn dash between the groups — the same component draws a code being typed at the door and a code being handed out in the invite run. Hairline empty, ink filled, sunk paper on the cell awaiting the next keystroke, alarm on all eight when refused, struck ink bar and soft ink when spent.",
+      "html": "<div class=\"ds-codes\"><span class=\"ds-code\"><span class=\"ds-cell ds-cell-filled\">K</span><span class=\"ds-cell ds-cell-filled\">7</span><span class=\"ds-cell ds-cell-filled\">Q</span><span class=\"ds-cell ds-cell-filled\">M</span><span class=\"ds-dash\"><svg width=\"12\" height=\"2\" viewBox=\"0 0 12 2\" aria-hidden=\"true\"><path d=\"M0 1h12\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg></span><span class=\"ds-cell ds-cell-active\">3</span><span class=\"ds-cell\"></span><span class=\"ds-cell\"></span><span class=\"ds-cell\"></span></span><span class=\"ds-code ds-code-spent\"><span class=\"ds-cell ds-cell-filled\">A</span><span class=\"ds-cell ds-cell-filled\">G</span><span class=\"ds-cell ds-cell-filled\">S</span><span class=\"ds-cell ds-cell-filled\">8</span><span class=\"ds-dash\"><svg width=\"12\" height=\"2\" viewBox=\"0 0 12 2\" aria-hidden=\"true\"><path d=\"M0 1h12\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg></span><span class=\"ds-cell ds-cell-filled\">B</span><span class=\"ds-cell ds-cell-filled\">S</span><span class=\"ds-cell ds-cell-filled\">R</span><span class=\"ds-cell ds-cell-filled\">D</span><span class=\"ds-strike\"></span></span></div>",
+      "css": ".ds-codes { display: flex; flex-direction: column; gap: 20px; font-family: Archivo, ui-sans-serif, system-ui, sans-serif; color: var(--color-ink, #16130F); background: var(--color-paper, #F4F1E8); padding: 16px; } .ds-code { position: relative; display: inline-flex; align-items: stretch; gap: 4px; } .ds-cell { display: flex; height: 48px; width: 40px; align-items: center; justify-content: center; border: 1px solid var(--color-rule, rgba(22,19,15,0.15)); border-radius: 0; font-size: 1.375rem; font-weight: 600; font-variant-numeric: tabular-nums; } .ds-cell-filled { border-color: var(--color-ink, #16130F); } .ds-cell-active { border-color: var(--color-ink, #16130F); background: var(--color-paper-sunk, #EAE5D8); } .ds-code[data-invalid] .ds-cell { border-color: var(--color-alarm, #951D10); } .ds-dash { display: flex; width: 12px; flex-shrink: 0; align-items: center; justify-content: center; color: var(--color-ink-soft, #5D564C); } .ds-code-spent { color: var(--color-ink-soft, #5D564C); } .ds-code-spent .ds-cell { border-color: var(--color-rule, rgba(22,19,15,0.15)); } .ds-strike { position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--color-ink, #16130F); }"
+    },
+    {
+      "name": "Commit Band",
+      "kind": "button",
+      "refersTo": "commit-band",
+      "description": "The account sheet's one commit and the system's only viewport-pinned element. Fiction-orange band on a solid ink rule, carrying the verb and a live count of pending fields. Not rendered at all when nothing is pending.",
+      "html": "<div class=\"ds-commit\"><button class=\"ds-commit-btn\" type=\"submit\"><span class=\"ds-commit-verb\">Save</span><span class=\"ds-commit-count\">2 changes pending</span></button></div>",
+      "css": ".ds-commit { position: sticky; bottom: 0; border-top: 1px solid var(--color-ink, #16130F); background: var(--color-paper, #F4F1E8); font-family: Archivo, ui-sans-serif, system-ui, sans-serif; } .ds-commit-btn { display: flex; width: 100%; flex-wrap: wrap; align-items: baseline; column-gap: 16px; row-gap: 4px; border: 0; border-radius: 0; background: var(--color-band-fiction, #E8501B); color: var(--color-ink, #16130F); padding: 16px 24px; text-align: left; text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600; font-stretch: 88%; font-size: 0.6875rem; line-height: 1; font-variant-numeric: tabular-nums; transition: opacity 0.15s; } .ds-commit-btn:disabled { opacity: 0.6; } .ds-commit-btn:focus-visible { outline: 2px solid var(--color-ink, #16130F); outline-offset: 2px; } .ds-commit-verb { font-stretch: 118%; letter-spacing: 0.2em; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "The standing control outside the form — Mint a code, Sign out, Delete this account. Solid ink border when available, hairline while not, alarm when armed and irreversible. Floods with the fiction band on hover and focus; disabled is ruled through, never a grey fill.",
+      "html": "<div class=\"ds-outlines\"><button class=\"ds-outline\" type=\"button\">Mint a code</button><button class=\"ds-outline ds-outline-armed\" type=\"button\">Delete this account</button><button class=\"ds-outline\" type=\"button\" disabled>Delete this account</button></div>",
+      "css": ".ds-outlines { display: flex; flex-wrap: wrap; gap: 12px; background: var(--color-paper, #F4F1E8); padding: 16px; font-family: Archivo, ui-sans-serif, system-ui, sans-serif; } .ds-outline { border: 1px solid var(--color-ink, #16130F); border-radius: 0; background: transparent; color: var(--color-ink, #16130F); padding: 10px 12px; text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600; font-stretch: 88%; font-size: 0.6875rem; line-height: 1; transition: background-color 0.15s, border-color 0.15s, opacity 0.15s; } .ds-outline:enabled:hover, .ds-outline:enabled:focus-visible { background: var(--color-band-fiction, #E8501B); } .ds-outline:focus-visible { outline: 2px solid var(--color-ink, #16130F); outline-offset: 2px; } .ds-outline-armed { border-color: var(--color-alarm, #951D10); } .ds-outline:disabled { border-color: var(--color-rule, rgba(22,19,15,0.15)); text-decoration: line-through; opacity: 0.5; }"
     },
     {
       "name": "Rating",
@@ -141,35 +186,46 @@
   ],
   "narrative": {
     "northStar": "Tri-band",
-    "overview": "Marginalia is drawn as a paperback cover system, not as an app skin. The reference is the mid-century Penguin/Pelican grid: a paper ground, flat opaque ink, one typeface doing every job through weight and width, and a rigid three-band frame — colour, field, record — that carries every object on the page. The frame is applied at two scales: each diary entry is a tri-band cell, and the masthead is the same three bands run at page width. A shelf of four books and a shelf of four hundred read as the same designed object because the frame never varies.\n\nThe density is printed rather than app-like. Cells butt against each other on a 1px hairline, band padding is 8-10px, and there is no card gutter, no elevation, no rounding to soften a join. The one colour that varies is each entry's own band, derived from that book's cover art; everything else on the page is paper, ink, soft ink, or sunk paper. What the world refuses is recorded in the build itself: no dark mode (this is printed paper, and paper does not invert), no shadows, no gradient shading, no second typeface, and no decorative imagery — the book jackets are the only pictures and they arrive from Open Library at unpredictable ratio and quality, so the system holds them in a fixed frame rather than trusting them.\n\nBecause both phone and laptop are equally primary (PRODUCT.md), the shelf repacks whole cells at 2 / 3 / 4 / 6 columns rather than degrading into a list on one of them. And because the production database is genuinely empty, the empty shelf is the first-run surface a real reader meets, designed as one full tri-band cell that is the action — never mocked up with invented entries, ratings, or activity.",
+    "overview": "Marginalia is drawn as a paperback cover system, not as an app skin. The reference is the mid-century Penguin/Pelican grid: a paper ground, flat opaque ink, one typeface doing every job through weight and width, and a rigid three-band frame — colour, field, record — that carries every object on the page. The frame is applied at two scales: each diary entry is a tri-band cell, and the masthead is the same three bands run at page width. A shelf of four books and a shelf of four hundred read as the same designed object because the frame never varies.\n\nThe density is printed rather than app-like. Cells butt against each other on a 1px hairline, band padding is 8-10px, and there is no card gutter, no elevation, no rounding to soften a join. The one colour that varies is each entry's own band, derived from that book's cover art; everything else on the page is paper, ink, soft ink, or sunk paper. What the world refuses is recorded in the build itself: no dark mode (this is printed paper, and paper does not invert), no shadows, no gradient shading, no second typeface, and no decorative imagery — the book jackets are the only pictures and they arrive from Open Library at unpredictable ratio and quality, so the system holds them in a fixed frame rather than trusting them.\n\nBecause both phone and laptop are equally primary (PRODUCT.md), the shelf repacks whole cells at 2 / 3 / 4 / 6 columns rather than degrading into a list on one of them. And because the production database is genuinely empty, the empty shelf is the first-run surface a real reader meets, designed as one full tri-band cell that is the action — never mocked up with invented entries, ratings, or activity.\n\nThe account surfaces extend the same world into interaction. Controls and fields carry their state as printed marks rather than as chrome: a hairline at rest, solid ink once filled, sunk paper on the cell waiting for the next keystroke, a struck bar across a code that is spent. One tone was added to the palette to do the one job ink cannot do — say that something failed — and one element is pinned to the viewport, which the world otherwise never does.",
     "keyCharacteristics": [
       "A three-band frame — colour / field / record — at both cell and page scale",
       "Paper ground, flat ink, hairline rules, zero elevation",
       "One family (Archivo variable), differentiated by weight and by width axis",
       "Band foreground chosen by WCAG contrast at render time, never fixed",
       "Tabular figures everywhere: this page is a record of dates and ratings",
+      "State drawn as a printed mark — rule, fill, strike — never as a chrome control",
       "Exactly one authored motion moment on the whole surface"
     ],
     "rules": [
       { "name": "The Readable Band Rule", "body": "No band ever has a fixed foreground. readableOn() compares the WCAG contrast of ink and paper against the band and returns the winner. This is not a nicety: bands are derived from arbitrary cover art, and paper on the fiction orange is 3.32:1 and fails AA. The same helper decides the masthead, the entry bands, and the \"Add\" cell's hover state.", "section": "colors" },
       { "name": "The Conditioned Ink Rule", "body": "A colour lifted from a jacket is never used raw. conditionBand() floors saturation at 0.35 and clamps lightness into 0.28-0.62, so near-white paper borders, near-black spines, and washed-out scans all land as deliberate flat ink rather than as whatever the scanner captured.", "section": "colors" },
       { "name": "The Stable Colour Rule", "body": "A fallback band is a deterministic hash of the Open Library work key, never random and never per-render. A shelf that reshuffles its own colours between visits reads as broken, not lively.", "section": "colors" },
+      { "name": "The Refusal Tone Rule", "body": "Alarm red says one thing — this was refused, or this is about to destroy something — and it says it as a stroke or as words, never as a fill and never as a band. Nothing on this page is ever tinted with it, nothing is \"styled\" with it, and it never marks a merely optional or informational state. If a new surface needs a second red, the answer is that it does not.", "section": "colors" },
+      { "name": "The Word Beside the Colour Rule", "body": "Colour is never the only carrier of a state. A spent invite is struck and labelled \"Used\"; a refused code is bordered in alarm and explained in a sentence; an unavailable control is ruled through and says what it is waiting for.", "section": "colors" },
       { "name": "The Browser-Surface Rule", "body": "Surfaces we did not draw still belong to the design. Selection, caret, scrollbar track and thumb, and the focus ring are all themed to paper and ink; none may be left at the OS default.", "section": "colors" },
       { "name": "The One Family Rule", "body": "Archivo alone. New weight, new width, new tracking, new case — never a new face. A second family breaks the system this entire surface is built on.", "section": "typography" },
       { "name": "The Tabular Record Rule", "body": "font-variant-numeric: tabular-nums is set on body and inherited everywhere. This page is a column of dates and ratings, and proportional digits make that column ripple.", "section": "typography" },
-      { "name": "The Band Voice Rule", "body": "Condensed tracked-out caps are the voice of content carried on a band — an author, a state, a count. They are never used as a kicker or eyebrow above a heading, and never as body copy.", "section": "typography" },
+      { "name": "The Band Voice Rule", "body": "Condensed tracked-out caps are the voice of content carried on a band — an author, a state, a count, a control, a field's own label. They are never used as a kicker or eyebrow above a heading, and never as body copy.", "section": "typography" },
+      { "name": "The Value Over Label Rule", "body": "A form's value is set larger than its label: label in the 0.6875rem band voice, value at the 1.375rem field step, on a ruled line with no box. A control that inverts this — small value inside a chrome input under a large heading — is not this system.", "section": "typography" },
       { "name": "The Edge-to-Edge Rule", "body": "Bands span the full viewport width. Never inset a band inside a container to make it look like a card.", "section": "layout" },
       { "name": "The Ruled Signature Rule", "body": "An incomplete row shows ruled empty slots. Never centre a short row, never stretch cells to fill it, and never insert placeholder cards to square it off.", "section": "layout" },
+      { "name": "The One Pin Rule", "body": "Bands run in the flow of the page. The single exception is the commit band, which pins to the foot of the viewport only while unsaved work exists and is not rendered at all otherwise — the exception is paid for by the promise that the page never silently holds work. Nothing else floats, sticks, or overlays: no sticky header, no toast, no floating action button, and no second pinned band alongside this one.", "section": "layout" },
       { "name": "The Flat Ink Rule", "body": "Every surface is flat at every state. Hover and focus change colour (the \"Add\" cell floods with the fiction band), never height, never blur, never a shadow. Nothing on this page casts light.", "section": "elevation" },
+      { "name": "The Printed State Rule", "body": "Control and field state is carried by a mark on the page, not by chrome: a hairline at rest (an empty code cell, an unedited field's line, a control not yet available); the same stroke at solid ink when filled or focused; sunk paper as the ground of the cell awaiting the next keystroke; the stroke redrawn in alarm red on refusal, with a sentence in the same tone; a rule run through the control's own label when it is unavailable, never a greyed box; and a 1px ink bar struck across a spent object, which keeps its cells and characters and steps down to soft ink (6.4:1) rather than fading below legibility. Add a state only as another mark — a state that needs a fill, a badge, or a rounded chip is a state this world does not have yet.", "section": "shapes" },
       { "name": "The One Moment Rule", "body": "The entire surface has exactly one authored animation: an entry's colour band inks in from the spine edge via a clip-path wipe, 620ms on cubic-bezier(0.16, 1, 0.3, 1), animation-fill-mode: backwards. It is gated twice — to entries created since the reader's server-side lastSeenAt, and to the band's first intersection with the viewport. The band renders visible from the server, so with no JS or under prefers-reduced-motion: reduce nothing is hidden and nothing moves.", "section": "components" }
     ],
     "dos": [
       "Do build every new object out of the three bands — colour, field, record — at whatever scale the object needs.",
       "Do pass every band colour through conditionBand() and every band foreground through readableOn(). Contrast is decided by the helper, never by eye.",
-      "Do keep hairlines at {colors.rule} (ink at 15%) and reserve solid ink borders for the primary action and the year rule.",
+      "Do keep hairlines at {colors.rule} (ink at 15%) and reserve solid ink borders for the primary action, the year rule, the standing controls, and the delete fence.",
+      "Do draw state as a printed mark — hairline at rest, solid ink filled or focused, sunk paper on the position awaiting the next keystroke, an alarm stroke on refusal, a rule through an unavailable label, a struck bar across a spent code.",
+      "Do reserve {colors.alarm} for refusal, destructive warning, and an armed irreversible control, as a stroke or as words.",
+      "Do say every state in a word as well as a tone: \"Unused\", \"Used\", \"Expired\", \"2 changes pending\".",
+      "Do set an editable value at the field step (1.375rem) on a ruled line, with its label smaller above it.",
       "Do set numbers in tabular figures; the record is a column of dates and ratings.",
       "Do use Archivo's width axis for voice: wide for the wordmark (wdth 118), condensed for band labels (wdth 88).",
-      "Do design empty and no-cover states as real settings with real copy — an unfilled slot is ruled, a coverless book gets a typographic jacket.",
+      "Do design empty and no-cover states as real settings with real copy — an unfilled slot is ruled, a coverless book gets a typographic jacket, an empty invite run says what an invitation does.",
+      "Do cap the measure of a ruled value at 34rem and of prose at 38rem, inside a band that still runs edge to edge.",
       "Do theme browser surfaces (selection, caret, scrollbar, focus ring) whenever a new one appears.",
       "Do hold both 390px and 1440px as finished layouts; whole-cell repack, never a list fallback."
     ],
@@ -180,8 +236,12 @@
       "Don't round a corner past the 2px ceiling, and prefer 0 — nothing shipped uses even 2px.",
       "Don't hard-code a foreground colour on a coloured band, and don't assume paper reads on the fiction orange (3.32:1, fails AA).",
       "Don't build a dark mode or invert the ground. This world is printed paper.",
-      "Don't use the condensed tracked-out caps as a kicker or eyebrow above a heading; that voice belongs to content carried on a band.",
-      "Don't use a glyph character, an icon font, or an emoji as an icon or a rating mark. Icons are authored SVG paths.",
+      "Don't fill a surface with {colors.alarm}, use it as a band, or add a second red. It is a stroke and a sentence, and it means refusal.",
+      "Don't pin, float, or overlay anything else. The commit band is the one exception, and it disappears when there is nothing to commit.",
+      "Don't give a control chrome: no filled input box, no pill, no toggle, no badge, no rounded chip. State is a mark on the page.",
+      "Don't grey out a disabled control as the only signal, and don't delete a spent object from the page — rule through it and keep it legible.",
+      "Don't use the condensed tracked-out caps as a kicker or eyebrow above a heading; that voice belongs to content carried on a band, on a control, or on a field's own label.",
+      "Don't use a glyph character, an icon font, or an emoji as an icon, a rating mark, or the dash inside a code. Icons and separators are authored SVG paths.",
       "Don't invent entries, ratings, reviews, counts, or activity to populate a design. The production database is empty; every state must be honest to that.",
       "Don't add a second animated moment. If something must move, replace the band wipe rather than joining it."
     ]

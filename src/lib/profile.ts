@@ -109,3 +109,54 @@ export async function findByUsername(
   if (!row?.username) return null;
   return { id: row.id, name: row.name, username: row.username, bio: row.bio };
 }
+
+export type UpdateResult =
+  | { ok: true; username: string }
+  | { ok: false; reason: "invalid" | "taken" | "no-such-user" };
+
+/**
+ * Save a reader's whole account in one statement.
+ *
+ * The surface promises one commit for the whole sheet, and this is what makes
+ * that promise true rather than cosmetic: name, username and bio live in one
+ * row, so a single UPDATE either applies all three or none of them. There is
+ * no window in which the name has changed and the handle has not.
+ *
+ * That also means a taken username fails the *whole* save — the coupling is
+ * deliberate. The alternative, writing what worked and reporting what did not,
+ * leaves the page showing a state that is neither what was submitted nor what
+ * was stored.
+ *
+ * Availability is decided by the unique index, not by a check beforehand. Two
+ * readers racing for the same handle both pass a prior SELECT; only one
+ * survives 23505.
+ *
+ * Whether the handle actually moved is the caller's comparison to make: an
+ * UPDATE ... RETURNING hands back the new row, never the one it replaced.
+ */
+export async function updateAccount(
+  userId: string,
+  input: { name: string; username: string; bio: string | null },
+): Promise<UpdateResult> {
+  const username = normalizeUsername(input.username);
+  if (!username) return { ok: false, reason: "invalid" };
+
+  try {
+    const updated = await getDb()
+      .update(schema.user)
+      .set({
+        name: input.name,
+        username,
+        bio: input.bio,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.user.id, userId))
+      .returning({ username: schema.user.username });
+
+    if (updated.length === 0) return { ok: false, reason: "no-such-user" };
+    return { ok: true, username };
+  } catch (error) {
+    if (isUniqueViolation(error)) return { ok: false, reason: "taken" };
+    throw error;
+  }
+}

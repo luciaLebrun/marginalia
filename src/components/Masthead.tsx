@@ -1,8 +1,6 @@
-import { CATEGORY_BANDS, readableOn } from "@/lib/color";
+import Link from "next/link";
 
 import { WordmarkBand } from "./WordmarkBand";
-
-const BAND = CATEGORY_BANDS[0];
 
 /**
  * The masthead is a tri-band at page scale — colour, field, record — so the
@@ -29,10 +27,6 @@ export function Masthead({
   const noun = count === 1 ? "book" : "books";
   const tally = count === 0 ? "Nothing logged yet" : `${count} ${noun} logged`;
 
-  // Paper on this orange is 3.32:1 and fails AA. The same rule every entry
-  // band goes through decides it here.
-  const tone = readableOn(BAND);
-
   return (
     <header>
       <WordmarkBand />
@@ -47,13 +41,22 @@ export function Masthead({
         <h1 className="text-[2.25rem] leading-[0.95] font-semibold tracking-[-0.02em] sm:text-[3.5rem]">
           {name ?? "Your reading"}
         </h1>
-        <p className="text-[1rem] font-medium text-ink-soft tabular-nums sm:text-[1.25rem]">
+        <p className="text-[1rem] font-medium text-ink-soft tabular-nums sm:text-[1.375rem]">
           {span}
         </p>
       </div>
 
+      {/* The record band carries the tally and the only way into the account
+          sheet. A separate nav bar would be a fourth band this page does not
+          have, and this one is already the page's ruled foot. */}
       <div className="flex items-center justify-between gap-4 bg-ink px-4 py-3 text-paper sm:px-6">
         <p className="band-label">{tally}</p>
+        <Link
+          href="/settings"
+          className="band-label underline decoration-paper/40 underline-offset-4 transition-colors hover:decoration-paper"
+        >
+          Your account
+        </Link>
       </div>
     </header>
   );
