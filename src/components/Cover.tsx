@@ -20,7 +20,12 @@ export function Cover({
   title: string;
   authors: string[];
 }>) {
-  const src = coverUrl(coverId, "M");
+  // "M" is 180px wide. A cell is ~231 CSS px on desktop, which is 462 device
+  // px at DSF 2 — every jacket was being upscaled 2.6x and going visibly soft.
+  // "L" is the shipping asset; "M" stays in the srcset so small viewports
+  // still pay a small bill. Both are CoverID URLs; see ADR 0004.
+  const src = coverUrl(coverId, "L");
+  const small = coverUrl(coverId, "M");
 
   if (!src) {
     return (
@@ -44,6 +49,8 @@ export function Cover({
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
+      srcSet={small ? `${small} 180w, ${src} 500w` : undefined}
+      sizes="(min-width: 80rem) 16vw, (min-width: 64rem) 24vw, (min-width: 40rem) 32vw, 48vw"
       alt={authors.length ? `${title} by ${authors[0]}` : title}
       loading="lazy"
       decoding="async"

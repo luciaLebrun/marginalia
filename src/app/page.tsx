@@ -1,9 +1,10 @@
 import { headers } from "next/headers";
 
+import { MarkSeen } from "@/components/MarkSeen";
 import { Masthead } from "@/components/Masthead";
 import { Shelf } from "@/components/Shelf";
 import { getAuth } from "@/lib/auth";
-import { getDiary, getDiaryCount } from "@/lib/diary";
+import { getDiary, getDiaryCount, readingSpan } from "@/lib/diary";
 
 export default async function DiaryPage() {
   const session = await getAuth().api.getSession({
@@ -13,14 +14,19 @@ export default async function DiaryPage() {
   if (!session) return <SignedOut />;
 
   const [entries, count] = await Promise.all([
-    getDiary(session.user.id),
+    getDiary(session.user.id, session.user.lastSeenAt ?? null),
     getDiaryCount(session.user.id),
   ]);
 
   return (
     <main className="flex-1">
-      <Masthead name={session.user.name} count={count} />
+      <Masthead
+        name={session.user.name}
+        span={readingSpan(entries)}
+        count={count}
+      />
       <Shelf entries={entries} />
+      <MarkSeen userId={session.user.id} />
     </main>
   );
 }

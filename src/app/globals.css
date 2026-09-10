@@ -47,9 +47,11 @@
   }
 
   /* Browser surfaces we did not draw still belong to the design. */
+  /* Ink, not paper: paper on this orange is 3.32:1 and fails AA. The same
+     rule readableOn() applies to every entry band applies here. */
   ::selection {
     background: var(--color-band-fiction);
-    color: var(--color-paper);
+    color: var(--color-ink);
   }
 
   :focus-visible {
@@ -80,19 +82,84 @@
 }
 
 @layer utilities {
-  /* The band label voice: tracked-out caps, small, set on flat colour. */
+  /* The band label voice: condensed tracked-out caps on flat colour. The
+     condensed cut is half of OWN-WORLD's "weight and width" — Archivo is
+     loaded with the wdth axis precisely for this contrast. */
   .band-label {
     text-transform: uppercase;
     letter-spacing: 0.14em;
     font-weight: 600;
+    font-stretch: 88%;
     font-size: 0.6875rem;
     line-height: 1;
+  }
+
+  /* The other half: the masthead runs wide against those condensed caps. */
+  .band-wordmark {
+    text-transform: uppercase;
+    letter-spacing: 0.34em;
+    font-weight: 700;
+    font-stretch: 118%;
+    line-height: 1;
+  }
+
+  /*
+   * Fix 8: unfilled slots in a partial row are ruled, the way a printed
+   * signature shows its unfilled positions. The rules are drawn on the
+   * container and every real cell paints over them, so the device costs one
+   * background and needs no filler elements.
+   */
+  .shelf-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 1px;
+    background-color: var(--color-paper);
+    /*
+     * A NON-repeating gradient tiled by background-size. A repeating-linear-
+     * gradient whose last stop is at 1px has a 1px period and paints solid,
+     * which is a grey block, not a ruled sheet.
+     */
+    background-image: linear-gradient(
+      to right,
+      var(--color-rule) 0 1px,
+      transparent 1px
+    );
+    background-repeat: repeat-x;
+    background-size: calc((100% + 1px) / 2) 100%;
+  }
+
+  @media (min-width: 40rem) {
+    .shelf-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      background-size: calc((100% + 1px) / 3) 100%;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .shelf-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      background-size: calc((100% + 1px) / 4) 100%;
+    }
+  }
+
+  @media (min-width: 80rem) {
+    .shelf-grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      background-size: calc((100% + 1px) / 6) 100%;
+    }
   }
 }
 
 /*
-  The one authored motion moment: a new entry's colour band wipes in from the
-  spine edge, the way a flat ink pass lays down. Everything else is static.
+  The one authored motion moment: the colour band of an entry this reader has
+  not seen before inks in from the spine edge, the way a flat ink pass lays
+  down. Everything else is static.
+
+  The class is added on the client and only to genuinely new entries, so a
+  revisit — which PRODUCT.md calls a primary mode — is still. Bands are
+  visible by default and the animation never hides content: with no JS, or
+  with reduced motion, every band simply renders.
 */
 @media (prefers-reduced-motion: no-preference) {
   @keyframes band-ink {
@@ -105,6 +172,6 @@
   }
 
   .band-ink {
-    animation: band-ink 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: band-ink 620ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 }

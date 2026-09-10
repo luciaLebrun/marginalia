@@ -40,6 +40,9 @@ function create() {
         // Unique in the database; a unique index permits many NULLs.
         username: { type: "string", required: false, input: false },
         bio: { type: "string", required: false, input: false },
+        // Read on every diary render to decide which entries are new. Must be
+        // declared here or the session will not carry it.
+        lastSeenAt: { type: "date", required: false, input: false },
       },
     },
 

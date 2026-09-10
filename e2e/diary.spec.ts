@@ -63,10 +63,12 @@ test.describe("reading diary", () => {
     expect(broken).toBe(0);
   });
 
-  test("a partial row leaves paper, not a flooded gutter", async ({ page }) => {
+  test("a partial row leaves ruled paper, not a flooded gutter", async ({ page }) => {
     // The grid once used its own background as gridlines, which looked correct
-    // on a full row and flooded the whole remainder of a partial one.
-    const grids = page.locator("section > div.grid");
+    // on a full row and flooded the whole remainder of a partial one. It now
+    // paints paper with hairline column rules, so the unfilled slots read as a
+    // printed sheet.
+    const grids = page.locator("section > div.shelf-grid");
     const backgrounds = await grids.evaluateAll((nodes) =>
       nodes.map((n) => getComputedStyle(n).backgroundColor),
     );

@@ -1,3 +1,4 @@
+import { BandInk } from "./BandInk";
 import { Cover } from "./Cover";
 import { Rating } from "./Rating";
 import { fallbackBand, readableOn } from "@/lib/color";
@@ -13,6 +14,8 @@ export interface DiaryEntry {
   readAt: Date | null;
   isReread: boolean;
   hasReview: boolean;
+  /** Logged since this reader last opened their diary. */
+  isNew: boolean;
 }
 
 const MONTH = new Intl.DateTimeFormat("en-GB", {
@@ -26,31 +29,21 @@ const MONTH = new Intl.DateTimeFormat("en-GB", {
  * The three bands are the whole system. A shelf of four and a shelf of four
  * hundred are the same designed object because this frame never varies.
  */
-export function Entry({
-  entry,
-  index,
-}: Readonly<{ entry: DiaryEntry; index: number }>) {
+export function Entry({ entry }: Readonly<{ entry: DiaryEntry }>) {
   const band = entry.coverColor ?? fallbackBand(entry.olWorkKey);
   const tone = readableOn(band);
 
   return (
     <article className="group flex flex-col border border-rule bg-paper">
       {/* Band one: the book's own colour, flooded, carrying its author. */}
-      <div
-        className="band-ink flex items-center justify-between gap-2 px-2.5 py-2"
-        style={{
-          background: band,
-          color: tone,
-          animationDelay: `${Math.min(index, 11) * 40}ms`,
-        }}
-      >
+      <BandInk isNew={entry.isNew} background={band} color={tone}>
         <span className="band-label truncate">
           {entry.authors[0] ?? "Unknown"}
         </span>
         {entry.isReread && (
           <span className="band-label shrink-0 opacity-80">Reread</span>
         )}
-      </div>
+      </BandInk>
 
       {/* Band two: the jacket, on paper. */}
       <div className="aspect-[2/3] overflow-hidden bg-paper-sunk">

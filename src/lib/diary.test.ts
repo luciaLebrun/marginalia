@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { groupByYear } from "./diary";
+import { groupByYear, readingSpan } from "./diary";
 import type { DiaryEntry } from "@/components/Entry";
 
 function entry(id: string, readAt: string | null): DiaryEntry {
@@ -15,6 +15,7 @@ function entry(id: string, readAt: string | null): DiaryEntry {
     readAt: readAt === null ? null : new Date(readAt),
     isReread: false,
     hasReview: false,
+    isNew: false,
   };
 }
 
@@ -93,5 +94,53 @@ describe("groupByYear", () => {
     ];
     const total = groupByYear(input).reduce((n, g) => n + g.entries.length, 0);
     expect(total).toBe(input.length);
+  });
+});
+
+describe("readingSpan", () => {
+  it("never returns null — the masthead's right edge cannot be empty", () => {
+    // An empty shelf is what every new account opens on, and a nullable value
+    // here leaves that band a justify-between row with one occupant.
+    expect(readingSpan([], new Date("2026-05-05T00:00:00Z"))).toBe("2026");
+  });
+
+  it("returns a single year when every entry falls in one", () => {
+    expect(
+      readingSpan([entry("a", "2026-01-01"), entry("b", "2026-12-31")]),
+    ).toBe("2026");
+  });
+
+  it("returns the range across years, oldest first", () => {
+    expect(
+      readingSpan([
+        entry("new", "2026-03-01"),
+        entry("old", "2019-08-14"),
+        entry("mid", "2022-01-01"),
+      ]),
+    ).toBe("2019–2026");
+  });
+
+  it("ignores undated entries", () => {
+    expect(
+      readingSpan([entry("dated", "2024-05-05"), entry("undated", null)]),
+    ).toBe("2024");
+  });
+
+  it("falls back to the current year when nothing is dated", () => {
+    expect(
+      readingSpan(
+        [entry("a", null), entry("b", null)],
+        new Date("2031-02-02T00:00:00Z"),
+      ),
+    ).toBe("2031");
+  });
+
+  it("uses UTC for the fallback too", () => {
+    // 1 January anywhere west of UTC is still the previous year locally.
+    expect(readingSpan([], new Date("2027-01-01T00:30:00Z"))).toBe("2027");
+  });
+
+  it("uses UTC, so a 1 January entry does not fall into the previous year", () => {
+    expect(readingSpan([entry("newyear", "2026-01-01")])).toBe("2026");
   });
 });
