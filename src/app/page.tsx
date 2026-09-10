@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 import { MarkSeen } from "@/components/MarkSeen";
 import { Masthead } from "@/components/Masthead";
@@ -12,6 +13,10 @@ export default async function DiaryPage() {
   });
 
   if (!session) return <SignedOut />;
+
+  // A reader without a handle has no address for their diary, so claiming one
+  // comes before anything else they can do here.
+  if (!session.user.username) redirect("/claim");
 
   const [entries, count] = await Promise.all([
     getDiary(session.user.id, session.user.lastSeenAt ?? null),

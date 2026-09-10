@@ -18,6 +18,15 @@ import { bandColorFromCover } from "../src/lib/cover-color.ts";
 const USER_ID = "dev-reader";
 const EMAIL = "dev@marginalia.local";
 
+/**
+ * A second reader who has signed in but claimed nothing yet — the state
+ * `/dev/claim` exercises. Kept separate from dev-reader so the two harness
+ * routes do not fight over one row: the shelf needs a claimed username for
+ * `/@lucia` to resolve, and the claim form needs an unclaimed one.
+ */
+const NEWCOMER_ID = "dev-newcomer";
+const NEWCOMER_EMAIL = "newcomer@marginalia.local";
+
 /** Real books, spread across years so the year rules have something to rule. */
 const SHELF: [query: string, readAt: string, rating: number | null][] = [
   ["Piranesi Susanna Clarke", "2026-08-14", 5],
@@ -50,7 +59,8 @@ const db = getDb();
 if (process.argv.includes("--clear")) {
   await db.delete(schema.log).where(eq(schema.log.userId, USER_ID));
   await db.delete(schema.user).where(eq(schema.user.id, USER_ID));
-  console.log("cleared dev user and their entries (books left cached)");
+  await db.delete(schema.user).where(eq(schema.user.id, NEWCOMER_ID));
+  console.log("cleared dev users and their entries (books left cached)");
   process.exit(0);
 }
 
@@ -58,6 +68,24 @@ await db
   .insert(schema.user)
   .values({ id: USER_ID, name: "Lucia", email: EMAIL, username: "lucia" })
   .onConflictDoNothing();
+
+// Reassert the handle: a claim test or a manual poke may have cleared it, and
+// /@lucia has to resolve for the profile route to be exercisable.
+await db
+  .update(schema.user)
+  .set({ username: "lucia" })
+  .where(eq(schema.user.id, USER_ID));
+
+await db
+  .insert(schema.user)
+  .values({ id: NEWCOMER_ID, name: "Newcomer", email: NEWCOMER_EMAIL })
+  .onConflictDoNothing();
+
+// Always unclaimed, so /dev/claim always has a form to show.
+await db
+  .update(schema.user)
+  .set({ username: null })
+  .where(eq(schema.user.id, NEWCOMER_ID));
 
 await db.delete(schema.log).where(eq(schema.log.userId, USER_ID));
 
