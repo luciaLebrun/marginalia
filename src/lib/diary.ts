@@ -10,7 +10,11 @@ import type { DiaryEntry } from "@/components/Entry";
  * renders from Postgres alone, so it keeps working when openlibrary.org is
  * unreachable — which, being Internet Archive infrastructure, it regularly is.
  */
-export async function getDiary(userId: string): Promise<DiaryEntry[]> {
+export async function getDiary(
+  userId: string,
+  /** Entries logged after this are new to the reader. Null means all are. */
+  lastSeenAt: Date | null = null,
+): Promise<DiaryEntry[]> {
   const rows = await getDb()
     .select({
       id: schema.log.id,
@@ -18,6 +22,7 @@ export async function getDiary(userId: string): Promise<DiaryEntry[]> {
       readAt: schema.log.readAt,
       isReread: schema.log.isReread,
       reviewText: schema.log.reviewText,
+      createdAt: schema.log.createdAt,
       title: schema.book.title,
       authors: schema.book.authors,
       coverId: schema.book.coverId,
@@ -48,7 +53,22 @@ export async function getDiary(userId: string): Promise<DiaryEntry[]> {
     readAt: row.readAt === null ? null : new Date(row.readAt),
     isReread: row.isReread,
     hasReview: Boolean(row.reviewText?.trim()),
+    // A first visit (no lastSeenAt) is not "everything is new" — that would
+    // ink in the whole shelf, which is the entrance the craft floor refuses.
+    isNew: lastSeenAt !== null && row.createdAt > lastSeenAt,
   }));
+}
+
+/**
+ * Record that this reader has now seen their diary. Called from a client
+ * effect rather than during render: a server component must not mutate while
+ * rendering, and React may render it more than once.
+ */
+export async function markDiarySeen(userId: string): Promise<void> {
+  await getDb()
+    .update(schema.user)
+    .set({ lastSeenAt: new Date() })
+    .where(eq(schema.user.id, userId));
 }
 
 /** Books finished, for the masthead count. */
@@ -58,6 +78,33 @@ export async function getDiaryCount(userId: string): Promise<number> {
     .from(schema.log)
     .where(eq(schema.log.userId, userId));
   return row?.count ?? 0;
+}
+
+/**
+ * The years this diary spans, e.g. "2025–2026" or "2026".
+ *
+ * Returns a string always, never null. It holds the right edge of the
+ * masthead's name field, and a nullable value there leaves that band a
+ * justify-between row with one occupant — which is the void this exists to
+ * fill. Two states yield no span of their own and both fall back to the
+ * current year, the year the diary is being started in:
+ *
+ *   - an empty shelf, which is what every new account opens on
+ *   - entries that are all undated (such a diary has no year bands either)
+ *
+ * Derived from the entries rather than read from a column, so unlike a
+ * username it cannot be absent for a real reader.
+ */
+export function readingSpan(entries: DiaryEntry[], now = new Date()): string {
+  const years = entries
+    .map((e) => e.readAt?.getUTCFullYear())
+    .filter((y): y is number => typeof y === "number");
+
+  if (years.length === 0) return String(now.getUTCFullYear());
+
+  const first = Math.min(...years);
+  const last = Math.max(...years);
+  return first === last ? String(first) : `${first}\u2013${last}`;
 }
 
 /**

@@ -4,55 +4,49 @@ import { YearRule } from "./YearRule";
 import { groupByYear } from "@/lib/diary";
 
 /**
- * The grid. Two columns at 360px, six at 1440px, whole-cell repack.
+ * The shelf.
  *
- * The empty shelf is not a special screen — it is this same grid holding one
- * cell, which happens to be the action. That is why the "log a book" cell lives
- * in the grid rather than in a toolbar.
+ * Hairlines come from each cell's own border; the container carries ruled
+ * column lines so the unfilled positions in a partial row read as a printed
+ * signature rather than as a hole. Two columns at 360, six at 1440, whole-cell
+ * repack, chronology running down. See .shelf-grid in globals.css.
  */
-/**
- * The hairlines come from each cell's own border, not from the container's
- * background showing through the gaps. Using the container for gridlines looks
- * identical on a full row and floods the whole remainder of a partial row with
- * rule colour — a shelf of 6 books in a 6-wide grid is fine, a shelf of 7 is a
- * grey void five columns wide.
- */
-const GRID =
-  "grid grid-cols-2 items-start gap-px bg-paper sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6";
-
 export function Shelf({ entries }: Readonly<{ entries: DiaryEntry[] }>) {
-  if (entries.length === 0) {
-    return (
-      <div className="px-4 py-6 sm:px-6">
-        <div className="max-w-[34rem]">
-          <p className="text-[0.9375rem] leading-relaxed text-ink-soft">
-            Nothing logged yet. When you finish a book, add it here with the
-            date you finished and, if you want, a rating and a few words.
-          </p>
-        </div>
-        <div className="mt-5 grid max-w-[16rem] grid-cols-1">
-          <LogCell emphatic />
-        </div>
-      </div>
-    );
-  }
+  if (entries.length === 0) return <EmptyShelf />;
 
   const groups = groupByYear(entries);
-  let rendered = 0;
 
   return (
-    <div className="flex flex-col gap-8 px-4 py-6 sm:px-6">
+    <div className="flex flex-col gap-10 px-4 py-6 sm:px-6">
       {groups.map((group, groupIndex) => (
         <section key={group.year} className="flex flex-col gap-3">
           <YearRule year={group.year} count={group.entries.length} />
-          <div className={GRID}>
+          <div className="shelf-grid">
             {groupIndex === 0 && <LogCell />}
             {group.entries.map((entry) => (
-              <Entry key={entry.id} entry={entry} index={rendered++} />
+              <Entry key={entry.id} entry={entry} />
             ))}
           </div>
         </section>
       ))}
+    </div>
+  );
+}
+
+/**
+ * The empty shelf is one full-width tri-band cell that IS the action.
+ *
+ * PRODUCT.md records that the database is empty, so this is the state a real
+ * reader meets on day one — it is the surface, not an edge case. The contract
+ * refuses "a blank page with a button", so the guidance lives inside the
+ * cell's own record band rather than as a paragraph stranded above it.
+ */
+function EmptyShelf() {
+  return (
+    <div className="px-4 py-6 sm:px-6">
+      <div className="shelf-grid max-w-[24rem] !grid-cols-1">
+        <LogCell emphatic />
+      </div>
     </div>
   );
 }

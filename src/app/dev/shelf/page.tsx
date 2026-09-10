@@ -1,10 +1,11 @@
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
+import { MarkSeen } from "@/components/MarkSeen";
 import { Masthead } from "@/components/Masthead";
 import { Shelf } from "@/components/Shelf";
 import { getDb, schema } from "@/db";
-import { getDiary, getDiaryCount } from "@/lib/diary";
+import { getDiary, getDiaryCount, readingSpan } from "@/lib/diary";
 
 /**
  * Development harness for the diary surface.
@@ -21,7 +22,11 @@ export default async function DevShelfPage() {
   if (process.env.NODE_ENV === "production") notFound();
 
   const [user] = await getDb()
-    .select({ id: schema.user.id, name: schema.user.name })
+    .select({
+      id: schema.user.id,
+      name: schema.user.name,
+      lastSeenAt: schema.user.lastSeenAt,
+    })
     .from(schema.user)
     .where(eq(schema.user.id, "dev-reader"));
 
@@ -36,14 +41,15 @@ export default async function DevShelfPage() {
   }
 
   const [entries, count] = await Promise.all([
-    getDiary(user.id),
+    getDiary(user.id, user.lastSeenAt),
     getDiaryCount(user.id),
   ]);
 
   return (
     <main className="flex-1">
-      <Masthead name={user.name} count={count} />
+      <Masthead name={user.name} span={readingSpan(entries)} count={count} />
       <Shelf entries={entries} />
+      <MarkSeen userId={user.id} />
     </main>
   );
 }
