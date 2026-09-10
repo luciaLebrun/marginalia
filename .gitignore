@@ -51,3 +51,11 @@ next-env.d.ts
 
 # Impeccable: the decision-round server log is per-session noise.
 .impeccable/questions/
+
+# Local screenshots from `pnpm shot`.
+.screenshots/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
