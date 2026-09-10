@@ -9,10 +9,10 @@ export function Masthead({
   name: string | null;
   count: number;
 }>) {
-  const tally =
-    count === 0
-      ? "No books logged yet"
-      : `${count} ${count === 1 ? "book" : "books"} logged`;
+  // Two independent ternaries rather than one nested inside the other: the
+  // plural and the empty case are separate decisions and read better apart.
+  const noun = count === 1 ? "book" : "books";
+  const tally = count === 0 ? "No books logged yet" : `${count} ${noun} logged`;
 
   return (
     <header className="border-b border-ink">
