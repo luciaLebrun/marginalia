@@ -113,6 +113,12 @@ the same reason `getDb()` is.
   Unset means nobody can mint — a misconfigured deployment closes the door
   rather than opening it. The check lives in the server action as well as the
   page, because hiding a button hides nothing.
+- **The first account cannot be invited, so it is exempted.** The gate and the
+  schema deadlock otherwise: no account without a code, and no code without an
+  account. `bootstrapAllowed()` lets the address in `MARGINALIA_OWNER_EMAIL`
+  create an account **only while no accounts exist**, checked before the code
+  is. One account closes it forever, and deleting every account reopens it —
+  which is correct, since an empty deployment must be enterable. See ADR 0008.
 - **The door checks a code before the Google round-trip.** This is a known,
   accepted oracle: a holder can learn their own code is spent. The alternative
   is worse — a typo would send someone through Google only to have sign-up

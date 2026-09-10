@@ -8,6 +8,7 @@ import {
   inviteState,
   normalizeInviteCode,
 } from "./invite-code";
+import { bootstrapAllowed } from "./bootstrap";
 
 export * from "./invite-code";
 
@@ -86,13 +87,39 @@ export async function attributeInviteCode(
  * account here, so it fails closed: no code, unknown code, expired code and
  * already-used code all reject.
  */
-export async function enforceInvite(code: string | undefined): Promise<void> {
+export async function enforceInvite(
+  code: string | undefined,
+  email?: string | null,
+): Promise<void> {
+  // Checked first, so the owner's own account never spends a code.
+  if (await isBootstrap(email)) return;
+
   if (!code) {
     throw new Error("An invite code is required to create an account.");
   }
   if (!(await claimInviteCode(code))) {
     throw new Error("That invite code is not valid or has already been used.");
   }
+}
+
+/**
+ * Is anybody using this deployment yet?
+ *
+ * `limit(1)` rather than a count: the question is existence, and on a table
+ * that will hold a dozen rows the difference is nil, but the intent reads
+ * correctly and it stays cheap if that ever stops being true.
+ */
+export async function hasAnyUser(): Promise<boolean> {
+  const [existing] = await getDb()
+    .select({ id: schema.user.id })
+    .from(schema.user)
+    .limit(1);
+
+  return existing !== undefined;
+}
+
+async function isBootstrap(email: string | null | undefined): Promise<boolean> {
+  return bootstrapAllowed(email, await hasAnyUser());
 }
 
 /** Hand a code back if the signup it was claimed for did not complete. */
