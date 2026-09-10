@@ -10,8 +10,15 @@ import { groupByYear } from "@/lib/diary";
  * cell, which happens to be the action. That is why the "log a book" cell lives
  * in the grid rather than in a toolbar.
  */
+/**
+ * The hairlines come from each cell's own border, not from the container's
+ * background showing through the gaps. Using the container for gridlines looks
+ * identical on a full row and floods the whole remainder of a partial row with
+ * rule colour — a shelf of 6 books in a 6-wide grid is fine, a shelf of 7 is a
+ * grey void five columns wide.
+ */
 const GRID =
-  "grid grid-cols-2 gap-px bg-rule sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6";
+  "grid grid-cols-2 items-start gap-px bg-paper sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6";
 
 export function Shelf({ entries }: { entries: DiaryEntry[] }) {
   if (entries.length === 0) {

@@ -17,7 +17,10 @@
     "db:push": "drizzle-kit push",
     "smoke:books": "node --experimental-strip-types scripts/smoke-books.mts",
     "test:integration": "vitest run src/lib/invite.integration.test.ts",
-    "seed:dev": "node --env-file=.env.local --experimental-strip-types scripts/seed-dev.mts"
+    "seed:dev": "node --env-file=.env.local --experimental-strip-types scripts/seed-dev.mts",
+    "shot": "node scripts/screenshot.mjs",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.7.3",
@@ -31,6 +34,7 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/jpeg-js": "^0.3.7",
     "@types/node": "^22.20.2",
