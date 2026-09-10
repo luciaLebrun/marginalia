@@ -1,5 +1,7 @@
 import { CATEGORY_BANDS, readableOn } from "@/lib/color";
 
+import { WordmarkBand } from "./WordmarkBand";
+
 const BAND = CATEGORY_BANDS[0];
 
 /**
@@ -33,15 +35,7 @@ export function Masthead({
 
   return (
     <header>
-      <div
-        className="flex items-baseline justify-between gap-4 px-4 py-5 sm:px-6 sm:py-7"
-        style={{ background: BAND, color: tone }}
-      >
-        <p className="band-wordmark text-[1rem] sm:text-[1.375rem]">
-          Marginalia
-        </p>
-        <p className="band-label opacity-80">A reading diary</p>
-      </div>
+      <WordmarkBand />
 
       {/* The name field. The reading span holds its right edge so the band is
           not a single word floating in a thousand pixels of paper.
