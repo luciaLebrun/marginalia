@@ -1,5 +1,8 @@
 /** A full-width ruled band. The chronology is the structure, so it is drawn. */
-export function YearRule({ year, count }: { year: string; count: number }) {
+export function YearRule({
+  year,
+  count,
+}: Readonly<{ year: string; count: number }>) {
   return (
     <div className="col-span-full flex items-baseline gap-3 border-b border-ink pb-1.5">
       <h2 className="text-[1.125rem] leading-none font-semibold tracking-tight">

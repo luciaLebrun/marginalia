@@ -7,12 +7,12 @@
 export function Rating({
   value,
   tone,
-}: {
+}: Readonly<{
   /** 0.5 to 5, in half steps. */
   value: number;
   /** Foreground colour of the band this sits on. */
   tone: string;
-}) {
+}>) {
   const marks = [1, 2, 3, 4, 5];
 
   return (
@@ -29,7 +29,7 @@ export function Rating({
   );
 }
 
-function Mark({ fill, tone }: { fill: number; tone: string }) {
+function Mark({ fill, tone }: Readonly<{ fill: number; tone: string }>) {
   const id = `m${Math.round(fill * 100)}`;
   return (
     <svg

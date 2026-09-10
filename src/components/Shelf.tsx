@@ -20,7 +20,7 @@ import { groupByYear } from "@/lib/diary";
 const GRID =
   "grid grid-cols-2 items-start gap-px bg-paper sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6";
 
-export function Shelf({ entries }: { entries: DiaryEntry[] }) {
+export function Shelf({ entries }: Readonly<{ entries: DiaryEntry[] }>) {
   if (entries.length === 0) {
     return (
       <div className="px-4 py-6 sm:px-6">

@@ -26,7 +26,10 @@ const MONTH = new Intl.DateTimeFormat("en-GB", {
  * The three bands are the whole system. A shelf of four and a shelf of four
  * hundred are the same designed object because this frame never varies.
  */
-export function Entry({ entry, index }: { entry: DiaryEntry; index: number }) {
+export function Entry({
+  entry,
+  index,
+}: Readonly<{ entry: DiaryEntry; index: number }>) {
   const band = entry.coverColor ?? fallbackBand(entry.olWorkKey);
   const tone = readableOn(band);
 
