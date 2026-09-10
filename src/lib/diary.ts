@@ -1,4 +1,4 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import { getDb, schema } from "@/db";
 import type { DiaryEntry } from "@/components/Entry";
@@ -27,9 +27,14 @@ export async function getDiary(userId: string): Promise<DiaryEntry[]> {
     .from(schema.log)
     .innerJoin(schema.book, eq(schema.log.bookId, schema.book.id))
     .where(eq(schema.log.userId, userId))
-    // Matches log_user_read_at_idx. Undated entries sort last, then by entry
-    // order, so the column never jumps around between visits.
-    .orderBy(desc(schema.log.readAt), desc(schema.log.createdAt));
+    // NULLS LAST is explicit because Postgres defaults DESC to NULLS FIRST,
+    // which floats undated entries to the top of the shelf. It also matches how
+    // log_user_read_at_idx is built (DESC NULLS LAST), so the two agree — though
+    // the secondary created_at sort means the planner still sorts regardless.
+    .orderBy(
+      sql`${schema.log.readAt} desc nulls last`,
+      sql`${schema.log.createdAt} desc`,
+    );
 
   return rows.map((row) => ({
     id: row.id,

@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import jpeg from "jpeg-js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { dominantColor } from "./cover-color";
+import { bandColorFromCover, dominantColor } from "./cover-color";
 import { hexToRgb, rgbToHsl } from "./color";
 
 /** Build an RGBA buffer from a function of (x, y). */
@@ -24,6 +25,30 @@ function image(
 }
 
 const hueOf = (hex: string) => rgbToHsl(hexToRgb(hex)!).h;
+
+/**
+ * A real encoded JPEG, so the decoder is exercised rather than mocked.
+ *
+ * Deliberately 200px with a little per-pixel noise: a small flat-colour JPEG
+ * compresses to ~677 bytes and trips the 1024-byte guard that exists to catch
+ * Open Library's 1x1 "no cover" placeholder. A fixture has to be at least as
+ * substantial as the real thing it stands in for.
+ */
+function jpegOf(r: number, g: number, b: number, size = 200): ArrayBuffer {
+  const data = new Uint8Array(size * size * 4);
+  for (let i = 0; i < size * size; i++) {
+    const noise = ((i * 2654435761) % 7) - 3;
+    data[i * 4] = r + noise;
+    data[i * 4 + 1] = g + noise;
+    data[i * 4 + 2] = b + noise;
+    data[i * 4 + 3] = 255;
+  }
+  const encoded = jpeg.encode({ data, width: size, height: size }, 90).data;
+  return encoded.buffer.slice(
+    encoded.byteOffset,
+    encoded.byteOffset + encoded.byteLength,
+  ) as ArrayBuffer;
+}
 
 describe("dominantColor", () => {
   it("finds the hue of a solid cover", () => {
@@ -87,5 +112,73 @@ describe("dominantColor", () => {
       expect(s).toBeGreaterThanOrEqual(0.34);
       expect(l).toBeLessThanOrEqual(0.63);
     }
+  });
+});
+
+describe("bandColorFromCover", () => {
+  const fetchMock = vi.fn();
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("does not touch the network without a cover id", async () => {
+    for (const id of [null, undefined, 0, -1]) {
+      await expect(bandColorFromCover(id)).resolves.toBeNull();
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("requests the medium cover by CoverID, never by ISBN", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => jpegOf(200, 40, 40),
+    });
+
+    await bandColorFromCover(11481354);
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("https://covers.openlibrary.org/b/id/11481354-M.jpg");
+    expect(url).not.toContain("/b/isbn/");
+    expect(init.redirect).toBe("follow");
+  });
+
+  it("derives a band colour from a real JPEG", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => jpegOf(30, 90, 200),
+    });
+
+    const hex = await bandColorFromCover(1);
+    expect(hex).toMatch(/^#[0-9A-F]{6}$/);
+    expect(hueOf(hex!)).toBeCloseTo(hueOf("#1E5AC8"), 1);
+  });
+
+  it("returns null for the 1x1 placeholder Open Library serves for missing covers", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => new ArrayBuffer(120),
+    });
+    await expect(bandColorFromCover(1)).resolves.toBeNull();
+  });
+
+  it("returns null rather than throwing when the cover cannot be had", async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 404 });
+    await expect(bandColorFromCover(1)).resolves.toBeNull();
+
+    fetchMock.mockRejectedValue(new TypeError("fetch failed"));
+    await expect(bandColorFromCover(1)).resolves.toBeNull();
+  });
+
+  it("returns null rather than throwing when the bytes are not a JPEG", async () => {
+    // A cover we cannot decode must never block saving a book.
+    fetchMock.mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => new Uint8Array(4096).fill(0x41).buffer,
+    });
+    await expect(bandColorFromCover(1)).resolves.toBeNull();
   });
 });
