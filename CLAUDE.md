@@ -30,6 +30,11 @@ PostgreSQL on Neon · Better Auth (Google OAuth) · Zod · Vitest.
 Hosting: Vercel Hobby. `main` → production, `develop` → preview, via Vercel's
 Git integration (there is deliberately no deploy workflow).
 
+`vercel.json` sets the build command to `pnpm db:migrate && pnpm build`, so each
+environment migrates the database it points at before building — see ADR 0005.
+A destructive migration must therefore be split across two deploys: expand
+first, contract once nothing reads the old shape.
+
 ## Architectural invariants
 
 These four rules are the ones that are easy to break and expensive to unbreak.
