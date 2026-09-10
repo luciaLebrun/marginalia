@@ -63,7 +63,12 @@ function create() {
            * the whole sign-up.
            */
           async before(user) {
-            await enforceInvite((await cookies()).get(INVITE_COOKIE)?.value);
+            // The email comes from Google, not from the form, so the bootstrap
+            // check inside enforceInvite is testing a verified address.
+            await enforceInvite(
+              (await cookies()).get(INVITE_COOKIE)?.value,
+              user.email,
+            );
             return { data: user };
           },
 

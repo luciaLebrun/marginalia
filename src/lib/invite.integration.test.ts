@@ -6,6 +6,8 @@ import {
   attributeInviteCode,
   claimInviteCode,
   createInviteCodes,
+  enforceInvite,
+  hasAnyUser,
   isInviteCodeUsable,
   listInvitesWithState,
   releaseInviteCode,
@@ -93,5 +95,33 @@ describe.skipIf(!hasRealDb)("invite codes (integration)", () => {
 
     await releaseInviteCode(code);
     await expect(isInviteCodeUsable(code)).resolves.toBe(true);
+  });
+
+  /*
+   * The occupancy half of the bootstrap rule. The policy itself is unit-tested
+   * in bootstrap.test.ts; what needs a real database is that this question is
+   * answered by the table rather than by an assumption.
+   */
+  it("reports the deployment as occupied while any account exists", async () => {
+    // The OWNER row is inserted by this suite's beforeAll, so one exists.
+    await expect(hasAnyUser()).resolves.toBe(true);
+  });
+
+  /*
+   * The direction that matters on a populated deployment: once somebody has an
+   * account, the owner's own email buys nothing. Anyone signing up still needs
+   * a code, and the bootstrap door stays shut.
+   */
+  it("still demands a code from the owner once the app is occupied", async () => {
+    const previous = process.env.MARGINALIA_OWNER_EMAIL;
+    process.env.MARGINALIA_OWNER_EMAIL = "owner@gate.test";
+    try {
+      await expect(enforceInvite(undefined, "owner@gate.test")).rejects.toThrow(
+        /invite code is required/i,
+      );
+    } finally {
+      if (previous === undefined) delete process.env.MARGINALIA_OWNER_EMAIL;
+      else process.env.MARGINALIA_OWNER_EMAIL = previous;
+    }
   });
 });
