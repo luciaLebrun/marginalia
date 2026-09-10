@@ -129,6 +129,13 @@ export const book = pgTable(
      */
     coverId: integer("cover_id"),
 
+    /**
+     * Band colour derived from the cover art once, at upsert, and stored.
+     * Null means the cover was monochrome, absent or undecodable — the UI then
+     * falls back to a stable category colour. Never computed at render time.
+     */
+    coverColor: text("cover_color"),
+
     isbn13: text("isbn13"),
     pageCount: integer("page_count"),
     description: text("description"),

@@ -48,3 +48,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Impeccable: the decision-round server log is per-session noise.
+.impeccable/questions/

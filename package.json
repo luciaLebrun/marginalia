@@ -16,13 +16,15 @@
     "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit push",
     "smoke:books": "node --experimental-strip-types scripts/smoke-books.mts",
-    "test:integration": "vitest run src/lib/invite.integration.test.ts"
+    "test:integration": "vitest run src/lib/invite.integration.test.ts",
+    "seed:dev": "node --env-file=.env.local --experimental-strip-types scripts/seed-dev.mts"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.7.3",
     "@neondatabase/serverless": "^1.1.0",
     "better-auth": "^1.7.3",
     "drizzle-orm": "^0.45.2",
+    "jpeg-js": "^0.4.4",
     "next": "16.3.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -30,6 +32,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/jpeg-js": "^0.3.7",
     "@types/node": "^22.20.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -43,7 +46,7 @@
     "vitest": "^5.0.0"
   },
   "packageManager": "pnpm@10.5.0",
-  "description": "A reading diary \u2014 log, rate and review the books you read.",
+  "description": "A reading diary — log, rate and review the books you read.",
   "pnpm": {
     "overrides": {
       "@esbuild-kit/esm-loader": "npm:tsx@^4.23.13",

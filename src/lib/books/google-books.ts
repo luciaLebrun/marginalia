@@ -1,4 +1,4 @@
-import type { BookDetail } from "./types";
+import type { BookDetail } from "./types.ts";
 
 const ORIGIN = "https://www.googleapis.com/books/v1";
 const ONE_WEEK = 60 * 60 * 24 * 7;
