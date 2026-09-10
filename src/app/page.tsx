@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { MarkSeen } from "@/components/MarkSeen";
 import { Masthead } from "@/components/Masthead";
 import { Shelf } from "@/components/Shelf";
+import { SignInDoor } from "@/components/SignInDoor";
+import { WordmarkBand } from "@/components/WordmarkBand";
 import { getAuth } from "@/lib/auth";
 import { getDiary, getDiaryCount, readingSpan } from "@/lib/diary";
 
@@ -37,24 +39,17 @@ export default async function DiaryPage() {
 }
 
 /**
- * Placeholder until the sign-in surface is built (MRG-033). Deliberately plain
- * — inventing a landing page here would set a second visual world before the
- * one this build establishes has shipped.
+ * The door, for anyone without a session. The tri-band cell is the whole
+ * surface: there is nothing to browse here until you are through it.
  */
 function SignedOut() {
   return (
-    <main className="flex flex-1 items-center px-4 py-16 sm:px-6">
-      <div className="max-w-[38rem]">
-        <p className="band-label mb-4 inline-block bg-band-fiction px-2.5 py-2 text-paper">
-          Marginalia
-        </p>
-        <h1 className="text-[2rem] leading-[1.05] font-semibold tracking-tight text-balance sm:text-[2.75rem]">
-          A reading diary.
-        </h1>
-        <p className="mt-4 max-w-[34rem] text-[0.9375rem] leading-relaxed text-ink-soft">
-          Log a book you have finished, rate it, write about it. Marginalia is
-          invite-only; sign-in is not built yet.
-        </p>
+    <main className="flex flex-1 flex-col">
+      <WordmarkBand />
+      {/* The door is the only thing on this page, so it sits in the middle of
+          what is left rather than in the corner of it. */}
+      <div className="flex flex-1 items-center justify-center px-4 py-10 sm:px-6 sm:py-16">
+        <SignInDoor />
       </div>
     </main>
   );

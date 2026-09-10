@@ -14,8 +14,13 @@ pnpm lint             # eslint
 pnpm typecheck        # next typegen && tsc --noEmit  (typegen is required first)
 pnpm test             # vitest run
 pnpm test:coverage    # vitest run --coverage  → coverage/lcov.info for Sonar
+pnpm test:integration # only the suites that need a real DATABASE_URL
 pnpm build            # next build
 pnpm smoke:books      # LIVE check against openlibrary.org (not in CI)
+
+pnpm seed:dev         # one local reader, real books, three invite codes
+pnpm shot /dev/shelf  # screenshot a route at 360/768/1440 (needs pnpm dev)
+pnpm e2e              # playwright, desktop + mobile projects
 
 pnpm db:generate      # drizzle-kit generate — write a migration from schema.ts
 pnpm db:migrate       # drizzle-kit migrate  — apply migrations
@@ -37,7 +42,7 @@ first, contract once nothing reads the old shape.
 
 ## Architectural invariants
 
-These four rules are the ones that are easy to break and expensive to unbreak.
+These are the rules that are easy to break and expensive to unbreak.
 
 **1. Book data only ever flows through `src/lib/books/`.**
 No component, route handler or server action may call `openlibrary.org` or
@@ -101,6 +106,18 @@ the same reason `getDb()` is.
   sends one HTTP request per statement and cannot hold a transaction open. The
   consequence is that a code is burned if user creation then fails — the safer
   direction to fail in for a closed POC.
+- **Only the owner mints codes, and the owner is an env var.**
+  `MARGINALIA_OWNER_EMAIL` (one address or several, comma separated) is checked
+  by `isOwner()` in `src/lib/owner.ts`. Deliberately not a column: it costs no
+  migration, and it cannot be escalated by anything that reaches the database.
+  Unset means nobody can mint — a misconfigured deployment closes the door
+  rather than opening it. The check lives in the server action as well as the
+  page, because hiding a button hides nothing.
+- **The door checks a code before the Google round-trip.** This is a known,
+  accepted oracle: a holder can learn their own code is spent. The alternative
+  is worse — a typo would send someone through Google only to have sign-up
+  aborted on the way back, with the session burned. With 29^8 codes and single
+  figures live, mistyping is the threat model, not guessing.
 - Integration tests hit the real database and **skip** when `DATABASE_URL` is
   missing or a placeholder, so CI stays green without one. Run them with
   `pnpm test:integration`. They must always clean up after themselves.
@@ -112,6 +129,15 @@ the same reason `getDb()` is.
 - **`log` is a diary entry, not a rating.** `(userId, bookId)` is deliberately
   not unique — rereads are separate rows. `rating` and `reviewText` are both
   nullable, independently.
+- **A handle can be changed, and the old one dies.** There is no handle history
+  and no redirect: renaming frees the old name immediately, a link to it 404s,
+  and anyone may take it. `claimUsername()` is the first claim (`WHERE username
+  IS NULL`); `updateAccount()` is the rename. Both let the unique index decide,
+  never a check-then-write.
+- **The account sheet is one UPDATE.** Name, handle and bio are written
+  together or not at all, which is what makes the surface's "one commit"
+  promise true rather than cosmetic. A taken handle fails the whole save on
+  purpose; do not "improve" this into partial writes.
 - **Validate at the boundary with Zod**, in a schema shared by the form and the
   server action. Never trust a server action's input.
 - **Tests run against fixtures in `tests/fixtures/`**, never the live API — a
@@ -147,8 +173,9 @@ contract and is audited at the finish).
 After finishing changed UI, run the mechanical detector once:
 `.claude/skills/impeccable/scripts/impeccable detect --json <changed targets>`
 
-DESIGN.md does not exist yet — there is no real UI. It gets created by the
-first new-work flow, not written by hand.
+DESIGN.md and `.impeccable/design.json` exist, written from the shipped
+tri-band build by the Impeccable documenter — not by hand. An ordinary
+extension does not rewrite them; a new world or an approved system change does.
 
 The two project review agents in `.claude/agents/` (`ui-reviewer`,
 `schema-reviewer`) are cheap pre-PR checks for project-specific rules. They do

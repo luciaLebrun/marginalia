@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   generateInviteCode,
+  inviteState,
   normalizeInviteCode,
   secureRandomInt,
 } from "./invite";
@@ -116,5 +117,36 @@ describe("normalizeInviteCode", () => {
     const once = normalizeInviteCode("k7qm3xpt");
     expect(once).not.toBeNull();
     expect(normalizeInviteCode(once!)).toBe(once);
+  });
+});
+
+describe("inviteState", () => {
+  const NOW = new Date("2026-09-10T12:00:00Z");
+  const later = new Date("2026-10-10T12:00:00Z");
+  const earlier = new Date("2026-08-10T12:00:00Z");
+
+  it("is live while unused and unexpired", () => {
+    expect(inviteState({ usedAt: null, expiresAt: later }, NOW)).toBe("live");
+  });
+
+  it("is expired once the expiry has passed", () => {
+    expect(inviteState({ usedAt: null, expiresAt: earlier }, NOW)).toBe("expired");
+  });
+
+  it("is expired exactly at the expiry instant, not live", () => {
+    expect(inviteState({ usedAt: null, expiresAt: NOW }, NOW)).toBe("expired");
+  });
+
+  it("is spent once used", () => {
+    expect(inviteState({ usedAt: earlier, expiresAt: later }, NOW)).toBe("spent");
+  });
+
+  /*
+   * Spent beats expired. A code somebody walked through, which has since
+   * passed its expiry, is not "expired" — that would describe the wrong thing
+   * happening to it.
+   */
+  it("reports a used code as spent even after it expires", () => {
+    expect(inviteState({ usedAt: earlier, expiresAt: earlier }, NOW)).toBe("spent");
   });
 });
