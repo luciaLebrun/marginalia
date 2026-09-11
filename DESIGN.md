@@ -94,6 +94,11 @@ components:
     textColor: "{colors.ink}"
     typography: "{typography.title}"
     padding: "8px 10px"
+  result-band-colour:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.paper}"
+    typography: "{typography.label}"
+    padding: "8px 10px"
   log-cell:
     backgroundColor: "{colors.paper}"
     textColor: "{colors.ink}"
@@ -234,14 +239,15 @@ populated shelf is nearly always derived from the jacket and conditioned before 
 
 ### Neutral
 - **Paper** (`{colors.paper}`): the page ground and every cell's ground. Also the
-  reversed text colour on the ink band, and one of the two candidates the contrast
+  reversed text colour on every ink band, the focus ring on an ink band, and one of the two candidates the contrast
   helper picks from for band text.
 - **Sunk Paper** (`{colors.paper-sunk}`): the jacket well behind a cover, the
   no-cover setting, the year rule's ground, the ground of the code cell awaiting the
-  next keystroke, and the scrollbar track. It reads as the same sheet pressed
+  next keystroke, the band that says Open Library is unavailable, and the scrollbar
+  track. It reads as the same sheet pressed
   slightly, not as a second surface.
 - **Ink** (`{colors.ink}`): all primary text, all structural borders, the focus
-  ring, the fence around the delete section, and the masthead's record band ground.
+  ring (except on an ink band, where it is paper), the fence around the delete section, and the masthead's record band ground.
 - **Soft Ink** (`{colors.ink-soft}`): dates, counts, the reading span, "Unrated",
   field labels and hints, a closed code's characters, supporting copy, and the
   scrollbar thumb. It is the only tonal step below ink; there is no third text grey.
@@ -281,7 +287,7 @@ what it is waiting for.
 
 **The Browser-Surface Rule.** Surfaces we did not draw still belong to the design.
 Selection, caret, scrollbar track and thumb, and the focus ring are all themed to
-paper and ink; none may be left at the OS default.
+paper and ink; none may be left at the OS default. The focus ring is 2px ink at a 2px offset everywhere except on an ink band, where ink vanishes into the ground and the ring is paper; every control or link set on an ink band carries it.
 
 ## Typography
 
@@ -322,7 +328,9 @@ of the system, and it is what makes a second typeface unnecessary.
   author name, "Add", "Reread", the tally, a year's book count, a field's label, an
   invite's state, and every button on the account surfaces. Two page-scale headings
   ("Invitations", the commit band's verb) run this voice at `wdth` 118 and 0.2em to
-  hold a full-width band.
+  hold a full-width band. Where band-voice text has to wrap — a state line beside a
+  link in a record band at 390px — it takes 1.4 leading and balanced lines instead of
+  its resting line-height of 1.
 - **Meta** (500, 0.6875rem, soft ink, tabular): dates, "Unrated", counts, the
   reading span. Field hints and inline errors sit one step up at 0.8125rem.
 
@@ -447,7 +455,8 @@ page, not by chrome:
 - **At rest** — a hairline (`{colors.rule}`): an empty code cell, an unedited field's
   ruled line, a control that is not yet available.
 - **Filled or focused** — the same stroke at solid ink: a code cell holding a
-  character, a field being typed in (`focus-within`).
+  character, a field being typed in (`focus-within`), a search result under the pointer
+  or keyboard focus.
 - **Awaiting the next keystroke** — sunk paper as the cell's ground, so the position
   the next character lands in is visible without a blinking cursor.
 - **Refused** — the stroke redrawn in alarm red, on the field that failed and on
@@ -482,6 +491,30 @@ printed, impersonal, identical to its four hundred neighbours.
 - **States:** none. The card is not interactive at rest and does not lift, tint, or
   outline on hover.
 
+### Search Result
+
+An Entry Card with the colour held back: a book that is not on the shelf yet.
+Colour is what a book earns by being logged. A jacket colour is only extracted once
+a book is logged, so a result showing a fallback band would change colour at the
+moment it was taken.
+
+- **Shape:** the Entry Card's frame on the shelf grid — square, 1px hairline, paper
+  ground, stretched to its row so the year holds one baseline across a ragged row.
+- **Band one — ink:** ink ground, the first author in paper label type ("Author
+  unknown" when there is none). Never a band colour, conditioned or fallback.
+- **Band two — field:** the same 2:3 sunk-paper well and Cover, including the
+  typographic no-cover jacket, which is the common case in search results, not a
+  rare one.
+- **Band three — record:** the title (balanced) over the first-published year in
+  soft-ink meta, pinned to the foot of the cell.
+- **Hover / focus-visible:** the cell's border and the record band's hairline both
+  go to solid ink, per the Printed State Rule. Nothing fills: sunk paper marks the
+  position awaiting the next keystroke, not the thing under the pointer.
+- **Unavailable:** when Open Library does not answer, the grid is replaced by one
+  sentence of soft-ink body copy on a full-width sunk-paper band. Not alarm, because
+  nothing was refused. It is kept visibly apart from "no matches", which is plain
+  soft-ink body copy on paper.
+
 ### Log Cell (primary action)
 
 The primary action shaped as an entry, so an empty shelf reads as one card that *is*
@@ -510,7 +543,9 @@ device repeated, and the year rule immediately below is already a ruled strip.
   edge so the band is not one word floating in a thousand pixels of paper.
 - **Band three:** ink ground, paper text, the tally in label type ("11 books logged"
   / "Nothing logged yet") left, and the link into the account sheet right. A separate
-  nav bar would be a fourth band this page does not have.
+  nav bar would be a fourth band this page does not have. This band also ships on its
+  own under the search field: the search's state ("5 books", "Searching Open
+  Library…") left, and "Your diary" right.
 
 ### Year Rule
 
