@@ -53,7 +53,8 @@ export function Masthead({
         <p className="band-label">{tally}</p>
         <Link
           href="/settings"
-          className="band-label underline decoration-paper/40 underline-offset-4 transition-colors hover:decoration-paper"
+          // The global focus ring is ink, which vanishes on this band.
+          className="band-label underline decoration-paper/40 underline-offset-4 transition-colors hover:decoration-paper focus-visible:outline-paper"
         >
           Your account
         </Link>
