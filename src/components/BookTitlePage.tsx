@@ -95,7 +95,7 @@ export function BookTitlePage({
           {/* Before the description, not after it: the reads and the line the
               next one goes on are the task, and a long blurb must not push
               them out of the first viewport on either device. */}
-          <DateSlip reads={reads} />
+          <DateSlip reads={reads} bookId={book.id} />
 
           {paragraphs.length > 0 && (
             <div className="mt-8 flex max-w-[34rem] flex-col gap-3 text-[0.9375rem] leading-relaxed text-ink-soft">

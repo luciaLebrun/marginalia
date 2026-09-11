@@ -1,3 +1,4 @@
+import { LogSheet } from "./LogSheet";
 import { Rating } from "./Rating";
 import { describeReads, slipDate, type Read } from "@/lib/book-view";
 import { INK } from "@/lib/color";
@@ -9,8 +10,14 @@ import { INK } from "@/lib/color";
  * It says "your reads" and never "due": the object is borrowed from a library
  * book, the meaning is not. A read date is a value, so it is set at the field
  * step over the band voice, as every value in this world is.
+ *
+ * The blank line is the log sheet's summary. It opens the sheet in place, and
+ * a saved read comes back as a new line at the top of the list.
  */
-export function DateSlip({ reads }: Readonly<{ reads: Read[] }>) {
+export function DateSlip({
+  reads,
+  bookId,
+}: Readonly<{ reads: Read[]; bookId: string }>) {
   return (
     <section aria-labelledby="date-slip-heading" className="mt-8 max-w-[34rem]">
       <div>
@@ -29,10 +36,7 @@ export function DateSlip({ reads }: Readonly<{ reads: Read[] }>) {
           </ol>
         )}
 
-        {/* The next line. Drawn and inert until the log sheet exists to deploy
-            from it (MRG-016), so it is hidden from assistive tech rather than
-            announced as a control that does nothing. */}
-        <div aria-hidden="true" className="h-[3.25rem] border-b-2 border-rule" />
+        <LogSheet bookId={bookId} hasReads={reads.length > 0} />
       </div>
     </section>
   );

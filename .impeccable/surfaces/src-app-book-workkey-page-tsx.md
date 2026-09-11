@@ -2,7 +2,7 @@
 version: 1
 slug: "src-app-book-workkey-page-tsx"
 primary_target: "src/app/book/[workKey]/page.tsx"
-related_targets: ["src/components/BookTitlePage.tsx","src/components/DateSlip.tsx","src/components/BookStates.tsx"]
+related_targets: ["src/components/BookTitlePage.tsx","src/components/DateSlip.tsx","src/components/BookStates.tsx","src/components/LogSheet.tsx"]
 ---
 
 Scope: `/book/[workKey]` — one book, opened through `openBook()`. Reached
@@ -71,7 +71,39 @@ canonical `/book/[key]` · signed out → `/` · no handle → `/claim` · no co
 typographic jacket · no author → "Author unknown" · an absent imprint value →
 its row omitted.
 
+## Log sheet (MRG-016) — extension, confirmed with the user
+
+An addition inside this surface, so it inherits the direction contract above
+unchanged: no concept roll, no new tone, type step or motion.
+
+- The slip's blank line becomes the control: "Log a read" in band voice on the
+  ruled line. It deploys the sheet in place inside the slip's 34rem column — a
+  native disclosure, so it opens without JS; no modal, no navigation. Closing
+  returns the blank line.
+- Fields in the Field Row language (value over label, ruled line, no box):
+  Finished — prefilled with today in the reader's own time zone, changeable, or
+  cleared to Undated; a future date is refused in a sentence. Rating — five
+  drawn marks in half steps over one real range input (the Code Cells pattern),
+  unrated until touched, clearable. Review — optional, grows with the text.
+  Reread — a printed tick, preselected when the slip already has a read.
+- Commit: a fiction-orange band in the flow of the sheet, never pinned — the
+  One Pin Rule's exception stays the account sheet's.
+- After save the reader stays here: the page re-renders, the sheet closes into
+  a new line at the top of the slip, the count updates, and a first read turns
+  the author band to the book's colour. No animation on this page; the diary's
+  ink-in fires on the next diary visit.
+- One Zod schema shared by form and server action; the reader comes from the
+  session, never the form. Refusals land on their field in alarm; a failed
+  save says so and keeps what was typed.
+- States: closed · open · saving · field error · save failed · saved.
+- Confirmed answers: date prefilled with today; stay on the book page after
+  saving; only date, rating, review, reread in this build.
+- Confirmed after the finish review: the review field is set at the body step
+  (0.9375rem, regular), not the field step — a named exception to the Value
+  Over Label Rule for a field that holds paragraphs of prose. Short values stay
+  at the field step.
+
 ## Unresolved
 
-- None blocking. Diary cells linking to their book page is MRG-051, not this
-  build.
+- None blocking. Diary cells linking to their book page is MRG-051; a spoiler
+  flag is MRG-053; editing or removing a read is MRG-054.

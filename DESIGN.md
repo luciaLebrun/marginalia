@@ -149,6 +149,11 @@ components:
     textColor: "{colors.ink}"
     typography: "{typography.label}"
     padding: "16px 16px"
+  commit-band-flow:
+    backgroundColor: "{colors.band-fiction}"
+    textColor: "{colors.ink}"
+    typography: "{typography.label}"
+    padding: "16px 12px"
   button-outline:
     backgroundColor: "{colors.paper}"
     textColor: "{colors.ink}"
@@ -177,6 +182,34 @@ components:
     textColor: "{colors.ink}"
     typography: "{typography.field}"
     padding: "12px 12px"
+  log-sheet-summary:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink-soft}"
+    typography: "{typography.label}"
+    height: "3.25rem"
+    padding: "0 12px"
+  log-sheet-summary-open:
+    textColor: "{colors.ink}"
+  log-sheet-row:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    typography: "{typography.field}"
+    rounded: "0"
+    padding: "16px 12px"
+  log-sheet-review:
+    textColor: "{colors.ink}"
+    typography: "{typography.body}"
+  log-sheet-rating:
+    textColor: "{colors.ink}"
+    size: "32px"
+  reread-tick:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    rounded: "0"
+    size: "20px"
+  text-button:
+    textColor: "{colors.ink}"
+    typography: "{typography.label}"
   page-jacket:
     backgroundColor: "{colors.paper-sunk}"
     textColor: "{colors.ink}"
@@ -238,7 +271,8 @@ entry drawn from that book's own jacket. One tone stands outside it, for refusal
 ### Primary
 - **Penguin Orange** (`{colors.band-fiction}`): the fiction band. The system's
   standing accent — it carries the masthead's colour band, the "Add" affordance's
-  hover and focus fill, the commit band's ground, the outline button's hover and
+  hover and focus fill, the ground of both commit bands (the account sheet's, pinned, and
+  the log sheet's, in the flow), the outline button's hover and
   focus fill, the text selection highlight, and the caret. It is also the first of
   the three fallback bands.
 
@@ -255,11 +289,15 @@ populated shelf is nearly always derived from the jacket and conditioned before 
   neither paper, ink, nor a band. It exists because ink cannot say "this failed"
   when every rule and border on the page is already ink, and because all three band
   colours already mean "a book". It measures 7.6:1 on paper, so it carries body copy
-  as well as a stroke. It appears in exactly four places: the door's refused-code
-  message and all eight of that mask's cell borders, a field-level validation error
-  under the account sheet's ruled value, the handle-rename warning that says the old
-  address dies, and the border of the delete control once the handle has been typed
-  back and the control is armed.
+  as well as a stroke. It appears in exactly six places: the door's refused-code
+  message and all eight of that mask's cell borders; a field-level validation error
+  under the account sheet's ruled value; the handle-rename warning that says the old
+  address dies; the border of the delete control once the handle has been typed
+  back and the control is armed; a refused field on the log sheet, as the error
+  sentence under its row and, where the field has a ruled line (Finished, Review),
+  that line redrawn in alarm — Rating's drawn marks are never recoloured; and the log
+  sheet's general refusal sentence above its commit band, whose "Sign in again" link
+  is underlined in alarm at 40% at rest and in full alarm under the pointer.
 
 ### Neutral
 - **Paper** (`{colors.paper}`): the page ground and every cell's ground. Also the
@@ -280,7 +318,9 @@ populated shelf is nearly always derived from the jacket and conditioned before 
   this reader's shelf, and it draws the 2px rule that parts that author band from the
   wordmark band.
 - **Soft Ink** (`{colors.ink-soft}`): dates, counts, the reading span, a book's
-  subtitle, "Unrated" and "Undated", field and imprint labels and hints, a closed
+  subtitle, "Unrated" and "Undated" (and "N of 5" on the log sheet), the log sheet's
+  "Log a read" line at rest, an empty date field, a placeholder, field and imprint
+  labels and hints, a closed
   code's characters, supporting copy (a book's description among it), the author at
   the foot of a type-only jacket, and the scrollbar thumb. It is the only tonal step below ink; there is no third text grey.
 - **Hairline Rule** (`{colors.rule}`): ink at 15% alpha. Every hairline in the shelf
@@ -288,7 +328,9 @@ populated shelf is nearly always derived from the jacket and conditioned before 
   partial row's unfilled positions — plus the resting stroke under a field value,
   the resting border of an empty code cell, the border of a control that is not
   yet available, the border of a book page's frontispiece, the lines between imprint
-  rows and between reads on the date slip, the slip's closing blank line (at 2px),
+  rows, between reads on the date slip and between the log sheet's rows, the slip's
+  closing "Log a read" line at rest (at 2px), a text button's underline at rest, the
+  empty box of the reread tick,
   the ruled empty frame drawn while a book opens, and a link's underline at rest on
   paper.
 
@@ -358,7 +400,8 @@ of the system, and it is what makes a second typeface unnecessary.
   shelf is ordered by, so it is drawn at a scale that carries across a viewport
   rather than set in the page's smallest type.
 - **Field** (600, 1.375rem, lh snug, −0.01em): the value voice. Every editable value
-  in the system is set at this step — the name, handle and note on the account sheet,
+  in the system but one is set at this step — the name, handle and note on the account
+  sheet, the Finished date on the log sheet (in soft ink while the field is empty),
   the handle on the claim form, the confirmation handle in the delete fence, and the
   characters in an invite-code cell (stepping to 1.75rem at ≥640px in the door's
   mask). The masthead's reading span uses the same step at ≥640px, at weight 500 in
@@ -366,6 +409,8 @@ of the system, and it is what makes a second typeface unnecessary.
   under its title, and a read's date on the date slip is set at this step at 600, in
   ink, or in soft ink when the line says "Undated". Values are larger than their labels here;
   that inversion is deliberate and is what makes a form read as a filled-in sheet.
+  The one exception is the log sheet's review, set at the body step (see the Value
+  Over Label Rule).
 - **Title** (600, 0.8125rem, lh tight, balanced): a book title in an entry's record
   band. Small on purpose — the jacket above it is the identifying object.
 - **Body** (400, 0.9375rem / 0.875rem, lh relaxed, soft ink, capped ~34–38rem):
@@ -374,18 +419,22 @@ of the system, and it is what makes a second typeface unnecessary.
   sentence under a book page's unavailable or not-found band (38rem). Body copy is
   rare here; this surface is a record, not an article. An imprint value (a year, a
   page count, "Open Library") sits at the body size at weight 500 in ink: a value on
-  a ruled line, still larger than its label.
+  a ruled line, still larger than its label. A log sheet's review is set at this
+  size and leading, weight 400, in ink, by the Value Over Label Rule's named
+  exception; the log sheet's general refusal sentence takes the same step in alarm.
 - **Label** (600, 0.6875rem, `wdth` 88, 0.14em tracking, caps): the band voice —
   author name, "Add", "Reread", the tally, a year's book count, a field's label, an
   invite's state, every button on the account surfaces, a book page's author line
-  and state line, the date slip's head and count, and an imprint row's label. Two page-scale headings
-  ("Invitations", the commit band's verb) run this voice at `wdth` 118 and 0.2em to
+  and state line, the date slip's head and count, the log sheet's "Log a read" / "Close" line, its field
+  labels, "Reread" beside its tick, and its text buttons, and an imprint row's label. Two page-scale headings
+  ("Invitations", a commit band's verb) run this voice at `wdth` 118 and 0.2em to
   hold a full-width band. Where band-voice text has to wrap — a state line beside a
   link in a record band at 390px, a two-author line in a book page's author band, the
   author at the foot of a type-only jacket — it takes 1.4 leading and balanced lines instead of
   its resting line-height of 1.
 - **Meta** (500, 0.6875rem, soft ink, tabular): dates, "Unrated", counts, the
-  reading span. Field hints and inline errors sit one step up at 0.8125rem.
+  reading span. Field hints, inline errors and the log sheet's
+  rating readout ("Unrated", "N of 5", at 500) sit one step up at 0.8125rem.
 
 ### Named Rules
 
@@ -404,7 +453,11 @@ They are never used as a kicker or eyebrow above a heading, and never as body co
 **The Value Over Label Rule.** A form's value is set larger than its label: label in
 the 0.6875rem band voice, value at the 1.375rem field step, on a ruled line with no
 box. A control that inverts this — small value inside a chrome input under a large
-heading — is not this system.
+heading — is not this system. One named exception, approved by the user: a field
+that holds paragraphs of prose — the log sheet's review — sets its value at the body
+step (0.9375rem, regular), not the field step, still in ink on a ruled line with no
+box and still under its band-voice label. Short values stay at the field step, and
+no other field joins the exception without the same approval.
 
 ## Layout
 
@@ -417,7 +470,9 @@ field rows, then the ink-banded sections that are not part of the form.
 **Page padding** is 16px, widening to 24px at ≥640px. **Section rhythm** between year
 groups is 40px; a year rule sits 12px above its grid. **Band padding** inside a cell
 is 8px vertical / 10px horizontal; masthead bands run 20–32px vertical. A field row
-runs 20px vertical inside the page padding and is closed by a hairline.
+runs 20px vertical inside the page padding and is closed by a hairline; on the log
+sheet a row runs 16px vertical and 12px horizontal inside the slip's column, on the
+same inset as the slip's lines.
 
 **Measure is capped inside the full-bleed column, not by the column.** The band and
 the row run edge to edge; the ruled line under a value stops at 34rem and a hint or
@@ -445,7 +500,8 @@ of a third. Every block in the title column (title, subtitle, imprint rows, date
 slip, description) hangs on one 34rem right edge, so the page reads as a single set
 measure and a long title wraps on the same edge as the imprint. The date slip comes
 before the description, so a long blurb never pushes the reads out of the first
-viewport. Below 40rem the columns stack 24px apart, 24px under the band, and the
+viewport. The log sheet opens in place inside the slip, on the same 34rem measure,
+and pushes the description down rather than covering anything. Below 40rem the columns stack 24px apart, 24px under the band, and the
 frontispiece is centred at 60% of the width.
 
 **Everything runs in the flow of the page, with one named exception.** The commit
@@ -454,7 +510,8 @@ viewport-pinned element in the build. It is scoped to the whole account column
 rather than to the `<form>` — sticky only holds inside its own containing block, so
 a band nested in the form would unpin exactly where the reader scrolls past the last
 field, which is the stretch of page where unsaved work must not go quiet. It reaches
-the form by `form` id instead of by nesting.
+the form by `form` id instead of by nesting. The log sheet's commit band is a second
+commit band, not a second pin: it sits at the foot of its sheet, in the flow.
 
 **Both viewports are primary.** Neither the 390px nor the 1440px layout is the
 fallback; a change that only holds on one of them is not finished.
@@ -476,7 +533,8 @@ commit band, which pins to the foot of the viewport *only while unsaved work
 exists* and is not rendered at all otherwise — the exception is paid for by the
 promise that the page never silently holds work. Nothing else floats, sticks, or
 overlays: no sticky header, no toast, no floating action button, and no second
-pinned band alongside this one.
+pinned band alongside this one. The log sheet's commit band runs in the flow and
+never pins; the exception stays the account sheet's.
 
 ## Elevation & Depth
 
@@ -508,10 +566,12 @@ and inside cells, 1px solid ink around the "Add" cell, above and below a year ru
 and around the delete fence; a 2px solid ink rule between the wordmark band and a
 book's author band, which a fallback band can match in colour and over a hairline
 would merge with; a 2px ruled line under an editable value, and the same 2px line
-left blank to close the date slip; and a fixed 2:3 jacket frame that never crops,
+closing the date slip as its "Log a read" line; a 20px square in a 1px hairline,
+ink once ticked, around the reread tick; and a fixed 2:3 jacket frame that never crops,
 hairline-bordered where it stands alone as a frontispiece. The single non-rectangular shape in the system is
 the drawn rating mark. Icons and separators are authored SVG paths at 1.5px stroke
-with square line caps — including the dash between the two halves of an invite code,
+with square line caps — including the log line's plus and minus, the reread tick,
+and the dash between the two halves of an invite code,
 which is drawn rather than typed so a screen reader never spells it as part of the
 code. Never an icon font, never an emoji, never a glyph character.
 
@@ -524,19 +584,23 @@ weight, tone, or presence of a printed mark.
 **The Printed State Rule.** Control and field state is carried by a mark on the
 page, not by chrome:
 - **At rest** — a hairline (`{colors.rule}`): an empty code cell, an unedited field's
-  ruled line, a control that is not yet available, the date slip's closing blank
-  line, a link's underline (hairline tone on paper; the band's foreground at 40% on
-  a band).
+  ruled line, a control that is not yet available, the date slip's closing
+  "Log a read" line, a text button's underline, the reread tick's empty box, a link's
+  underline (hairline tone on paper; the band's foreground at 40% on a band; alarm
+  at 40% inside a refusal sentence).
 - **Filled or focused** — the same stroke at solid ink: a code cell holding a
   character, a field being typed in (`focus-within`), a search result under the pointer
-  or keyboard focus, a link's underline under the pointer (the band's full foreground
-  on a band).
+  or keyboard focus, the log line and its words under the pointer, on keyboard focus and
+  while its sheet is open, a ticked reread box (with its tick drawn in), a text
+  button's or link's underline under the pointer (the band's full foreground on a
+  band; full alarm inside a refusal sentence).
 - **Awaiting the next keystroke** — sunk paper as the cell's ground, so the position
   the next character lands in is visible without a blinking cursor.
 - **Refused** — the stroke redrawn in alarm red, on the field that failed and on
-  every cell of a refused code, with a sentence in the same tone.
-- **Unavailable** — a rule run through the control's own label (`line-through`),
-  never a greyed box and never a removed control.
+  every cell of a refused code, with a sentence in the same tone. A refusal with no
+  field of its own is the sentence alone, above the commit it refused.
+- **Unavailable** — a rule run through the control's own label (`line-through`) at
+  50%, never a greyed box and never a removed control.
 - **Spent** — a 1px ink bar struck across the whole object, which keeps its cells and
   its characters so the record of it survives; the tone steps down to soft ink
   (6.4:1) rather than fading below legibility.
@@ -654,8 +718,9 @@ page.
   in hairline tone and going to ink under the pointer.
 - **Band three, record:** the Date Slip, set in the title column straight under the
   imprint rather than as a third full-width band.
-- **States:** the page has none of its own; only its two links respond to hover and
-  focus, and only in colour.
+- **States:** the page has none of its own; its two links and the date slip's "Log a
+  read" line respond to hover and focus, only in colour, and that line deploys the
+  Log Sheet in place.
 
 ### Date Slip
 
@@ -671,11 +736,63 @@ library book, saying "your reads", never "due".
   ink. On the right: a soft-ink "Reread" label when relevant, then the drawn Rating
   in ink, or "Unrated" in soft-ink meta. At 390px the two halves wrap rather than
   shrinking the date.
-- **Blank line:** a 3.25rem empty line closed by a 2px hairline-tone rule, the Field
-  Row's resting line left unfilled. It is inert and `aria-hidden` until a log sheet
-  exists to deploy from it: never announced as a control that does nothing, never
-  labelled "coming soon". A book not on the shelf shows the head and this one line.
-- **States:** none; nothing on the slip is interactive yet.
+- **Closing line:** the summary of the Log Sheet, standing where the next read goes.
+  A 3.25rem line, 12px horizontal padding, closed by a 2px rule: "Log a read" in band
+  voice left, a 14px drawn plus (1.5px stroke, square caps) right. It is the Field
+  Row's resting ruled line, labelled with what goes on it. A book not on the shelf
+  shows the head and this one line.
+- **States:** at rest the words and the plus are soft ink over a hairline-tone rule.
+  Under the pointer and on focus-visible, words, mark and rule go to solid ink, with
+  the standard focus ring. Open, the line stays ink, the visible word becomes "Close"
+  and the plus loses its upright to become a drawn minus; "Close" is `aria-hidden` and
+  "Log a read" remains the accessible name, so the disclosure is announced as "Log a
+  read, expanded", never "Close". Colour only; nothing moves.
+
+### Log Sheet
+
+The date slip's closing line, deployed in place: a native `<details>` whose summary is
+that line and whose body is a short form in the Field Row language. It opens without
+JavaScript, inside the slip's 34rem column, and pushes the description down. There is
+no modal, no overlay, and no navigation. Character: the slip's next line, filled in.
+
+- **Rows:** 16px/12px, each closed by a hairline. The label sits above in soft-ink band
+  voice and the value 8px under it. A value on a line takes the 2px ruled line:
+  hairline at rest, ink on `focus-within`, alarm when it is what was refused. A
+  refused field's sentence prints under its row at 0.8125rem in alarm, and everything
+  typed stays where it was.
+- **Finished:** a native date field at the field step (1.375rem, 600), prefilled on
+  first opening with today in the reader's own zone and capped at it. Empty, it is
+  set in soft ink, so the browser's "mm/dd/yyyy" never reads as a date; the slip sets
+  Undated the same way. Beside it, an "Undated" Text Button empties it. Under the line,
+  a soft-ink 0.8125rem hint gives the date in the slip's own words — "Logs as 11 Sept
+  2026", or "Logs as Undated" — because a native field prints in the browser's locale
+  order.
+- **Rating:** the drawn Rating at 32px in ink, with one real range input (0 to 5 in
+  half steps) lying over the marks: the Code Cells pattern. Its track is transparent
+  and its thumb is a transparent 1px sliver the marks' height, so where the reader
+  taps is the value, and drag, arrow keys and a screen reader all work. The focus ring
+  is drawn around the marks, not around an invisible input. Beside them sit the
+  readout, "Unrated" or "N of 5", in soft ink at 0.8125rem/500, and a "Clear" Text
+  Button. Untouched means unrated.
+- **Review:** a textarea on the ruled line with no box, set at the body step (0.9375rem,
+  400, relaxed leading) in ink, by the Value Over Label Rule's named exception. Its
+  placeholder, "Optional", is plain soft ink. It grows with its text where
+  `field-sizing: content` is supported and starts at three rows elsewhere; no resize
+  handle.
+- **Reread:** a printed tick. A 20px paper square in a 1px hairline beside "Reread" in
+  ink band voice; ticked, the square's border goes to ink and a drawn tick (1.5px,
+  square caps) appears inside it. Preselected when the slip already holds a read.
+- **Refusal without a field:** one body-step sentence in alarm above the commit band —
+  "Not saved: you’re signed out. Sign in again to log this read.", with "Sign in
+  again" linking to the door, or "Not saved: this book is no longer here. Find it
+  again from search."
+- **Commit:** a Commit Band in the flow at the foot of the sheet, 16px under the last
+  row, reading "Save this read", then "Saving…" while the save runs.
+- **After a save:** the sheet remounts closed and empty, focus returns to the "Log a
+  read" line, and a visually hidden live readout says "Read saved." ("Read saved — N
+  logged this visit." on later saves, so its words change every time). The page
+  re-renders, and the new line at the top of the slip, with its updated count, is the
+  confirmation: a record, not a toast. Nothing animates.
 
 ### Book States
 
@@ -697,7 +814,8 @@ focus ring). None uses alarm, because nothing in them was refused.
 
 ### Field Row
 
-One row of the account sheet, and the only text-entry pattern in the system.
+One row of a form — the account sheet's and the log sheet's — and the only text-entry
+pattern in the system.
 Character: a line on a printed form, filled in.
 
 - **Shape:** no box, no fill, no radius. A 2px ruled line under the value, capped at
@@ -705,7 +823,9 @@ Character: a line on a printed form, filled in.
 - **Label:** band voice in soft ink, above the value.
 - **Value:** the field step (1.375rem, 600), transparent ground, prefixed by a
   soft-ink `@` where the value is a handle. A multi-line note uses
-  `field-sizing: content` so the box grows to the text rather than clipping it.
+  `field-sizing: content` so the box grows to the text rather than clipping it. A log
+  sheet's review is the one value set at the body step instead (see the Value Over
+  Label Rule).
 - **States:** hairline at rest, solid ink on `focus-within`, alarm on the failed
   field. A hint sits under the line in soft ink at 0.8125rem and switches to alarm
   when what the reader has typed will destroy something (renaming a handle kills the
@@ -737,20 +857,27 @@ identity is the point of the component.
 
 ### Commit Band
 
-The account sheet's one commit, and the system's one pinned element. Character: a
-band, not a toolbar.
+A form's one commit, set as a band. It ships twice: pinned at the foot of the account
+sheet, where it is the system's one pinned element, and in the flow at the foot of the
+log sheet. Character: a band, not a toolbar.
 
-- **Shape and colour:** full-width fiction-orange band on a solid ink top rule,
-  paper behind it, 16px/24px padding, square.
+- **Shape and colour:** full-width fiction-orange band, square. On the account sheet
+  it sits on a solid ink top rule with paper behind it, 16px/24px padding. On the log
+  sheet it spans the slip's column at 16px/12px with no top rule, because nothing
+  scrolls beneath it.
 - **Content:** the verb at `wdth` 118 / 0.2em, then the live count of fields that
   differ from what the server last rendered ("2 changes pending"), set beside the
   verb rather than pushed to the far end of the band — held apart by
   `justify-between` the count lands a thousand pixels from the word it qualifies.
   Both at full ink: ink on the fiction band is 4.9:1, and the same tone at 80% falls
-  to 3.9:1, under the floor for the only live readout on the page.
-- **States:** absent entirely when nothing is pending; after a successful commit it
-  is replaced in the flow by a soft-ink "Saved" line on a hairline, which is a
-  record, not a toast.
+  to 3.9:1, under the floor for the only live readout on the page. The log sheet's band
+  carries the verb alone, "Save this read".
+- **States:** on the account sheet, absent entirely when nothing is pending; after a
+  successful commit it is replaced in the flow by a soft-ink "Saved" line on a
+  hairline, which is a record, not a toast. On the log sheet it is always present in
+  the open sheet; while saving its verb reads "Saving…", which is the live readout,
+  and the band holds full ink on full orange at full opacity. Only the cursor
+  changes; a faded band would be a greyed box.
 
 ### Outline Button
 
@@ -764,6 +891,19 @@ link. Character: a label with a border drawn around it.
 - **Hover / focus-visible:** floods with the fiction band. Colour only; nothing moves.
 - **Disabled:** the label is ruled through at 50% opacity — the printed mark for
   unavailable — never a grey chrome fill.
+
+### Text Button
+
+The secondary control inside a form row — "Undated" and "Clear" on the log sheet.
+Character: a word in the row's margin, not a second button.
+
+- **Shape:** no border, no ground, no padding; a band-voice label in ink, underlined
+  4px below in hairline tone.
+- **Hover / focus-visible:** the underline goes to ink under the pointer; keyboard focus
+  takes the standard 2px ink ring. Colour only.
+- **Unavailable:** when there is nothing to undo — the date already empty, the rating
+  already unrated — the label is ruled through in ink at 50% opacity, as a disabled
+  Outline Button is. It stays on the page rather than disappearing.
 
 ### Delete Fence
 
@@ -780,7 +920,9 @@ Five drawn marks in authored SVG, half-steps supported by clipping the filled pa
 a fractional width. The unfilled state is **the same shape at 30% opacity** — never a
 different mark, never an outline variant. `tone` is passed in so the marks carry the
 same ink weight as whatever band they sit on. Exposed as `role="img"` with an
-"N out of 5" label.
+"N out of 5" label. `size` sets one mark's pixel size: 11 on the shelf and the slip,
+32 on the log sheet, where the marks are the drawn face of a range input and are
+hidden from assistive tech in favour of it.
 
 ### Cover
 
@@ -827,14 +969,15 @@ moves. No other transition on the page changes anything but colour or opacity.
 - **Do** say every state in a word as well as a tone: "Unused", "Used", "Expired",
   "2 changes pending".
 - **Do** set an editable value at the field step (1.375rem) on a ruled line, with its
-  label smaller above it.
+  label smaller above it. The one named exception is a field that holds
+  paragraphs of prose, set at the body step (0.9375rem).
 - **Do** set numbers in tabular figures; the record is a column of dates and ratings.
 - **Do** use Archivo's width axis for voice: wide for the wordmark (`wdth` 118),
   condensed for band labels (`wdth` 88).
 - **Do** design empty and no-cover states as real settings with real copy — an
   unfilled slot is ruled, a coverless book gets a typographic jacket, an empty invite
   run says what an invitation does, a book with no reads gets a slip with one ruled
-  blank line.
+  line, the one its first read is logged on.
 - **Do** cap the measure of a ruled value at 34rem and of prose at 38rem, inside a
   band that still runs edge to edge. On a title page, hang every block, the title
   included, on one 34rem edge.
@@ -856,8 +999,9 @@ moves. No other transition on the page changes anything but colour or opacity.
 - **Don't** build a dark mode or invert the ground. This world is printed paper.
 - **Don't** fill a surface with `{colors.alarm}`, use it as a band, or add a second
   red. It is a stroke and a sentence, and it means refusal.
-- **Don't** pin, float, or overlay anything else. The commit band is the one
-  exception, and it disappears when there is nothing to commit.
+- **Don't** pin, float, or overlay anything else. The account sheet's commit band is
+  the one exception, and it disappears when there is nothing to commit; the log
+  sheet's commit band runs in the flow.
 - **Don't** give a control chrome: no filled input box, no pill, no toggle, no badge,
   no rounded chip. State is a mark on the page.
 - **Don't** grey out a disabled control as the only signal, and don't delete a spent

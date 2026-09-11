@@ -7,11 +7,14 @@
 export function Rating({
   value,
   tone,
+  size = 11,
 }: Readonly<{
   /** 0.5 to 5, in half steps. */
   value: number;
   /** Foreground colour of the band this sits on. */
   tone: string;
+  /** Pixel size of one mark. The shelf's is 11; the log sheet draws them larger. */
+  size?: number;
 }>) {
   const marks = [1, 2, 3, 4, 5];
 
@@ -23,18 +26,18 @@ export function Rating({
     >
       {marks.map((mark) => {
         const fill = Math.min(Math.max(value - (mark - 1), 0), 1);
-        return <Mark key={mark} fill={fill} tone={tone} />;
+        return <Mark key={mark} fill={fill} tone={tone} size={size} />;
       })}
     </span>
   );
 }
 
-function Mark({ fill, tone }: Readonly<{ fill: number; tone: string }>) {
+function Mark({ fill, tone, size }: Readonly<{ fill: number; tone: string; size: number }>) {
   const id = `m${Math.round(fill * 100)}`;
   return (
     <svg
-      width="11"
-      height="11"
+      width={size}
+      height={size}
       viewBox="0 0 12 12"
       aria-hidden="true"
       focusable="false"
