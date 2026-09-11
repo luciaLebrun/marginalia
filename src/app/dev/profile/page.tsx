@@ -1,9 +1,8 @@
-import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
+import { getDevReader, NoDevReader } from "@/app/dev/dev-reader";
 import { Masthead } from "@/components/Masthead";
 import { Shelf } from "@/components/Shelf";
-import { getDb, schema } from "@/db";
 import { BIO_MAX } from "@/lib/account";
 import { getDiary, getDiaryCount, readingSpan } from "@/lib/diary";
 import { profileMastheadLink } from "@/lib/masthead-link";
@@ -34,25 +33,8 @@ export default async function DevProfilePage({ searchParams }: PageProps<"/dev/p
   const params = await searchParams;
   const viewer = VIEWERS.find((v) => v === params.viewer) ?? "visitor";
 
-  const [user] = await getDb()
-    .select({
-      id: schema.user.id,
-      name: schema.user.name,
-      username: schema.user.username,
-      bio: schema.user.bio,
-    })
-    .from(schema.user)
-    .where(eq(schema.user.id, "dev-reader"));
-
-  if (!user?.username) {
-    return (
-      <main className="flex-1 px-4 py-16 sm:px-6">
-        <p className="max-w-[34rem] text-[0.9375rem] leading-relaxed text-ink-soft">
-          No dev reader found. Run <code>pnpm seed:dev</code> first.
-        </p>
-      </main>
-    );
-  }
+  const user = await getDevReader();
+  if (!user?.username) return <NoDevReader />;
 
   const [entries, count] = await Promise.all([getDiary(user.id, null), getDiaryCount(user.id)]);
 

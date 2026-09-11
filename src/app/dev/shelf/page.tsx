@@ -1,10 +1,9 @@
-import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
+import { getDevReader, NoDevReader } from "@/app/dev/dev-reader";
 import { MarkSeen } from "@/components/MarkSeen";
 import { Masthead } from "@/components/Masthead";
 import { Shelf } from "@/components/Shelf";
-import { getDb, schema } from "@/db";
 import { getDiary, getDiaryCount, readingSpan } from "@/lib/diary";
 
 /**
@@ -21,24 +20,8 @@ import { getDiary, getDiaryCount, readingSpan } from "@/lib/diary";
 export default async function DevShelfPage() {
   if (process.env.NODE_ENV === "production") notFound();
 
-  const [user] = await getDb()
-    .select({
-      id: schema.user.id,
-      name: schema.user.name,
-      lastSeenAt: schema.user.lastSeenAt,
-    })
-    .from(schema.user)
-    .where(eq(schema.user.id, "dev-reader"));
-
-  if (!user) {
-    return (
-      <main className="flex-1 px-4 py-16 sm:px-6">
-        <p className="max-w-[34rem] text-[0.9375rem] leading-relaxed text-ink-soft">
-          No dev reader found. Run <code>pnpm seed:dev</code> first.
-        </p>
-      </main>
-    );
-  }
+  const user = await getDevReader();
+  if (!user) return <NoDevReader />;
 
   const [entries, count] = await Promise.all([
     getDiary(user.id, user.lastSeenAt),
