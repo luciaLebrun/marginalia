@@ -86,6 +86,11 @@ when openlibrary.org is down — which, being Internet Archive infrastructure, i
 periodically is. Never put an external API call on the path of rendering a
 profile or an existing review.
 
+`openBook()` in `src/lib/book.ts` is the only app code that writes to `book`,
+and the only path by which a book is opened. It returns `found`, `not-found` or
+`unavailable`, and a stored row is returned without reaching Open Library.
+Reach for it rather than calling `fetchWork()` from a page.
+
 **4. Work keys can be redirect stubs. Always resolve through `fetchWork()`.**
 Open Library merges duplicate works and leaves a `/type/redirect` stub at the
 old key, holding only a `location`. A stub has no title, authors or covers, so
