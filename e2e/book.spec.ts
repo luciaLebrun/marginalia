@@ -176,6 +176,121 @@ test.describe("book page", () => {
     await expect(page.getByText(/isn’t answering/)).toHaveCount(0);
   });
 
+  test.describe("the log sheet", () => {
+    const openSheet = async (page: Page, state = "new") => {
+      await page.goto(`/dev/book?state=${state}`, { waitUntil: "networkidle" });
+      await page.locator("summary", { hasText: "Log a read" }).click();
+    };
+
+    test("opens in place from the slip's blank line, dated today", async ({ page }) => {
+      await openSheet(page);
+
+      const today = await page.evaluate(() => {
+        const now = new Date();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        return `${now.getFullYear()}-${month}-${day}`;
+      });
+      await expect(page.getByLabel("Finished")).toHaveValue(today);
+      // In place: no navigation, no dialog.
+      await expect(page).toHaveURL(/\/dev\/book\?state=new$/);
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+    });
+
+    /*
+     * The native field prints in the browser's order (09/11 or 11/09), so the
+     * sheet says in words what the slip will print.
+     */
+    test("says in the slip's own words which day it will log", async ({ page }) => {
+      await openSheet(page);
+      // Wait for the sheet to date itself, so this tests the wording rather
+      // than racing the asynchronous toggle event.
+      await expect(page.getByText(/^Logs as /)).toBeVisible();
+
+      await page.getByLabel("Finished").fill("2026-08-14");
+      await expect(page.getByText("Logs as 14 Aug 2026")).toBeVisible();
+    });
+
+    test("clears the date to Undated, and says so", async ({ page }) => {
+      await openSheet(page);
+
+      await page.getByRole("button", { name: "Undated" }).click();
+      await expect(page.getByLabel("Finished")).toHaveValue("");
+      await expect(page.getByText("Logs as Undated")).toBeVisible();
+      // An empty field's "mm/dd/yyyy" is set in soft ink, so it never reads as
+      // a date — the slip prints Undated the same way.
+      await expect(page.getByLabel("Finished")).toHaveCSS("color", "rgb(93, 86, 76)");
+
+      // Unavailable is ruled through, never only greyed.
+      const undated = page.getByRole("button", { name: "Undated" });
+      await expect(undated).toBeDisabled();
+      await expect(undated).toHaveCSS("text-decoration-line", "line-through");
+    });
+
+    /*
+     * One real range input under drawn marks, so the keyboard and a screen
+     * reader get a rating control, not five decorative stars.
+     */
+    test("takes a half-step rating from the keyboard, and clears it", async ({ page }) => {
+      await openSheet(page);
+
+      const rating = page.getByLabel("Rating");
+      await expect(rating).toHaveAttribute("aria-valuetext", "Unrated");
+
+      await rating.focus();
+      for (let step = 0; step < 9; step++) await page.keyboard.press("ArrowRight");
+      await expect(rating).toHaveAttribute("aria-valuetext", "4.5 out of 5");
+      await expect(rating).toHaveValue("4.5");
+
+      await page.getByRole("button", { name: "Clear" }).click();
+      await expect(rating).toHaveAttribute("aria-valuetext", "Unrated");
+    });
+
+    test("ticks Reread in advance only when the slip already has a read", async ({ page }) => {
+      await openSheet(page, "new");
+      await expect(page.getByLabel("Reread")).not.toBeChecked();
+
+      await openSheet(page, "shelf");
+      await expect(page.getByLabel("Reread")).toBeChecked();
+    });
+
+    /*
+     * The harness has no session, and the action must refuse without one —
+     * whatever the form sends. The typing survives the refusal.
+     */
+    test("refuses to save without a signed-in reader, keeping what was typed", async ({ page }) => {
+      await openSheet(page);
+      await page.getByLabel("Review").fill("A first go.");
+
+      await page.getByRole("button", { name: "Save this read" }).click();
+
+      // Says nothing was saved, and offers the way back in.
+      await expect(page.locator("form [role=alert]")).toContainText("Not saved");
+      await expect(page.getByRole("link", { name: "Sign in again" })).toHaveAttribute("href", "/");
+      await expect(page.getByLabel("Review")).toHaveValue("A first go.");
+    });
+
+    test("closes back to the blank line", async ({ page }) => {
+      await openSheet(page);
+      await expect(page.getByLabel("Finished")).toBeVisible();
+      // Open, the disclosure keeps its name; only its drawn mark and visible
+      // word change.
+      await expect(page.locator("summary")).toHaveAccessibleName("Log a read");
+
+      await page.locator("summary", { hasText: "Close" }).click();
+      await expect(page.getByLabel("Finished")).toBeHidden();
+      await expect(page.locator("summary", { hasText: "Log a read" })).toBeVisible();
+    });
+
+    test("never scrolls sideways with the sheet open", async ({ page }) => {
+      await openSheet(page, "shelf");
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(0);
+    });
+  });
+
   test("keeps the way back to the diary on every state", async ({ page }) => {
     for (const state of ["new", "shelf", "opening", "down", "missing"]) {
       await page.goto(`/dev/book?state=${state}`, { waitUntil: "networkidle" });

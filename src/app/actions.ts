@@ -16,6 +16,8 @@ import {
 } from "@/lib/invite";
 import { isOwner } from "@/lib/owner";
 import { claimUsername, updateAccount } from "@/lib/profile";
+import { createRead } from "@/lib/read";
+import { isLogReadField, readSchema, type LogReadField } from "@/lib/read-schema";
 import {
   handlePath,
   normalizeUsername,
@@ -273,4 +275,83 @@ export async function deleteAccountAction(
   await getAuth().api.signOut({ headers: await headers() });
 
   redirect("/");
+}
+
+/* -------------------------------------------------------------------------- */
+/* The log sheet                                                               */
+/* -------------------------------------------------------------------------- */
+
+export interface LogReadState {
+  error: string | null;
+  /** Field-scoped, so a refusal lands on the row that caused it. */
+  field: LogReadField | null;
+  /** The session is gone: the sheet offers the way back in, not just a refusal. */
+  signedOut: boolean;
+  /**
+   * How many reads this sheet has saved. The sheet is keyed on it, so each
+   * save remounts it closed and clean while a refusal leaves the typing alone.
+   */
+  saved: number;
+}
+
+/**
+ * Log one read of a book into the signed-in reader's diary.
+ *
+ * The reader comes from the session and never from the form — a server action
+ * is a public endpoint, and an id in the form would let anyone write into
+ * anyone's diary. The book id does come from the form; the foreign key decides
+ * whether it is real, and a reader can only ever write into their own diary.
+ */
+export async function logReadAction(
+  previous: LogReadState,
+  formData: FormData,
+): Promise<LogReadState> {
+  const reader = await requireReader();
+  if (!reader) {
+    // Says that nothing was saved, and why — "sign in first" alone leaves the
+    // reader wondering whether the read went through.
+    return {
+      ...previous,
+      error: "Not saved: you’re signed out. Sign in again to log this read.",
+      field: null,
+      signedOut: true,
+    };
+  }
+
+  const parsed = readSchema.safeParse({
+    bookId: formData.get("bookId") ?? "",
+    readAt: formData.get("readAt") ?? "",
+    rating: formData.get("rating") ?? "",
+    review: formData.get("review") ?? "",
+    isReread: formData.get("isReread") === "on",
+  });
+
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    const field = String(issue.path[0] ?? "");
+    return {
+      ...previous,
+      error: issue.message,
+      field: isLogReadField(field) ? field : null,
+      signedOut: false,
+    };
+  }
+
+  const result = await createRead(reader.id, parsed.data);
+  if (!result.ok) {
+    return {
+      ...previous,
+      error: "Not saved: this book is no longer here. Find it again from search.",
+      field: null,
+      signedOut: false,
+    };
+  }
+
+  // The slip this was logged from, the diary, and the public profile all show
+  // it. Every book page, because the sheet does not know its own address.
+  revalidatePath("/book/[workKey]", "page");
+  revalidatePath("/");
+  if (reader.username) revalidatePath(handlePath(reader.username));
+
+  return { error: null, field: null, signedOut: false, saved: previous.saved + 1 };
 }

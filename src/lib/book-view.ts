@@ -136,21 +136,7 @@ export function descriptionParagraphs(text: string | null | undefined): string[]
     .filter(Boolean);
 }
 
-/**
- * A slip date. `read_at` is a calendar date stored at UTC midnight, so it is
- * formatted in UTC — in a local zone west of Greenwich it would print as the
- * day before.
- */
-const SLIP_DATE = new Intl.DateTimeFormat("en-GB", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: "UTC",
-});
-
-export function slipDate(readAt: Date | null): string {
-  return readAt ? SLIP_DATE.format(readAt) : "Undated";
-}
+export { slipDate } from "./slip-date";
 
 /**
  * The author band's ground and foreground.
