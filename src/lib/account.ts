@@ -7,7 +7,10 @@ import { MAX_LENGTH as USERNAME_MAX, usernameError } from "./username";
 /** Long enough for a real name, short enough to set at display scale in the masthead. */
 export const NAME_MAX = 60;
 
-/** Two lines under a handle on the public diary. Not a place to write an essay. */
+/**
+ * A few lines under a handle on the public diary — about three on a laptop and
+ * five on a phone at the limit. Not a place to write an essay.
+ */
 export const BIO_MAX = 240;
 
 /**

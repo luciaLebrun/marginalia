@@ -1,12 +1,11 @@
-import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
+import { getDevReader, NoDevReader } from "@/app/dev/dev-reader";
 import { AccountHeader } from "@/components/AccountHeader";
 import { AccountSheet } from "@/components/AccountSheet";
 import { DeleteAccount } from "@/components/DeleteAccount";
 import { InviteRun } from "@/components/InviteRun";
 import { SignOutButton } from "@/components/SignOutButton";
-import { getDb, schema } from "@/db";
 import { listInvitesWithState } from "@/lib/invite";
 
 /**
@@ -21,25 +20,8 @@ import { listInvitesWithState } from "@/lib/invite";
 export default async function DevSettingsPage() {
   if (process.env.NODE_ENV === "production") notFound();
 
-  const [user] = await getDb()
-    .select({
-      id: schema.user.id,
-      name: schema.user.name,
-      username: schema.user.username,
-      bio: schema.user.bio,
-    })
-    .from(schema.user)
-    .where(eq(schema.user.id, "dev-reader"));
-
-  if (!user?.username) {
-    return (
-      <main className="flex-1 px-4 py-16 sm:px-6">
-        <p className="max-w-[34rem] text-[0.9375rem] leading-relaxed text-ink-soft">
-          No dev reader found. Run <code>pnpm seed:dev</code> first.
-        </p>
-      </main>
-    );
-  }
+  const user = await getDevReader();
+  if (!user?.username) return <NoDevReader />;
 
   const invites = await listInvitesWithState(user.id);
 

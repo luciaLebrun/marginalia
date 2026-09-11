@@ -26,6 +26,17 @@ test.describe("reading diary", () => {
     await expect(log).toHaveAttribute("href", "/search");
   });
 
+  /*
+   * The reader's own diary keeps its way into the account; only the profile
+   * changes what the record band offers, by who is looking.
+   */
+  test("keeps the account link on the reader's own diary", async ({ page }) => {
+    await expect(page.getByRole("link", { name: "Your account" })).toHaveAttribute(
+      "href",
+      "/settings",
+    );
+  });
+
   test("never addresses a cover by ISBN", async ({ page }) => {
     // ISBN-addressed covers are rate limited to 100 per IP per 5 minutes and
     // 403 for everyone behind the same egress. This is the load-bearing rule.
