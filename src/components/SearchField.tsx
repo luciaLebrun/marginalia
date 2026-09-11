@@ -46,9 +46,9 @@ export function SearchField({
             name="q"
             type="search"
             defaultValue={query}
-            // Only a blank search takes focus: on a results page it would open
-            // the phone keyboard straight over the covers the reader came for.
-            autoFocus={!query}
+            // No autoFocus (Sonar S9379): it moves a screen reader past the
+            // page's context, and iOS Safari ignores it without a tap anyway,
+            // so the phone — where capture mostly happens — gains nothing.
             maxLength={MAX_QUERY_LENGTH}
             enterKeyHint="search"
             autoComplete="off"

@@ -39,7 +39,9 @@ looks like their shelf, and take it.
 
 FIRST VIEWPORT: Wordmark band edge to edge. Beneath it, the search field row:
 "Search" label, the query at the field step on a ruled line capped at 34rem,
-autofocused, with an outline "Search" button beside it. Then a full-width ink
+with an outline "Search" button beside it. Not autofocused: dropped for Sonar
+S9379 after review — iOS ignores it without a tap, and it moves a screen
+reader past the page's context. Then a full-width ink
 band carrying the count ("5 books" / "First 20 — add the author to narrow it").
 Then the shelf grid of result cells, 2 columns at 390, 6 at 1440, starting
 immediately below the band. Blank query: the field and one line of guidance,

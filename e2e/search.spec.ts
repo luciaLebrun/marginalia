@@ -14,7 +14,7 @@ test.describe("search", () => {
   test("a blank search waits in the field", async ({ page }) => {
     await page.goto("/dev/search", { waitUntil: "networkidle" });
 
-    await expect(page.getByRole("searchbox", { name: "Search" })).toBeFocused();
+    await expect(page.getByRole("searchbox", { name: "Search" })).toHaveValue("");
     await expect(page.getByText("A title, an author, or both")).toBeVisible();
     await expect(page.locator("ol.shelf-grid")).toHaveCount(0);
   });
@@ -93,10 +93,6 @@ test.describe("search", () => {
       await expect(first).toBeFocused();
       const outline = await first.evaluate((el) => getComputedStyle(el).outlineStyle);
       expect(outline).not.toBe("none");
-    });
-
-    test("does not take focus, so a phone keyboard stays closed over results", async ({ page }) => {
-      await expect(page.getByRole("searchbox", { name: "Search" })).not.toBeFocused();
     });
 
     test("the page does not scroll sideways", async ({ page }) => {

@@ -84,10 +84,10 @@ function RecordBand({
     <div className="flex items-center justify-between gap-4 bg-ink px-4 py-3 text-paper sm:px-6">
       {/* "First 20 — add the author to narrow it" does not fit beside the
           link at 390, so it wraps as balanced lines with real leading rather
-          than orphaning its last word at the band voice's line-height of 1. */}
-      <p role="status" className="band-label leading-[1.4]! text-balance">
-        {text}
-      </p>
+          than orphaning its last word at the band voice's line-height of 1.
+          <output> carries the status role natively (Sonar S6819), so the
+          count is announced when a search lands. */}
+      <output className="band-label leading-[1.4]! text-balance">{text}</output>
       <Link
         href={diaryHref}
         // The global focus ring is ink, which vanishes on this band.
