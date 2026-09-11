@@ -88,6 +88,17 @@ async function findBook(olWorkKey: string): Promise<Book | null> {
 }
 
 /**
+ * The stored row for a work key, or null when nobody has opened it yet.
+ *
+ * Postgres only, never Open Library — for callers such as page metadata that
+ * must not be the thing that triggers a first open.
+ */
+export async function findStoredBook(raw: string): Promise<Book | null> {
+  const key = parseWorkKey(raw);
+  return key ? findBook(key) : null;
+}
+
+/**
  * Open a book by work key, copying it into `book` if nobody has before.
  *
  * The returned book's `olWorkKey` can differ from the key asked for: Open
