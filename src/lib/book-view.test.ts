@@ -48,6 +48,28 @@ describe("descriptionParagraphs", () => {
   it("keeps a dash that is only punctuation", () => {
     expect(descriptionParagraphs("Spice --- and water.")).toEqual(["Spice --- and water."]);
   });
+
+  it("keeps the innermost link text when brackets nest", () => {
+    expect(descriptionParagraphs("See [the [Arrakis](https://example.org) map].")).toEqual([
+      "See [the Arrakis map].",
+    ]);
+  });
+
+  /*
+   * Descriptions are contributor-edited, so the parser has to stay linear on
+   * hostile input. A line of unmatched brackets made the old link pattern
+   * rescan from every bracket — quadratic, seconds at this size.
+   */
+  it("stays fast on a long run of unmatched brackets and parentheses", () => {
+    const hostile = `${"[".repeat(50_000)}${"(".repeat(50_000)}`;
+
+    const started = performance.now();
+    const paragraphs = descriptionParagraphs(hostile);
+    const elapsed = performance.now() - started;
+
+    expect(paragraphs).toEqual([hostile]);
+    expect(elapsed).toBeLessThan(500);
+  });
 });
 
 describe("authorLine", () => {

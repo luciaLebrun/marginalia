@@ -115,8 +115,12 @@ export function imprintRows(
  * Descriptions are contributor-edited markdown-ish text, and they often end in
  * editorial furniture under a dashed rule ("----------\nContains: Dune"), with
  * `([source][1])` citations and link reference definitions scattered through.
- * None of that is the book. Horizontal whitespace only in the patterns, so no
- * expression can backtrack across lines.
+ * None of that is the book.
+ *
+ * The text is untrusted, so no pattern may backtrack super-linearly: whitespace
+ * runs are horizontal only, and a bracketed run stops at the next bracket of
+ * either kind. `[^\]]+` would also match `[`, letting a line of unmatched
+ * brackets rescan from every one of them — quadratic (Sonar S8786).
  */
 export function descriptionParagraphs(text: string | null | undefined): string[] {
   if (!text) return [];
@@ -125,8 +129,8 @@ export function descriptionParagraphs(text: string | null | undefined): string[]
 
   return body
     .replaceAll(/^[ \t]*\[\d+\]:[ \t]*\S.*$/gm, "")
-    .replaceAll(/\([ \t]*\[source\](?:\[\d+\]|\([^)\n]*\))[ \t]*\)/gi, "")
-    .replaceAll(/\[([^\]\n]+)\](?:\[\d+\]|\([^)\n]*\))/g, "$1")
+    .replaceAll(/\([ \t]*\[source\](?:\[\d+\]|\([^()\n]*\))[ \t]*\)/gi, "")
+    .replaceAll(/\[([^[\]\n]+)\](?:\[\d+\]|\([^()\n]*\))/g, "$1")
     .split(/\n[ \t]*\n/)
     .map((paragraph) => paragraph.replaceAll(/\s+/g, " ").trim())
     .filter(Boolean);
