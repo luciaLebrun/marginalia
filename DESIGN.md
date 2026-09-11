@@ -158,6 +158,30 @@ components:
   button-outline-hover:
     backgroundColor: "{colors.band-fiction}"
     textColor: "{colors.ink}"
+  author-band:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.paper}"
+    typography: "{typography.label}"
+    padding: "12px 16px"
+  imprint-row:
+    textColor: "{colors.ink}"
+    typography: "{typography.label}"
+    padding: "10px 0"
+  date-slip-head:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.paper}"
+    typography: "{typography.label}"
+    padding: "10px 12px"
+  date-slip-line:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    typography: "{typography.field}"
+    padding: "12px 12px"
+  page-jacket:
+    backgroundColor: "{colors.paper-sunk}"
+    textColor: "{colors.ink}"
+    typography: "{typography.headline}"
+    padding: "24px 20px"
 ---
 
 # Design System: Marginalia
@@ -241,21 +265,32 @@ populated shelf is nearly always derived from the jacket and conditioned before 
 - **Paper** (`{colors.paper}`): the page ground and every cell's ground. Also the
   reversed text colour on every ink band, the focus ring on an ink band, and one of the two candidates the contrast
   helper picks from for band text.
-- **Sunk Paper** (`{colors.paper-sunk}`): the jacket well behind a cover, the
-  no-cover setting, the year rule's ground, the ground of the code cell awaiting the
-  next keystroke, the band that says Open Library is unavailable, and the scrollbar
-  track. It reads as the same sheet pressed
+- **Sunk Paper** (`{colors.paper-sunk}`): the jacket well behind a cover (in a cell,
+  and as a book page's frontispiece), the no-cover setting at both scales, the empty
+  frontispiece drawn while a book opens, the year rule's ground, the ground of the
+  code cell awaiting the next keystroke, the band that says Open Library is
+  unavailable (under search, and in place of a book never opened here), and the
+  scrollbar track. It reads as the same sheet pressed
   slightly, not as a second surface.
 - **Ink** (`{colors.ink}`): all primary text, all structural borders, the focus
-  ring (except on an ink band, where it is paper), the fence around the delete section, and the masthead's record band ground.
-- **Soft Ink** (`{colors.ink-soft}`): dates, counts, the reading span, "Unrated",
-  field labels and hints, a closed code's characters, supporting copy, and the
-  scrollbar thumb. It is the only tonal step below ink; there is no third text grey.
+  ring (except on a band: paper on an ink band, the band's `readableOn()` foreground
+  on a book's colour), the fence around the delete section, and the masthead's record
+  band ground. It is also the ground of the date slip's head, of the band that opens
+  each of a book page's states, and of a book page's author band until the book is on
+  this reader's shelf, and it draws the 2px rule that parts that author band from the
+  wordmark band.
+- **Soft Ink** (`{colors.ink-soft}`): dates, counts, the reading span, a book's
+  subtitle, "Unrated" and "Undated", field and imprint labels and hints, a closed
+  code's characters, supporting copy (a book's description among it), the author at
+  the foot of a type-only jacket, and the scrollbar thumb. It is the only tonal step below ink; there is no third text grey.
 - **Hairline Rule** (`{colors.rule}`): ink at 15% alpha. Every hairline in the shelf
   — cell borders, record-band separator, and the ruled column lines that show a
   partial row's unfilled positions — plus the resting stroke under a field value,
-  the resting border of an empty code cell, and the border of a control that is not
-  yet available.
+  the resting border of an empty code cell, the border of a control that is not
+  yet available, the border of a book page's frontispiece, the lines between imprint
+  rows and between reads on the date slip, the slip's closing blank line (at 2px),
+  the ruled empty frame drawn while a book opens, and a link's underline at rest on
+  paper.
 
 ### Named Rules
 
@@ -263,7 +298,8 @@ populated shelf is nearly always derived from the jacket and conditioned before 
 compares the WCAG contrast of ink and paper against the band and returns the winner.
 This is not a nicety: bands are derived from arbitrary cover art, and paper on the
 fiction orange is 3.32:1 and fails AA. The same helper decides the masthead, the
-entry bands, and the "Add" cell's hover state.
+entry bands, a book page's author band (its foreground, its link underline, and its
+focus ring), and the "Add" cell's hover state.
 
 **The Conditioned Ink Rule.** A colour lifted from a jacket is never used raw.
 `conditionBand()` floors saturation at 0.35 and clamps lightness into 0.28–0.62, so
@@ -273,6 +309,11 @@ deliberate flat ink rather than as whatever the scanner captured.
 **The Stable Colour Rule.** A fallback band is a deterministic hash of the Open
 Library work key, never random and never per-render. A shelf that reshuffles its own
 colours between visits reads as broken, not lively.
+
+**The Earned Colour Rule.** A book wears a band colour only once it is on this
+reader's shelf. Until then its band is ink: a search result's band, and a book page's
+author band while its slip reads "Not on your shelf". On the shelf it takes the
+conditioned jacket colour, or the stable fallback when there is none.
 
 **The Refusal Tone Rule.** Alarm red says one thing — *this was refused, or this is
 about to destroy something* — and it says it as a stroke or as words, never as a
@@ -287,7 +328,7 @@ what it is waiting for.
 
 **The Browser-Surface Rule.** Surfaces we did not draw still belong to the design.
 Selection, caret, scrollbar track and thumb, and the focus ring are all themed to
-paper and ink; none may be left at the OS default. The focus ring is 2px ink at a 2px offset everywhere except on an ink band, where ink vanishes into the ground and the ring is paper; every control or link set on an ink band carries it.
+paper and ink; none may be left at the OS default. The focus ring is 2px ink at a 2px offset everywhere except on a band that ink would vanish into. On an ink band the ring is paper; on a band whose ground is a book's colour (a book page's author band) the ring is that band's `readableOn()` foreground, because a fixed paper ring vanishes on a pale jacket as surely as ink vanishes on ink. Every control or link set on a band carries its band's ring.
 
 ## Typography
 
@@ -306,10 +347,14 @@ of the system, and it is what makes a second typeface unnecessary.
   "MARGINALIA" on the masthead's colour band. This voice belongs to the wordmark
   only.
 - **Display** (600, 2.25rem → 3.5rem at ≥640px, lh 0.95, −0.02em): the reader's name
-  in the masthead's field band, and "Your account" at the head of the account sheet.
-  The largest type on the page. Both steps are recorded tokens.
+  in the masthead's field band, "Your account" at the head of the account sheet, and
+  a book's title on its title page, balanced, breaking an unbroken word rather than
+  overflowing, and capped at the title column's 34rem edge. The largest type on the
+  page. Both steps are recorded tokens.
 - **Headline** (600, 1.75rem → 2.25rem at ≥640px, lh 1, −0.02em): the year on a year
-  rule, and the door's one sentence of proposition. Chronology is the structure the
+  rule, the door's one sentence of proposition, and the title at the head of a
+  page-scale type-only jacket (1.75rem, reaching 2.25rem only at ≥64rem, where the
+  frontispiece column is wide enough not to break a word). Chronology is the structure the
   shelf is ordered by, so it is drawn at a scale that carries across a viewport
   rather than set in the page's smallest type.
 - **Field** (600, 1.375rem, lh snug, −0.01em): the value voice. Every editable value
@@ -317,19 +362,27 @@ of the system, and it is what makes a second typeface unnecessary.
   the handle on the claim form, the confirmation handle in the delete fence, and the
   characters in an invite-code cell (stepping to 1.75rem at ≥640px in the door's
   mask). The masthead's reading span uses the same step at ≥640px, at weight 500 in
-  soft ink, because a span is a value too. Values are larger than their labels here;
+  soft ink, because a span is a value too. A book's subtitle takes that same setting
+  under its title, and a read's date on the date slip is set at this step at 600, in
+  ink, or in soft ink when the line says "Undated". Values are larger than their labels here;
   that inversion is deliberate and is what makes a form read as a filled-in sheet.
 - **Title** (600, 0.8125rem, lh tight, balanced): a book title in an entry's record
   band. Small on purpose — the jacket above it is the identifying object.
 - **Body** (400, 0.9375rem / 0.875rem, lh relaxed, soft ink, capped ~34–38rem):
-  the empty-shelf guidance, the door's explanation, and the delete fence's
-  consequences. Body copy is rare here; this surface is a record, not an article.
+  the empty-shelf guidance, the door's explanation, the delete fence's
+  consequences, a book's description (on the title page's 34rem edge), and the
+  sentence under a book page's unavailable or not-found band (38rem). Body copy is
+  rare here; this surface is a record, not an article. An imprint value (a year, a
+  page count, "Open Library") sits at the body size at weight 500 in ink: a value on
+  a ruled line, still larger than its label.
 - **Label** (600, 0.6875rem, `wdth` 88, 0.14em tracking, caps): the band voice —
   author name, "Add", "Reread", the tally, a year's book count, a field's label, an
-  invite's state, and every button on the account surfaces. Two page-scale headings
+  invite's state, every button on the account surfaces, a book page's author line
+  and state line, the date slip's head and count, and an imprint row's label. Two page-scale headings
   ("Invitations", the commit band's verb) run this voice at `wdth` 118 and 0.2em to
   hold a full-width band. Where band-voice text has to wrap — a state line beside a
-  link in a record band at 390px — it takes 1.4 leading and balanced lines instead of
+  link in a record band at 390px, a two-author line in a book page's author band, the
+  author at the foot of a type-only jacket — it takes 1.4 leading and balanced lines instead of
   its resting line-height of 1.
 - **Meta** (500, 0.6875rem, soft ink, tabular): dates, "Unrated", counts, the
   reading span. Field hints and inline errors sit one step up at 0.8125rem.
@@ -383,6 +436,18 @@ count, and every real cell paints over it — so a partial row shows its empty
 positions the way a printed signature does, at the cost of one background and no
 filler elements.
 
+**A book page is a title page facing its frontispiece.** Beneath the wordmark band
+and the author band sits a two-column grid from 40rem: a jacket column of
+min(24rem, 33%) and a title column taking the rest, 40px apart, inside the page
+padding, 32px under the band and 40px above the foot. The jacket column is sized to
+the jacket, so the title page faces it across one gap rather than across the dead half
+of a third. Every block in the title column (title, subtitle, imprint rows, date
+slip, description) hangs on one 34rem right edge, so the page reads as a single set
+measure and a long title wraps on the same edge as the imprint. The date slip comes
+before the description, so a long blurb never pushes the reads out of the first
+viewport. Below 40rem the columns stack 24px apart, 24px under the band, and the
+frontispiece is centred at 60% of the width.
+
 **Everything runs in the flow of the page, with one named exception.** The commit
 band on the account sheet is `position: sticky; bottom: 0`, and it is the only
 viewport-pinned element in the build. It is scoped to the whole account column
@@ -397,7 +462,10 @@ fallback; a change that only holds on one of them is not finished.
 ### Named Rules
 
 **The Edge-to-Edge Rule.** Bands span the full viewport width. Never inset a band
-inside a container to make it look like a card.
+inside a container to make it look like a card. The one band set to a measure is a
+band that heads an object on that measure: the date slip's head runs to the title
+column's 34rem edge and no further. It is never boxed; what it heads closes on ruled
+lines, not on a border.
 
 **The Ruled Signature Rule.** An incomplete row shows ruled empty slots. Never
 centre a short row, never stretch cells to fill it, and never insert placeholder
@@ -437,8 +505,11 @@ consumes it** — treat 2px as a limit, not as a default, and prefer 0.
 
 Form language is rectangles and rules only: 1px hairlines in `{colors.rule}` between
 and inside cells, 1px solid ink around the "Add" cell, above and below a year rule,
-and around the delete fence, a 2px ruled line under an editable value, and a fixed
-2:3 jacket frame that never crops. The single non-rectangular shape in the system is
+and around the delete fence; a 2px solid ink rule between the wordmark band and a
+book's author band, which a fallback band can match in colour and over a hairline
+would merge with; a 2px ruled line under an editable value, and the same 2px line
+left blank to close the date slip; and a fixed 2:3 jacket frame that never crops,
+hairline-bordered where it stands alone as a frontispiece. The single non-rectangular shape in the system is
 the drawn rating mark. Icons and separators are authored SVG paths at 1.5px stroke
 with square line caps — including the dash between the two halves of an invite code,
 which is drawn rather than typed so a screen reader never spells it as part of the
@@ -453,10 +524,13 @@ weight, tone, or presence of a printed mark.
 **The Printed State Rule.** Control and field state is carried by a mark on the
 page, not by chrome:
 - **At rest** — a hairline (`{colors.rule}`): an empty code cell, an unedited field's
-  ruled line, a control that is not yet available.
+  ruled line, a control that is not yet available, the date slip's closing blank
+  line, a link's underline (hairline tone on paper; the band's foreground at 40% on
+  a band).
 - **Filled or focused** — the same stroke at solid ink: a code cell holding a
   character, a field being typed in (`focus-within`), a search result under the pointer
-  or keyboard focus.
+  or keyboard focus, a link's underline under the pointer (the band's full foreground
+  on a band).
 - **Awaiting the next keystroke** — sunk paper as the cell's ground, so the position
   the next character lands in is visible without a blinking cursor.
 - **Refused** — the stroke redrawn in alarm red, on the field that failed and on
@@ -545,13 +619,81 @@ device repeated, and the year rule immediately below is already a ruled strip.
   / "Nothing logged yet") left, and the link into the account sheet right. A separate
   nav bar would be a fourth band this page does not have. This band also ships on its
   own under the search field: the search's state ("5 books", "Searching Open
-  Library…") left, and "Your diary" right.
+  Library…") left, and "Your diary" right. A book page's states open with the same
+  ink band on its own: "Opening this book…", "Book unavailable" or "Book not found"
+  left, "Your diary" right.
 
 ### Year Rule
 
 A full-width ruled band on sunk paper, bordered top and bottom in solid ink: the year
 at headline scale left, the group's book count in soft-ink label type right. It is a
 band, not a hairline, because chronology is the shelf's organising structure.
+
+### Book Title Page (page-scale tri-band)
+
+One book, opened: the tri-band frame at page scale, run beneath the wordmark band.
+Character: a paperback's title page facing its frontispiece, not a store's product
+page.
+
+- **Band one, author:** full width, 12px vertical inside the page padding. The author
+  line in band voice at 1.4 leading with balanced lines ("Author unknown" when there
+  is none; past three names, two and a count) left, "Your diary" right. Its ground
+  follows the Earned Colour Rule, and its foreground, its link underline (40% of the
+  foreground at rest, full under the pointer) and its focus ring all come from
+  `readableOn()`. A 2px solid ink rule parts it from the wordmark band, which a
+  fallback band can match exactly.
+- **Band two, frontispiece and title page:** the jacket in a 2:3 sunk-paper well with
+  a hairline border, facing the title column (see Layout). In that column: the title
+  at display scale, the subtitle at the field step in soft ink, the imprint rows, the
+  date slip, then the description in soft-ink body copy.
+- **Imprint rows:** a list opened by a hairline, one row per known value, each closed
+  by a hairline, 10px vertical. The label sits left in soft-ink band voice and the
+  value right on the same baseline, at body size, weight 500, in ink. A value Open
+  Library did not have omits its row rather than printing a dash. The last row,
+  "Source / Open Library", is always present and links out to the record, underlined
+  in hairline tone and going to ink under the pointer.
+- **Band three, record:** the Date Slip, set in the title column straight under the
+  imprint rather than as a third full-width band.
+- **States:** the page has none of its own; only its two links respond to hover and
+  focus, and only in colour.
+
+### Date Slip
+
+The record band of a book page: this reader's own reads of the book, one ruled line
+each, closed by the line the next read goes on. Character: the slip pasted into a
+library book, saying "your reads", never "due".
+
+- **Head:** an ink band on the 34rem measure, 10px/12px padding. "Your reads" (the
+  section's heading, in band voice) sits left and the count in band voice right: "Not
+  on your shelf", "Read once", "Read twice", then "Read N times".
+- **Lines:** newest first, undated last, each closed by a hairline, 12px padding. The
+  date sits left at the field step (600, ink), or "Undated" at the same step in soft
+  ink. On the right: a soft-ink "Reread" label when relevant, then the drawn Rating
+  in ink, or "Unrated" in soft-ink meta. At 390px the two halves wrap rather than
+  shrinking the date.
+- **Blank line:** a 3.25rem empty line closed by a 2px hairline-tone rule, the Field
+  Row's resting line left unfilled. It is inert and `aria-hidden` until a log sheet
+  exists to deploy from it: never announced as a control that does nothing, never
+  labelled "coming soon". A book not on the shelf shows the head and this one line.
+- **States:** none; nothing on the slip is interactive yet.
+
+### Book States
+
+The book page's other outcomes, each opened under the wordmark band by the masthead's
+ink record band on its own (state left, "Your diary" right, paper underline and
+focus ring). None uses alarm, because nothing in them was refused.
+
+- **Opening:** "Opening this book…" as a live `<output>` in the band, over the page's
+  frame drawn empty and `aria-hidden`: the frontispiece as a hairline-bordered
+  sunk-paper well, the title as a 2px hairline-tone ruled line, and three hairline
+  imprint rows. These are ruled empty positions, as an unfilled shelf position is
+  ruled, never skeleton shapes pretending to be a book, and nothing moves.
+- **Unavailable:** "Book unavailable" in the band, then one sentence of soft-ink body
+  copy on a full-width sunk-paper band closed by a hairline. This is search's
+  unavailable setting, kept apart from not-found so a reader never hunts for a typo
+  that is not there.
+- **Not found:** "Book not found" in the band, one soft-ink sentence on paper, and an
+  Outline Button, "Search for a book", as the way on.
 
 ### Field Row
 
@@ -613,7 +755,8 @@ band, not a toolbar.
 ### Outline Button
 
 The standing control outside the form — "Mint a code", "Sign out", "Delete this
-account". Character: a label with a border drawn around it.
+account", and "Search for a book" on a book page that was not found, where it is a
+link. Character: a label with a border drawn around it.
 
 - **Shape:** square, 1px border, 12px/10px padding, band-voice label, paper ground.
 - **Border:** solid ink when the control is available; hairline while it is not.
@@ -646,6 +789,14 @@ A plain lazy `<img>` at `object-contain` inside the fixed 2:3 well, with a
 `"{title} by {author}"` and is load-bearing rather than decorative, because the
 interface is built around cover art.
 
+**Page scale.** `scale="page"` changes only the coverless setting. At frontispiece
+size the cell's small centred label reads as an empty placeholder, so the well holds
+a type-only jacket instead: the title at the headline step at the head, and the first
+author in soft-ink band voice (1.4 leading, balanced) at the foot, with 24px/20px
+padding (32px/28px at ≥64rem). The jacket is `aria-hidden`, because the page's heading
+already says the title. The cell-scale no-cover setting is unchanged. A page-scale
+cover passes its own `sizes` for the frontispiece column.
+
 ### Motion
 
 **The One Moment Rule.** The entire surface has exactly one authored animation: an
@@ -663,8 +814,11 @@ moves. No other transition on the page changes anything but colour or opacity.
   whatever scale the object needs.
 - **Do** pass every band colour through `conditionBand()` and every band foreground
   through `readableOn()`. Contrast is decided by the helper, never by eye.
+- **Do** give a book its band colour only once it is on this reader's shelf; until
+  then its band is ink.
 - **Do** keep hairlines at `{colors.rule}` (ink at 15%) and reserve solid ink borders
-  for the primary action, the year rule, the standing controls, and the delete fence.
+  for the primary action, the year rule, the standing controls, the delete fence, and
+  the 2px rule between the wordmark band and a book's author band.
 - **Do** draw state as a printed mark — hairline at rest, solid ink filled or
   focused, sunk paper on the position awaiting the next keystroke, an alarm stroke on
   refusal, a rule through an unavailable label, a struck bar across a spent code.
@@ -679,9 +833,11 @@ moves. No other transition on the page changes anything but colour or opacity.
   condensed for band labels (`wdth` 88).
 - **Do** design empty and no-cover states as real settings with real copy — an
   unfilled slot is ruled, a coverless book gets a typographic jacket, an empty invite
-  run says what an invitation does.
+  run says what an invitation does, a book with no reads gets a slip with one ruled
+  blank line.
 - **Do** cap the measure of a ruled value at 34rem and of prose at 38rem, inside a
-  band that still runs edge to edge.
+  band that still runs edge to edge. On a title page, hang every block, the title
+  included, on one 34rem edge.
 - **Do** theme browser surfaces (selection, caret, scrollbar, focus ring) whenever a
   new one appears.
 - **Do** hold both 390px and 1440px as finished layouts; whole-cell repack, never a

@@ -12,7 +12,10 @@ export function StateBand({
   diaryHref = "/",
 }: Readonly<{ children: React.ReactNode; diaryHref?: string }>) {
   return (
-    <div className="flex items-center justify-between gap-4 border-t border-ink bg-ink px-4 py-3 text-paper sm:px-6">
+    // The 2px ink top rule draws nothing on an ink ground. It is there to give
+    // this band the author band's exact height, so the page does not shift by
+    // a pixel when "Opening this book…" is replaced by the book.
+    <div className="flex items-center justify-between gap-4 border-t-2 border-ink bg-ink px-4 py-3 text-paper sm:px-6">
       {children}
       <Link
         href={diaryHref}
