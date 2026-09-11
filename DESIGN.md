@@ -317,7 +317,8 @@ populated shelf is nearly always derived from the jacket and conditioned before 
   each of a book page's states, and of a book page's author band until the book is on
   this reader's shelf, and it draws the 2px rule that parts that author band from the
   wordmark band.
-- **Soft Ink** (`{colors.ink-soft}`): dates, counts, the reading span, a book's
+- **Soft Ink** (`{colors.ink-soft}`): dates, counts, the reading span, a profile's
+  handle and bio in the masthead, a book's
   subtitle, "Unrated" and "Undated" (and "N of 5" on the log sheet), the log sheet's
   "Log a read" line at rest, an empty date field, a placeholder, field and imprint
   labels and hints, a closed
@@ -416,7 +417,8 @@ of the system, and it is what makes a second typeface unnecessary.
 - **Body** (400, 0.9375rem / 0.875rem, lh relaxed, soft ink, capped ~34–38rem):
   the empty-shelf guidance, the door's explanation, the delete fence's
   consequences, a book's description (on the title page's 34rem edge), and the
-  sentence under a book page's unavailable or not-found band (38rem). Body copy is
+  sentence under a book page's unavailable or not-found band (38rem), and a profile's
+  bio in the masthead's field band (38rem). Body copy is
   rare here; this surface is a record, not an article. An imprint value (a year, a
   page count, "Open Library") sits at the body size at weight 500 in ink: a value on
   a ruled line, still larger than its label. A log sheet's review is set at this
@@ -426,7 +428,8 @@ of the system, and it is what makes a second typeface unnecessary.
   author name, "Add", "Reread", the tally, a year's book count, a field's label, an
   invite's state, every button on the account surfaces, a book page's author line
   and state line, the date slip's head and count, the log sheet's "Log a read" / "Close" line, its field
-  labels, "Reread" beside its tick, and its text buttons, and an imprint row's label. Two page-scale headings
+  labels, "Reread" beside its tick, and its text buttons, an imprint row's label, and a profile's `@handle` under the name in
+  the masthead's field band, in soft ink. Two page-scale headings
   ("Invitations", a commit band's verb) run this voice at `wdth` 118 and 0.2em to
   hold a full-width band. Where band-voice text has to wrap — a state line beside a
   link in a record band at 390px, a two-author line in a book page's author band, the
@@ -678,9 +681,19 @@ device repeated, and the year rule immediately below is already a ruled strip.
   page that has no reader to name yet — the door, the claim form, the account sheet.
 - **Band two:** paper; the reader's name at display scale left, the reading span in
   tabular soft ink right. The span is structural: it holds the name field's right
-  edge so the band is not one word floating in a thousand pixels of paper.
+  edge so the band is not one word floating in a thousand pixels of paper. The name
+  and the span keep a row of their own, so the span stays on the name's baseline at
+  every width. On a profile, and only there, the `@handle` follows under that row in
+  band voice, in soft ink, breaking anywhere rather than overflowing at 390px; then
+  the bio as body copy in soft ink, capped at 38rem, each 12px under the line above.
+  With no bio there is no line and nothing stands in for it. The reader's own diary
+  shows neither.
 - **Band three:** ink ground, paper text, the tally in label type ("11 books logged"
-  / "Nothing logged yet") left, and the link into the account sheet right. A separate
+  / "Nothing logged yet") left, and the way onward right. On the reader's own diary
+  it is "Your account" (`/settings`). On a profile it depends on who is looking: the
+  owner, on their own profile, keeps "Your account"; a signed-in friend gets "Your
+  diary" (their own `/`); a signed-out visitor gets nothing, only the tally. Every
+  link on this band carries the paper focus ring. A separate
   nav bar would be a fourth band this page does not have. This band also ships on its
   own under the search field: the search's state ("5 books", "Searching Open
   Library…") left, and "Your diary" right. A book page's states open with the same

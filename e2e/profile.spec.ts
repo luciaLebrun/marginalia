@@ -26,6 +26,30 @@ test.describe("public profile", () => {
     await expect(page.getByRole("link", { name: /log a book/i })).toHaveCount(0);
   });
 
+  /*
+   * The account sheet promises a bio as "a few lines under your handle on the
+   * public diary"; this is where that promise is kept.
+   */
+  test("says whose diary it is: the handle, then the bio, under the name", async ({ page }) => {
+    await page.goto("/@lucia", { waitUntil: "networkidle" });
+
+    const masthead = page.locator("header");
+    await expect(masthead.getByText("@lucia", { exact: true })).toBeVisible();
+    await expect(masthead.getByText(/^Mostly science fiction/)).toBeVisible();
+  });
+
+  /*
+   * These tests run without a session, so they are the signed-out visitor for
+   * real: the app is invite-only, and the record band offers them no link.
+   */
+  test("offers a signed-out visitor no account and no diary link", async ({ page }) => {
+    await page.goto("/@lucia", { waitUntil: "networkidle" });
+
+    await expect(page.getByRole("link", { name: "Your account" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Your diary" })).toHaveCount(0);
+    await expect(page.getByText(/books? logged|Nothing logged yet/)).toBeVisible();
+  });
+
   test.describe("refuses everything that is not a handle", () => {
     for (const [label, path] of [
       ["an unclaimed name", "/@nobody"],
@@ -39,6 +63,39 @@ test.describe("public profile", () => {
         const response = await page.goto(path);
         expect(response?.status()).toBe(404);
       });
+    }
+  });
+});
+
+/**
+ * The owner's and a friend's view need a session, which e2e cannot get, so
+ * `/dev/profile` renders the real masthead for each viewer.
+ */
+test.describe("profile masthead by viewer (harness)", () => {
+  test("keeps the account link for the owner", async ({ page }) => {
+    await page.goto("/dev/profile?viewer=owner", { waitUntil: "networkidle" });
+    await expect(page.getByRole("link", { name: "Your account" })).toHaveAttribute(
+      "href",
+      "/settings",
+    );
+    await expect(page.getByRole("link", { name: "Your diary" })).toHaveCount(0);
+  });
+
+  test("sends a signed-in friend back to their own diary", async ({ page }) => {
+    await page.goto("/dev/profile?viewer=friend", { waitUntil: "networkidle" });
+    await expect(page.getByRole("link", { name: "Your diary" })).toHaveAttribute("href", "/");
+    await expect(page.getByRole("link", { name: "Your account" })).toHaveCount(0);
+  });
+
+  test("offers a signed-out visitor nothing", async ({ page }) => {
+    await page.goto("/dev/profile?viewer=visitor", { waitUntil: "networkidle" });
+    await expect(page.locator("header a")).toHaveCount(0);
+  });
+
+  test("shows the handle and bio in every view", async ({ page }) => {
+    for (const viewer of ["owner", "friend", "visitor"]) {
+      await page.goto(`/dev/profile?viewer=${viewer}`, { waitUntil: "networkidle" });
+      await expect(page.locator("header").getByText("@lucia", { exact: true })).toBeVisible();
     }
   });
 });

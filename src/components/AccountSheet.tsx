@@ -96,7 +96,7 @@ export function AccountSheet({
           <Field
             name="bio"
             label="Note"
-            hint="Two lines under your handle. Optional."
+            hint="A few lines under your handle on your diary. Optional."
             value={values.bio}
             onChange={set("bio")}
             maxLength={BIO_MAX}
