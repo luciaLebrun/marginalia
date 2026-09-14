@@ -104,6 +104,20 @@ test.describe("book page", () => {
     test("puts a machine-readable date on each dated read", async ({ page }) => {
       await expect(slip(page).locator("time").first()).toHaveAttribute("datetime", "2026-08-14");
     });
+
+    /* Each line is the way to that read's own page. */
+    test("links every read to its permalink", async ({ page }) => {
+      const hrefs = await slip(page)
+        .locator("li a")
+        .evaluateAll((links) => links.map((a) => a.getAttribute("href")));
+
+      expect(hrefs).toHaveLength(2);
+      for (const href of hrefs) {
+        expect(href).toMatch(
+          /^\/@[a-z][a-z0-9_]*\/log\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+        );
+      }
+    });
   });
 
   test("says Undated and Unrated rather than inventing either", async ({ page }) => {
@@ -247,11 +261,12 @@ test.describe("book page", () => {
     });
 
     test("ticks Reread in advance only when the slip already has a read", async ({ page }) => {
+      // Exact: a slip line's own label also ends in "reread".
       await openSheet(page, "new");
-      await expect(page.getByLabel("Reread")).not.toBeChecked();
+      await expect(page.getByLabel("Reread", { exact: true })).not.toBeChecked();
 
       await openSheet(page, "shelf");
-      await expect(page.getByLabel("Reread")).toBeChecked();
+      await expect(page.getByLabel("Reread", { exact: true })).toBeChecked();
     });
 
     /*
