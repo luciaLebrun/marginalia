@@ -86,13 +86,35 @@ const MANY_AUTHORS = stored(
   "dev-authors",
 );
 
+/*
+ * Real-shaped ids: a slip line addresses its read's permalink, so a harness id
+ * that is not a UUID would build a link the real route refuses.
+ */
 const SHELF_READS: Read[] = [
-  { id: "dev-read-2", readAt: new Date("2026-08-14"), rating: 4.5, isReread: true, hasReview: true },
-  { id: "dev-read-1", readAt: new Date("2019-05-02"), rating: 4, isReread: false, hasReview: false },
+  {
+    id: "2f9c1d4a-7b3e-4c8d-9a1f-5e6d7c8b9a01",
+    readAt: new Date("2026-08-14"),
+    rating: 4.5,
+    isReread: true,
+    hasReview: true,
+  },
+  {
+    id: "2f9c1d4a-7b3e-4c8d-9a1f-5e6d7c8b9a02",
+    readAt: new Date("2019-05-02"),
+    rating: 4,
+    isReread: false,
+    hasReview: false,
+  },
 ];
 
 const UNDATED_READS: Read[] = [
-  { id: "dev-read-u", readAt: null, rating: null, isReread: false, hasReview: false },
+  {
+    id: "2f9c1d4a-7b3e-4c8d-9a1f-5e6d7c8b9a03",
+    readAt: null,
+    rating: null,
+    isReread: false,
+    hasReview: false,
+  },
 ];
 
 const DIARY = "/dev/shelf";
@@ -119,18 +141,18 @@ function State({ state }: Readonly<{ state: string }>) {
     case "missing":
       return <BookNotFound diaryHref={DIARY} />;
     case "nocover":
-      return <BookTitlePage book={COVERLESS} reads={[]} diaryHref={DIARY} />;
+      return <BookTitlePage book={COVERLESS} reads={[]} username="lucia" diaryHref={DIARY} />;
     case "subtitle":
-      return <BookTitlePage book={SUBTITLED} reads={[]} diaryHref={DIARY} />;
+      return <BookTitlePage book={SUBTITLED} reads={[]} username="lucia" diaryHref={DIARY} />;
     case "authors":
-      return <BookTitlePage book={MANY_AUTHORS} reads={[]} diaryHref={DIARY} />;
+      return <BookTitlePage book={MANY_AUTHORS} reads={[]} username="lucia" diaryHref={DIARY} />;
     case "shelf":
-      return <BookTitlePage book={DUNE} reads={SHELF_READS} diaryHref={DIARY} />;
+      return <BookTitlePage book={DUNE} reads={SHELF_READS} username="lucia" diaryHref={DIARY} />;
     case "fallback":
-      return <BookTitlePage book={DUNE_WITHOUT_COLOUR} reads={SHELF_READS} diaryHref={DIARY} />;
+      return <BookTitlePage book={DUNE_WITHOUT_COLOUR} reads={SHELF_READS} username="lucia" diaryHref={DIARY} />;
     case "undated":
-      return <BookTitlePage book={DUNE} reads={UNDATED_READS} diaryHref={DIARY} />;
+      return <BookTitlePage book={DUNE} reads={UNDATED_READS} username="lucia" diaryHref={DIARY} />;
     default:
-      return <BookTitlePage book={DUNE} reads={[]} diaryHref={DIARY} />;
+      return <BookTitlePage book={DUNE} reads={[]} username="lucia" diaryHref={DIARY} />;
   }
 }

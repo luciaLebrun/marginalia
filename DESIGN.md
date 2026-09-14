@@ -215,6 +215,25 @@ components:
     textColor: "{colors.ink}"
     typography: "{typography.headline}"
     padding: "24px 20px"
+  postcard-band-colour:
+    typography: "{typography.label}"
+    padding: "12px 16px"
+  postcard-postmark:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.paper}"
+    typography: "{typography.label}"
+    padding: "10px 12px"
+  postcard-message:
+    textColor: "{colors.ink}"
+    typography: "{typography.body}"
+  postcard-signature:
+    textColor: "{colors.ink}"
+    typography: "{typography.field}"
+  postcard-band-record:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.paper}"
+    typography: "{typography.label}"
+    padding: "12px 16px"
 ---
 
 # Design System: Marginalia
@@ -301,7 +320,9 @@ populated shelf is nearly always derived from the jacket and conditioned before 
 
 ### Neutral
 - **Paper** (`{colors.paper}`): the page ground and every cell's ground. Also the
-  reversed text colour on every ink band, the focus ring on an ink band, and one of the two candidates the contrast
+  reversed text colour on every ink band — including a review permalink's postmark
+  strip, where the drawn rating takes paper as its `tone` — the focus ring on an ink
+  band, and one of the two candidates the contrast
   helper picks from for band text.
 - **Sunk Paper** (`{colors.paper-sunk}`): the jacket well behind a cover (in a cell,
   and as a book page's frontispiece), the no-cover setting at both scales, the empty
@@ -316,14 +337,18 @@ populated shelf is nearly always derived from the jacket and conditioned before 
   band ground. It is also the ground of the date slip's head, of the band that opens
   each of a book page's states, and of a book page's author band until the book is on
   this reader's shelf, and it draws the 2px rule that parts that author band from the
-  wordmark band.
+  wordmark band. On a review permalink it is the ground of the postmark strip under
+  the stamp block, of the card's record band, and of the 2px rule that opens the
+  card's colour band.
 - **Soft Ink** (`{colors.ink-soft}`): dates, counts, the reading span, a profile's
   handle and bio in the masthead, a book's
   subtitle, "Unrated" and "Undated" (and "N of 5" on the log sheet), the log sheet's
   "Log a read" line at rest, an empty date field, a placeholder, field and imprint
   labels and hints, a closed
   code's characters, supporting copy (a book's description among it), the author at
-  the foot of a type-only jacket, and the scrollbar thumb. It is the only tonal step below ink; there is no third text grey.
+  the foot of a type-only jacket, a review permalink's "First published" line, its
+  no-review sentence, and the `@handle` and read date under its signature, and the
+  scrollbar thumb. It is the only tonal step below ink; there is no third text grey.
 - **Hairline Rule** (`{colors.rule}`): ink at 15% alpha. Every hairline in the shelf
   — cell borders, record-band separator, and the ruled column lines that show a
   partial row's unfilled positions — plus the resting stroke under a field value,
@@ -333,7 +358,8 @@ populated shelf is nearly always derived from the jacket and conditioned before 
   closing "Log a read" line at rest (at 2px), a text button's underline at rest, the
   empty box of the reread tick,
   the ruled empty frame drawn while a book opens, and a link's underline at rest on
-  paper.
+  paper — a review permalink's title and reader-name links among them, where it also
+  draws the well around the stamp and the rule above the signature.
 
 ### Named Rules
 
@@ -356,7 +382,10 @@ colours between visits reads as broken, not lively.
 **The Earned Colour Rule.** A book wears a band colour only once it is on this
 reader's shelf. Until then its band is ink: a search result's band, and a book page's
 author band while its slip reads "Not on your shelf". On the shelf it takes the
-conditioned jacket colour, or the stable fallback when there is none.
+conditioned jacket colour, or the stable fallback when there is none. The rule also
+governs a page-scale band on the review permalink, which calls `bookBand(book, true)`
+with the flag already earned: the entry's own existence is what proves the book is on
+the shelf, so that card's colour band is never held back to ink.
 
 **The Refusal Tone Rule.** Alarm red says one thing — *this was refused, or this is
 about to destroy something* — and it says it as a stroke or as words, never as a
@@ -408,7 +437,8 @@ of the system, and it is what makes a second typeface unnecessary.
   mask). The masthead's reading span uses the same step at ≥640px, at weight 500 in
   soft ink, because a span is a value too. A book's subtitle takes that same setting
   under its title, and a read's date on the date slip is set at this step at 600, in
-  ink, or in soft ink when the line says "Undated". Values are larger than their labels here;
+  ink, or in soft ink when the line says "Undated". A review permalink signs its
+  message at the same step with the reader's name, linking to their diary. Values are larger than their labels here;
   that inversion is deliberate and is what makes a form read as a filled-in sheet.
   The one exception is the log sheet's review, set at the body step (see the Value
   Over Label Rule).
@@ -424,11 +454,17 @@ of the system, and it is what makes a second typeface unnecessary.
   a ruled line, still larger than its label. A log sheet's review is set at this
   size and leading, weight 400, in ink, by the Value Over Label Rule's named
   exception; the log sheet's general refusal sentence takes the same step in alarm.
+  A review permalink's message is set at this step in ink, one paragraph per blank
+  line in the reader's own text, capped at the 34rem value measure rather than 38rem
+  because prose at this size runs about 90 characters on the wider one; an entry with
+  no words takes the same step in soft ink.
 - **Label** (600, 0.6875rem, `wdth` 88, 0.14em tracking, caps): the band voice —
   author name, "Add", "Reread", the tally, a year's book count, a field's label, an
   invite's state, every button on the account surfaces, a book page's author line
   and state line, the date slip's head and count, the log sheet's "Log a read" / "Close" line, its field
-  labels, "Reread" beside its tick, and its text buttons, an imprint row's label, and a profile's `@handle` under the name in
+  labels, "Reread" beside its tick, and its text buttons, an imprint row's label, a
+  review permalink's author band, the read date, "Reread" and "Unrated" on its
+  postmark strip and the `@handle` in both its signature and its record band, and a profile's `@handle` under the name in
   the masthead's field band, in soft ink. Two page-scale headings
   ("Invitations", a commit band's verb) run this voice at `wdth` 118 and 0.2em to
   hold a full-width band. Where band-voice text has to wrap — a state line beside a
@@ -436,7 +472,8 @@ of the system, and it is what makes a second typeface unnecessary.
   author at the foot of a type-only jacket — it takes 1.4 leading and balanced lines instead of
   its resting line-height of 1.
 - **Meta** (500, 0.6875rem, soft ink, tabular): dates, "Unrated", counts, the
-  reading span. Field hints, inline errors and the log sheet's
+  reading span, and on a review permalink the "First published" line and the read
+  date under the signature. Field hints, inline errors and the log sheet's
   rating readout ("Unrated", "N of 5", at 500) sit one step up at 0.8125rem.
 
 ### Named Rules
@@ -506,6 +543,16 @@ before the description, so a long blurb never pushes the reads out of the first
 viewport. The log sheet opens in place inside the slip, on the same 34rem measure,
 and pushes the description down rather than covering anything. Below 40rem the columns stack 24px apart, 24px under the band, and the
 frontispiece is centred at 60% of the width.
+
+**A review permalink is a card at page scale.** Under the wordmark band, band one
+runs edge to edge on a 2px ink rule; the field is a two-column grid from 40rem — a
+stamp column of min(20rem, 32%) and a message column of at most 34rem, 40px apart —
+inside 24px page padding and 32px of vertical air. Below 40rem the columns stack 32px
+apart inside 16px padding and 24px of air, and the jacket is centred at 60% of the
+width. The stamp block leads in both layouts, first at 390 and left at 1440, so the
+pointer and the keyboard meet the book before the words. The card is not a fixed
+ratio: the stamp column holds its size while the message column grows, so a
+5,000-character review cannot break it.
 
 **Everything runs in the flow of the page, with one named exception.** The commit
 band on the account sheet is `position: sticky; bottom: 0`, and it is the only
@@ -593,7 +640,8 @@ page, not by chrome:
   at 40% inside a refusal sentence).
 - **Filled or focused** — the same stroke at solid ink: a code cell holding a
   character, a field being typed in (`focus-within`), a search result under the pointer
-  or keyboard focus, the log line and its words under the pointer, on keyboard focus and
+  or keyboard focus, a date-slip line under the pointer or on keyboard focus (its own
+  2px line is transparent at rest and drawn in ink there), the log line and its words under the pointer, on keyboard focus and
   while its sheet is open, a ticked reread box (with its tick drawn in), a text
   button's or link's underline under the pointer (the band's full foreground on a
   band; full alarm inside a refusal sentence).
@@ -748,7 +796,12 @@ library book, saying "your reads", never "due".
   date sits left at the field step (600, ink), or "Undated" at the same step in soft
   ink. On the right: a soft-ink "Reread" label when relevant, then the drawn Rating
   in ink, or "Unrated" in soft-ink meta. At 390px the two halves wrap rather than
-  shrinking the date.
+  shrinking the date. **Each line is the link to that read's permalink** — the whole
+  line, never a word inside it. At rest it carries no mark of its own beyond the
+  hairline that closes it; under the pointer and on keyboard focus it draws a 2px line
+  in solid ink and nothing fills, which is the Search Result pattern. Its accessible
+  name is the read itself: the date, the rating or "unrated", and "reread" when it
+  applies.
 - **Closing line:** the summary of the Log Sheet, standing where the next read goes.
   A 3.25rem line, 12px horizontal padding, closed by a 2px rule: "Log a read" in band
   voice left, a 14px drawn plus (1.5px stroke, square caps) right. It is the Field
@@ -824,6 +877,49 @@ focus ring). None uses alarm, because nothing in them was refused.
   that is not there.
 - **Not found:** "Book not found" in the band, one soft-ink sentence on paper, and an
   Outline Button, "Search for a book", as the way on.
+
+### Review Postcard (page-scale tri-band)
+
+One diary entry as a card from its reader, and the surface a shared link opens: the
+tri-band frame at page scale, run beneath the wordmark band. Character: a postcard —
+the jacket franked as the stamp, the book addressed beside it, the reader's words as
+the message, their name signing the foot. Neither of the review-site defaults: not a
+rating-first product block with a comment under it, and not a blog post with a byline
+header over an article.
+
+- **Band one, colour:** full width on a 2px solid ink top rule, 12px vertical inside
+  the page padding. The author line in band voice at 1.4 leading with balanced lines,
+  on the book's earned jacket colour — `bookBand(book, true)`, the Earned Colour Rule
+  with the flag already earned — and its `readableOn()` foreground. The author is
+  named here and nowhere else on the card.
+- **Band two, field:** the two-column grid of Layout, stamp block left at 1440 and
+  first at 390, message right.
+- **Stamp block:** the page-scale Cover in a fixed 2:3 hairline-bordered sunk-paper
+  well, the same well the frontispiece uses, centred at 60% of the width below 40rem.
+  Under it the title at the headline step (1.75rem), which links to the book page for
+  a signed-in reader and is plain text for a visitor, because the book page is
+  signed-in only and a door that will not open is not a link. Then "First published
+  YYYY" in soft-ink meta, which omits its line rather than printing a dash when the
+  year is unknown. Then the postmark: an ink strip at the date slip head's 10px/12px,
+  the read date in band voice left, "Reread" and the drawn Rating — or "Unrated" — right,
+  the marks drawn in paper so they carry the strip's own tone.
+- **Message:** the review at the body step in ink, one paragraph per blank line in the
+  reader's own text, on the 34rem value measure. With no review the card says so in a
+  soft-ink sentence naming the reader, rather than leaving the field blank: every
+  entry has a page, reviewed or not, and a diary entry is not a rating.
+- **Signature:** at the foot of the message column, 32px down and over a hairline: the
+  reader's name at the field step linking to their diary, underlined in hairline tone
+  at rest and ink under the pointer; the `@handle` under it in soft-ink band voice;
+  then the read date as "Read 14 Aug 2026", or "Read at some point" when the read is
+  undated.
+- **Band three, record:** ink ground, the `@handle` left in band voice, and "Your
+  diary" right for a signed-in reader only — underlined in paper at 40%, full paper
+  under the pointer, with the paper focus ring. A signed-out visitor gets the band
+  with the handle alone; the page is public, so it must close without offering a door
+  that will not open.
+- **States:** none of its own, and no motion. Its links respond in colour only.
+  Undated, unrated, reread, no cover (the page-scale type-only jacket), no review, and
+  signed out against signed in are all real settings with real copy.
 
 ### Field Row
 
@@ -993,7 +1089,9 @@ moves. No other transition on the page changes anything but colour or opacity.
   line, the one its first read is logged on.
 - **Do** cap the measure of a ruled value at 34rem and of prose at 38rem, inside a
   band that still runs edge to edge. On a title page, hang every block, the title
-  included, on one 34rem edge.
+  included, on one 34rem edge. Prose that is the object itself — a review on its
+  permalink — takes the 34rem value measure instead, which is where the body step
+  lands inside the 65–75 characters a line of prose wants.
 - **Do** theme browser surfaces (selection, caret, scrollbar, focus ring) whenever a
   new one appears.
 - **Do** hold both 390px and 1440px as finished layouts; whole-cell repack, never a

@@ -35,7 +35,11 @@ export default async function BookPage({ params }: PageProps<"/book/[workKey]">)
           exist, or a stub that redirects, is decided after the 200 has been
           sent — a soft 404 with noindex, or a client-side redirect. */}
       <Suspense key={workKey} fallback={<BookOpening />}>
-        <OpenedBook workKey={workKey} userId={session.user.id} />
+        <OpenedBook
+          workKey={workKey}
+          userId={session.user.id}
+          username={session.user.username}
+        />
       </Suspense>
     </main>
   );
@@ -44,7 +48,8 @@ export default async function BookPage({ params }: PageProps<"/book/[workKey]">)
 async function OpenedBook({
   workKey,
   userId,
-}: Readonly<{ workKey: string; userId: string }>) {
+  username,
+}: Readonly<{ workKey: string; userId: string; username: string }>) {
   const outcome = await openBook(workKey);
 
   if (outcome.kind === "not-found") notFound();
@@ -56,7 +61,7 @@ async function OpenedBook({
   if (book.olWorkKey !== parseWorkKey(workKey)) redirect(bookPath(book.olWorkKey));
 
   const reads = await getReads(userId, book.id);
-  return <BookTitlePage book={book} reads={reads} />;
+  return <BookTitlePage book={book} reads={reads} username={username} />;
 }
 
 export async function generateMetadata({
