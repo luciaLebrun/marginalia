@@ -55,13 +55,23 @@ function SlipLine({ read, username }: Readonly<{ read: Read; username: string }>
   const date = slipDate(read.readAt);
   const valueClass = "text-[1.375rem] leading-snug font-semibold tracking-[-0.01em]";
 
+  // Built from parts rather than nested templates: the line says the same
+  // things a sighted reader sees on it, in the same order.
+  const spoken = [
+    date,
+    read.rating === null ? "unrated" : `${read.rating} out of 5`,
+    read.isReread ? "reread" : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
   return (
     <li className="border-b border-rule">
       {/* The whole line is the link: hover and focus draw it in solid ink, as
           a search result does, and nothing fills. */}
       <Link
         href={entryPath(username, read.id)}
-        aria-label={`${date}${read.rating === null ? ", unrated" : `, ${read.rating} out of 5`}${read.isReread ? ", reread" : ""}`}
+        aria-label={spoken}
         className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b-2 border-transparent px-3 py-3 transition-colors hover:border-ink focus-visible:border-ink"
       >
         {read.readAt ? (
