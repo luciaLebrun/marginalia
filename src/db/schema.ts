@@ -5,6 +5,7 @@ import {
   integer,
   numeric,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -193,9 +194,37 @@ export const log = pgTable(
   ],
 );
 
+/**
+ * A reader's to-read list (MRG-059): books they mean to read, private to them.
+ *
+ * One row per reader and book — a book is on the list or it is not — so the
+ * primary key is the pair, and saving twice is decided by that key rather
+ * than by a lookup first. Logging a read of the book removes its row.
+ * Deleting an account removes the list with it; a book on someone's list is
+ * not deletable out from under it, as with `log`.
+ */
+export const toRead = pgTable(
+  "to_read",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    bookId: text("book_id")
+      .notNull()
+      .references(() => book.id, { onDelete: "restrict" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.bookId] }),
+    // The list page: one reader's list, newest saved first.
+    index("to_read_user_created_at_idx").on(t.userId, t.createdAt.desc()),
+  ],
+);
+
 export type User = typeof user.$inferSelect;
 export type Book = typeof book.$inferSelect;
 export type NewBook = typeof book.$inferInsert;
 export type Log = typeof log.$inferSelect;
 export type NewLog = typeof log.$inferInsert;
 export type InviteCode = typeof inviteCode.$inferSelect;
+export type ToRead = typeof toRead.$inferSelect;
