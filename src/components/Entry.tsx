@@ -1,7 +1,7 @@
 import { BandInk } from "./BandInk";
 import { Cover } from "./Cover";
 import { Rating } from "./Rating";
-import { fallbackBand, readableOn } from "@/lib/color";
+import { bandColor, readableOn } from "@/lib/color";
 import { cellDate } from "@/lib/slip-date";
 
 export interface DiaryEntry {
@@ -26,7 +26,7 @@ export interface DiaryEntry {
  * hundred are the same designed object because this frame never varies.
  */
 export function Entry({ entry }: Readonly<{ entry: DiaryEntry }>) {
-  const band = entry.coverColor ?? fallbackBand(entry.olWorkKey);
+  const band = bandColor(entry.coverColor, entry.olWorkKey);
   const tone = readableOn(band);
 
   return (

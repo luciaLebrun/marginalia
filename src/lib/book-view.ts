@@ -2,7 +2,7 @@ import { and, eq, sql } from "drizzle-orm";
 
 import { getDb, schema } from "@/db";
 import type { Book } from "@/db/schema";
-import { INK, fallbackBand, readableOn } from "@/lib/color";
+import { INK, bandColor, readableOn } from "@/lib/color";
 
 /**
  * The book page, as data. One query and a set of pure helpers, so every rule
@@ -149,6 +149,6 @@ export function bookBand(
   book: Pick<Book, "coverColor" | "olWorkKey">,
   onShelf: boolean,
 ): { background: string; color: string } {
-  const background = onShelf ? (book.coverColor ?? fallbackBand(book.olWorkKey)) : INK;
+  const background = onShelf ? bandColor(book.coverColor, book.olWorkKey) : INK;
   return { background, color: readableOn(background) };
 }
