@@ -78,6 +78,10 @@ itself shipped with MRG-012; MRG-017 was rescoped by the user to identity.
 - Masthead band three, profile only: the tally left; the right edge depends on
   who is looking — the owner keeps "Your account" (`/settings`), a signed-in
   friend gets "Your diary" (their own `/`), a signed-out visitor gets nothing.
+- Amended by MRG-059 (to-read list, confirmed with the user): the reader's own
+  diary at `/` carries two links in band three — "To read" (`/to-read`), then
+  "Your account" — as a nav on the ink band. The owner's own `/@handle` keeps
+  "Your account" alone; friends and visitors are unchanged.
 - Unchanged: the reader's own diary at `/`, the shelf, the grid, entry cells,
   page titles.
 - States: owner · signed-in friend · signed-out visitor · with and without a

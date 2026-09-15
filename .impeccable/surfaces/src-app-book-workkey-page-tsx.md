@@ -2,7 +2,7 @@
 version: 1
 slug: "src-app-book-workkey-page-tsx"
 primary_target: "src/app/book/[workKey]/page.tsx"
-related_targets: ["src/components/BookTitlePage.tsx","src/components/DateSlip.tsx","src/components/BookStates.tsx","src/components/LogSheet.tsx"]
+related_targets: ["src/components/BookTitlePage.tsx","src/components/DateSlip.tsx","src/components/BookStates.tsx","src/components/LogSheet.tsx","src/components/SlipLines.tsx","src/components/ToReadToggle.tsx"]
 ---
 
 Scope: `/book/[workKey]` — one book, opened through `openBook()`. Reached
@@ -131,6 +131,30 @@ sheet unchanged: no concept roll, no new tone, type step or motion.
   returns to the slip heading) · signed out mid-edit.
 - Confirmed answers: in place on the slip; arm-then-confirm removal; the line
   keeps its permalink link with Edit as a separate control.
+
+## Want to read (MRG-059) — extension, confirmed with the user
+
+An addition inside this surface, inheriting the direction contract: no concept
+roll, no new tone, type step or motion. The list itself is its own surface,
+`/to-read`, with its own brief.
+
+- Job: a reader who opens a book they mean to read later keeps it, in one
+  press, on a private list — without logging a read.
+- Placed on the title page between the imprint rows and the date slip, on the
+  same 34rem measure, so it sits with the book's facts and before the reads.
+- Not on the list: an Outline Button, "Want to read" (floods the fiction band
+  on hover and focus, as every Outline Button does).
+- On the list: a ruled line in the printed-state vocabulary — the drawn tick,
+  "On your to-read list" in band voice, a "Take it off" Text Button, and "Your
+  list" linking to `/to-read`. Never a filled or coloured badge.
+- Logging a read of the book takes it off the list (in `createRead`), so after
+  a save the control returns to "Want to read".
+- Private: the reader comes from the session; the list is never shown to
+  anyone else.
+- States: not on the list · saving · on the list · taking it off · signed out
+  (refusal sentence in alarm with Sign in again) · book no longer here.
+- Confirmed answers: saved from the book page only; the list on its own
+  private page; logging removes it.
 
 ## Unresolved
 

@@ -9,6 +9,7 @@ import { WordmarkBand } from "@/components/WordmarkBand";
 import { getAuth } from "@/lib/auth";
 import { findStoredBook, openBook, parseWorkKey } from "@/lib/book";
 import { getReads } from "@/lib/book-view";
+import { isOnToRead } from "@/lib/to-read";
 import { bookPath } from "@/lib/search";
 
 /**
@@ -60,8 +61,11 @@ async function OpenedBook({
   // own key. One address per book.
   if (book.olWorkKey !== parseWorkKey(workKey)) redirect(bookPath(book.olWorkKey));
 
-  const reads = await getReads(userId, book.id);
-  return <BookTitlePage book={book} reads={reads} username={username} />;
+  const [reads, onToRead] = await Promise.all([
+    getReads(userId, book.id),
+    isOnToRead(userId, book.id),
+  ]);
+  return <BookTitlePage book={book} reads={reads} onToRead={onToRead} username={username} />;
 }
 
 export async function generateMetadata({

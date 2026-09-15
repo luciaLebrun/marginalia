@@ -22,6 +22,13 @@
       "when": 1789042300846,
       "tag": "0002_real_carnage",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789509473014,
+      "tag": "0003_long_slapstick",
+      "breakpoints": true
     }
   ]
 }

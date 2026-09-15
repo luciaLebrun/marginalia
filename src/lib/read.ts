@@ -40,6 +40,12 @@ export async function createRead(
         reviewText: input.review,
         isReread: input.isReread,
       });
+    // A book just read is no longer waiting to be read (MRG-059). Done here, so
+    // every way a read is logged clears it — not in the action, where a second
+    // caller could forget.
+    await getDb()
+      .delete(schema.toRead)
+      .where(and(eq(schema.toRead.userId, userId), eq(schema.toRead.bookId, input.bookId)));
     return { ok: true, id };
   } catch (error) {
     if (sqlState(error) === FOREIGN_KEY_VIOLATION) return { ok: false, reason: "missing" };
@@ -93,7 +99,7 @@ export async function removeRead(userId: string, logId: string): Promise<ChangeR
  * Drizzle puts the driver's error on `.cause`, so the code is not on the error
  * it throws; walking the chain keeps working if another layer wraps it again.
  */
-function sqlState(error: unknown): string | null {
+export function sqlState(error: unknown): string | null {
   let current: unknown = error;
 
   for (let depth = 0; current && depth < 5; depth++) {

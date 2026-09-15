@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { ClaimForm } from "@/components/ClaimForm";
 import { WordmarkBand } from "@/components/WordmarkBand";
 import { getAuth } from "@/lib/auth";
-import { handlePath } from "@/lib/username";
+import { handlePath, suggestUsername } from "@/lib/username";
 
 export const metadata = { title: "Pick a username — Marginalia" };
 
@@ -25,7 +25,7 @@ export default async function ClaimPage() {
     <main className="flex-1">
       <WordmarkBand />
       <div className="px-4 py-10 sm:px-6">
-        <ClaimForm />
+        <ClaimForm suggestion={suggestUsername(session.user.name)} />
       </div>
     </main>
   );

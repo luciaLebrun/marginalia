@@ -240,11 +240,26 @@ components:
   postcard-signature:
     textColor: "{colors.ink}"
     typography: "{typography.field}"
-  postcard-band-record:
+    postcard-band-record:
     backgroundColor: "{colors.ink}"
     textColor: "{colors.paper}"
     typography: "{typography.label}"
     padding: "12px 16px"
+  spine:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.paper}"
+    typography: "{typography.field}"
+    rounded: "0"
+    padding: "8px 12px"
+  spine-author:
+    textColor: "{colors.paper}"
+    typography: "{typography.body}"
+  spine-empty:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink-soft}"
+    typography: "{typography.field}"
+    rounded: "0"
+    height: "4.5rem"
 ---
 
 # Design System: Marginalia
@@ -336,9 +351,11 @@ populated shelf is nearly always derived from the jacket and conditioned before 
 ### Neutral
 - **Paper** (`{colors.paper}`): the page ground and every cell's ground. Also the
   reversed text colour on every ink band — including a review permalink's postmark
-  strip, where the drawn rating takes paper as its `tone` — the focus ring on an ink
-  band, and one of the two candidates the contrast
-  helper picks from for band text.
+  strip, where the drawn rating takes paper as its `tone` — the focus ring on an ink band, and one of the two candidates the contrast
+  helper picks from for band text. A spine on the to-read list is another ink band:
+  its title, its first author at 70%, and its "Take it off" are all paper, and the
+  underline under its title is paper at 40%, going full under the pointer and on
+  keyboard focus.
 - **Sunk Paper** (`{colors.paper-sunk}`): the jacket well behind a cover (in a cell,
   and as a book page's frontispiece), the no-cover setting at both scales, the empty
   frontispiece drawn while a book opens, the year rule's ground, the ground of the
@@ -393,7 +410,10 @@ deliberate flat ink rather than as whatever the scanner captured.
 
 **The Stable Colour Rule.** A fallback band is a deterministic hash of the Open
 Library work key, never random and never per-render. A shelf that reshuffles its own
-colours between visits reads as broken, not lively.
+colours between visits reads as broken, not lively. Anything else that varies per book
+is settled the same way: how far off true a spine lies in the to-read pile is a
+deterministic step from the same key, so the pile looks hand-stacked and still stands
+exactly as it did last visit.
 
 **The Earned Colour Rule.** A book wears a band colour only once it is on this
 reader's shelf. Until then its band is ink: a search result's band, and a book page's
@@ -402,7 +422,10 @@ conditioned jacket colour, or the stable fallback when there is none. Removing a
 book's last read takes it off the shelf, and its band goes back to ink. The rule also
 governs a page-scale band on the review permalink, which calls `bookBand(book, true)`
 with the flag already earned: the entry's own existence is what proves the book is on
-the shelf, so that card's colour band is never held back to ink.
+the shelf, so that card's colour band is never held back to ink. A book merely
+*waiting* is held back the same way: every spine on the to-read list is ink, because
+colour is earned by reading and not by saving, and no jacket colour is extracted for a
+book that has never been logged.
 
 **The Refusal Tone Rule.** Alarm red says one thing — *this was refused, or this is
 about to destroy something* — and it says it as a stroke or as words, never as a
@@ -419,7 +442,7 @@ what it is waiting for.
 Selection, caret, scrollbar track and thumb, and the focus ring are all themed to
 paper and ink; none may be left at the OS default. The tap highlight is switched off:
 a tapped cover-sized link must not flash the platform's grey or blue box, because its
-state is the printed ink border. The focus ring is 2px ink at a 2px offset everywhere except on a band that ink would vanish into. On an ink band the ring is paper; on a band whose ground is a book's colour (a book page's author band) the ring is that band's `readableOn()` foreground, because a fixed paper ring vanishes on a pale jacket as surely as ink vanishes on ink. Every control or link set on a band carries its band's ring. One exception draws the ring inside rather than outside: a slip line's "Edit" hit box fills the line's corner, against the slip's ink head above and the 34rem edge beside it, so its ink ring sits at a −2px offset, inside the box. It is the only inset ring in the build; every other ring stays outside its control.
+state is the printed ink border. The focus ring is 2px ink at a 2px offset everywhere except on a band that ink would vanish into. On an ink band the ring is paper; on a band whose ground is a book's colour (a book page's author band) the ring is that band's `readableOn()` foreground, because a fixed paper ring vanishes on a pale jacket as surely as ink vanishes on ink. Every control or link set on a band carries its band's ring. Two rings are drawn inside rather than outside, each because an outside ring would be lost against what abuts the control. A slip line's "Edit" hit box fills the line's corner, against the slip's ink head above and the 34rem edge beside it, so its ink ring sits at a −2px offset, inside the box. A spine's link on the to-read list carries a **paper** ring at a −4px offset, inside the ink: the spines above and below it are ink too, so an outside ring loses its top and bottom edges into its neighbours. Those two are the only inset rings in the build; every other ring stays outside its control.
 
 ## Typography
 
@@ -459,8 +482,10 @@ of the system, and it is what makes a second typeface unnecessary.
   ink, or in soft ink when the line says "Undated". A review permalink signs its
   message at the same step with the reader's name, linking to their diary. Values are larger than their labels here;
   that inversion is deliberate and is what makes a form read as a filled-in sheet.
-  The one exception is the log sheet's review, set at the body step (see the Value
-  Over Label Rule).
+  The one exception is the log sheet's review, set at the body
+  step (see the Value Over Label Rule). A spine on the to-read list sets its title at
+  this step in paper, balanced and underlined, because a waiting book's title is the
+  value that spine carries.
 - **Title** (600, 0.8125rem, lh tight, balanced): a book title in an entry's record
   band. Small on purpose — the jacket above it is the identifying object.
 - **Body** (400, 0.9375rem / 0.875rem, lh relaxed, soft ink, capped ~34–38rem):
@@ -477,7 +502,9 @@ of the system, and it is what makes a second typeface unnecessary.
   A review permalink's message is set at this step in ink, one paragraph per blank
   line in the reader's own text, capped at the 34rem value measure rather than 38rem
   because prose at this size runs about 90 characters on the wider one; an entry with
-  no words takes the same step in soft ink.
+  no words takes the same step in soft ink. A spine's first author takes this step in
+  paper at 70%, on one truncated line beneath the title — beneath it, never as a
+  tracked-caps label above it.
 - **Label** (600, 0.6875rem, `wdth` 88, 0.14em tracking, caps): the band voice —
   author name, "Add", "Reread", the tally, a year's book count, a field's label, an
   invite's state, every button on the account surfaces, a book page's author line
@@ -490,11 +517,14 @@ of the system, and it is what makes a second typeface unnecessary.
   hold a full-width band. Where band-voice text has to wrap — a state line beside a
   link in a record band at 390px, a two-author line in a book page's author band, the
   author at the foot of a type-only jacket — it takes 1.4 leading and balanced lines instead of
-  its resting line-height of 1.
+  its resting line-height of 1. A spine's "Take it off", a to-read masthead's record
+  line and its "To read" link, and the saved line's "On your to-read list" are this
+  voice as well.
 - **Meta** (500, 0.6875rem, soft ink, tabular): dates, "Unrated", counts, the
   reading span, and on a review permalink the "First published" line and the read
   date under the signature. Field hints, inline errors and the log sheet's
-  rating readout ("Unrated", "N of 5", at 500) sit one step up at 0.8125rem.
+  rating readout ("Unrated", "N of 5", at 500) sit one step up at 0.8125rem, as does
+  the address in the claim form's ink band (500, in paper, lowercase).
 
 ### Named Rules
 
@@ -509,6 +539,12 @@ proportional digits make that column ripple.
 **The Band Voice Rule.** Condensed tracked-out caps are the voice of *content
 carried on a band* — an author, a state, a count, a control, a field's own label.
 They are never used as a kicker or eyebrow above a heading, and never as body copy.
+A band that carries a live value rather than naming content drops the voice: the
+claim form's ink band prints the address the handle becomes, `/@` and the typed
+handle, lowercased, at 0.8125rem and 500 in normal case, because a handle is
+lowercase. Until the reader types it holds a ruled blank after `/@`, never the
+suggestion in the field, so a hint is never printed as if it were already an address.
+The band is `aria-hidden`; the field is what a screen reader reads.
 
 **The Value Over Label Rule.** A form's value is set larger than its label: label in
 the 0.6875rem band voice, value at the 1.375rem field step, on a ruled line with no
@@ -577,6 +613,16 @@ width. The stamp block leads in both layouts, first at 390 and left at 1440, so 
 pointer and the keyboard meet the book before the words. The card is not a fixed
 ratio: the stamp column holds its size while the message column grows, so a
 5,000-character review cannot break it.
+
+**The to-read list is a pile, not a grid.** It runs in one column capped at 48rem,
+inside 16px page padding (24px at ≥640px) and 24px of vertical air (32px at ≥640px).
+Spines are separated by a 1px paper gap rather than by a border, so the join between
+two reads as one printed hairline. Each spine's minimum height is set by its book's
+length (3.5rem at 200 pages or fewer, 6rem at 700 or more, rounded to quarter-rems,
+4.5rem where the page count is unknown), and its jacket well is two-thirds of that
+height wide. Each whole spine is offset from true by a stable 0–3 step — up to 0.5rem
+at 390px and 1.5rem at 1440px — and gives that width up, so both its edges move and
+the pile never runs past its measure.
 
 **Everything runs in the flow of the page, with one named exception.** The commit
 band on the account sheet is `position: sticky; bottom: 0`, and it is the only
@@ -661,7 +707,8 @@ page, not by chrome:
   ruled line, a control that is not yet available, the date slip's closing
   "Log a read" line, a text button's underline, the reread tick's empty box, a link's
   underline (hairline tone on paper; the band's foreground at 40% on a band; alarm
-  at 40% inside a refusal sentence).
+  at 40% inside a refusal sentence), and the claim band's blank after `/@` (a 4rem,
+  1px line in the band's foreground at 50%).
 - **Filled or focused** — the same stroke at solid ink: a code cell holding a
   character, a field being typed in (`focus-within`), a search result under the pointer
   or keyboard focus, a date-slip line under the pointer or on keyboard focus (its own
@@ -747,6 +794,67 @@ in-grid cell, and an `emphatic` variant used alone on the empty shelf.
 - **Hover / focus-visible:** the whole cell floods with the fiction band and all
   foreground flips to the contrast-chosen tone. Colour only; nothing moves.
 
+### Spine (signature component)
+
+A book waiting to be read, lying in the pile: a single ink band on paper, and the
+object the to-read surface is made of. Character: a paperback seen edge-on on the
+bedside stack, not a row in a list.
+
+- **Shape:** square (0px), no border — an ink band on the paper page, its neighbours a
+  1px paper gap away. It is not a tri-band cell: a waiting book has one thing to say,
+  and three bands would promise a record it does not have yet.
+- **Ground:** ink, always, per the Earned Colour Rule. No band colour, no fallback.
+- **Words:** the title at the field step in paper, balanced, underlined in paper at 40%
+  and going to full paper under the pointer and on keyboard focus; the first author
+  beneath it at the body step in paper at 70% ("Author unknown" where there is none),
+  truncated to one line.
+- **Thickness:** the spine's minimum height is its book's length, so a thick book sits
+  thick in the pile (see Layout for the mapping).
+- **Jacket well:** at the spine's end, a 2:3 well at the spine's minimum height, parted
+  from the words by a paper hairline at 20%, holding the Cover. A title that wraps
+  grows the spine past that minimum, and the jacket then sits whole and centred with
+  the spine's own ink above and below it — **never cropped to fill the well**; the
+  never-crop rule outranks a full well. **A book with no cover has no well at all:** the
+  ink runs to the end rather than framing nothing. It is the one place in the build
+  where a missing cover is answered by absence rather than by a drawn setting, because
+  a spine has no second band to hold a type-only jacket.
+- **Take it off:** band voice in paper, underlined at 40%, inside the spine's own
+  footprint at every width — outside the title link, since a control may not live in a
+  link, and before the jacket. Pending, its label becomes the live readout
+  ("Taking off…").
+- **Lie:** each whole spine lies off true by its stable step (Layout, Stable Colour
+  Rule). Newest saved on top. Nothing tilts, nothing casts a shadow, nothing moves.
+- **Links and focus:** the words are the link to the book's page; the jacket is a
+  second link to the same page, `tabIndex -1` and `aria-hidden`, so the ring bounds the
+  words while the whole spine is clickable. That ring is the paper inset exception of
+  the Browser-Surface Rule.
+- **Refusal:** printed under the spine it happened to, on that spine's own offset,
+  never once under the whole stack: the sentence at the body step in alarm, its "Sign
+  in again" link underlined in alarm at 40% and in full alarm under the pointer.
+- **Empty:** the outline of the first spine, drawn rather than described — a 4.5rem
+  hairline box with its jacket well ruled in, "Nothing waiting" at the field step in
+  soft ink — then the sentence saying how a book gets here, and a "Search for a book"
+  Outline Button. The pile shows what it will be; it is never mocked up with invented
+  books.
+
+### Want to Read
+
+The one press that keeps a book without logging a read, set on a book page between the
+imprint rows and the date slip, on the same 34rem measure. Character: a line printed on
+the sheet, never a filled badge and never a toggle.
+
+- **Not on the list:** an Outline Button reading "Want to read" ("Saving…" while it
+  commits).
+- **On the list:** a ruled line closed by a hairline, 12px vertical — the reread tick's
+  20px hairline box with its drawn tick, "On your to-read list" beside it in band voice,
+  and at the right end "Your list" and "Take it off" as Text Buttons. At 390px the two
+  halves wrap rather than shrinking.
+- **Refusal:** the sentence at the body step in alarm under the line, with "Sign in
+  again" where the reader is signed out. Taking off has its own wording ("Not taken off:
+  you're signed out."), never the saving sentence reused.
+- **Announced:** a visually hidden readout says "Saved to your to-read list." or "Taken
+  off your to-read list."; the same readout stands under the pile when a spine goes.
+
 ### Masthead (page-scale tri-band)
 
 The same three bands at page width, differentiated by *ground* rather than by size —
@@ -764,15 +872,20 @@ device repeated, and the year rule immediately below is already a ruled strip.
   band voice, in soft ink, breaking anywhere rather than overflowing at 390px; then
   the bio as body copy in soft ink, capped at 38rem, each 12px under the line above.
   With no bio there is no line and nothing stands in for it. The reader's own diary
-  shows neither.
+  shows neither. A page that is not a diary names itself in this band the same way: the
+  to-read list sets "To read" at display scale with its count holding the right edge.
 - **Band three:** ink ground, paper text, the tally in label type ("11 books logged"
-  / "Nothing logged yet") left, and the way onward right. On the reader's own diary
-  it is "Your account" (`/settings`). On a profile it depends on who is looking: the
-  owner, on their own profile, keeps "Your account"; a signed-in friend gets "Your
-  diary" (their own `/`); a signed-out visitor gets nothing, only the tally. Every
-  link on this band carries the paper focus ring. A separate
-  nav bar would be a fourth band this page does not have. This band also ships on its
-  own under the search field: the search's state ("5 books", "Searching Open
+  / "Nothing logged yet") left, and the way onward right. The left words are a tally by
+  default; a page that is not a diary gives them directly instead — the to-read list
+  reads "Newest saved on top", or "Saved from a book's page" when nothing is waiting.
+  The right end carries one way onward or several: several are a `nav` labelled "Your
+  pages", 20px apart. On the reader's own diary they are "To read" (`/to-read`) then
+  "Your account" (`/settings`). On a profile it is one link, and which depends on who is
+  looking: the owner, on their own profile, keeps "Your account"; a signed-in friend gets
+  "Your diary" (their own `/`); a signed-out visitor gets nothing, only the tally. Every
+  link on this band carries the paper focus ring. This band remains the page's ruled
+  foot; a separate nav bar would be a fourth band this page does not have. This band
+  also ships on its own under the search field: the search's state ("5 books", "Searching Open
   Library…") left, and "Your diary" right. A book page's states open with the same
   ink band on its own: "Opening this book…", "Book unavailable" or "Book not found"
   left, "Your diary" right.
@@ -799,7 +912,7 @@ page.
 - **Band two, frontispiece and title page:** the jacket in a 2:3 sunk-paper well with
   a hairline border, facing the title column (see Layout). In that column: the title
   at display scale, the subtitle at the field step in soft ink, the imprint rows, the
-  date slip, then the description in soft-ink body copy.
+  Want to Read control, the date slip, then the description in soft-ink body copy.
 - **Imprint rows:** a list opened by a hairline, one row per known value, each closed
   by a hairline, 10px vertical. The label sits left in soft-ink band voice and the
   value right on the same baseline, at body size, weight 500, in ink. A value Open
@@ -984,7 +1097,8 @@ header over an article.
 ### Field Row
 
 One row of a form — the account sheet's and the log sheet's — and the only text-entry
-pattern in the system.
+pattern in the system. The claim form's handle takes the same line and states under
+its heading.
 Character: a line on a printed form, filled in.
 
 - **Shape:** no box, no fill, no radius. A 2px ruled line under the value, capped at
@@ -994,11 +1108,20 @@ Character: a line on a printed form, filled in.
   soft-ink `@` where the value is a handle. A multi-line note uses
   `field-sizing: content` so the box grows to the text rather than clipping it. A log
   sheet's review is the one value set at the body step instead (see the Value Over
-  Label Rule).
+  Label Rule). A placeholder is a hint, never a prefilled value, set at the body
+  weight (400) in full soft ink, never faded below it. The claim form's is a handle
+  built from the reader's own name by `suggestUsername()` ("your_name" when the name
+  gives nothing usable), never a handle that belongs to someone else.
 - **States:** hairline at rest, solid ink on `focus-within`, alarm on the failed
   field. A hint sits under the line in soft ink at 0.8125rem and switches to alarm
   when what the reader has typed will destroy something (renaming a handle kills the
-  old address). The field-level error prints under the hint in the same tone.
+  old address). The field-level error prints under the hint in the same tone. The
+  line's tone is set by class, so ink on `focus-within` is never held down by a
+  resting colour. The claim form is `noValidate`: an empty handle is refused in its
+  own alarm sentence ("Type your own username — the one shown is only a
+  suggestion."), never the browser's bubble, and the refusal stands down on the
+  reader's next keystroke — sentence, alarm line and `aria-invalid` together — because
+  what was refused is no longer in the field.
 
 ### Code Cells (signature component)
 
@@ -1053,8 +1176,9 @@ log sheet. Character: a band, not a toolbar.
 ### Outline Button
 
 The standing control outside the form — "Mint a code", "Sign out", "Delete this
-account", "Search for a book" on a book page that was not found, where it is a
-link, and "Remove" in an edit sheet's armed removal. Character: a label with a border drawn around it.
+account", "Search for a book" on a book page that was not found and on an empty to-read
+list, where it is a link, "Want to read" on a book page, and "Remove" in an edit sheet's
+armed removal. Character: a label with a border drawn around it.
 
 - **Shape:** square, 1px border, 12px/10px padding, band-voice label, paper ground.
 - **Border:** solid ink when the control is available; hairline while it is not.
@@ -1067,8 +1191,9 @@ link, and "Remove" in an edit sheet's armed removal. Character: a label with a b
 
 ### Text Button
 
-The secondary control inside a form row — "Undated" and "Clear" on the log sheet, and
-"Remove this read" and "Keep it" under an edit sheet's commit band.
+The secondary control inside a form row — "Undated" and "Clear" on the log sheet,
+"Remove this read" and "Keep it" under an edit sheet's commit band, and "Your list" and
+"Take it off" on the saved line of a book page's Want to Read.
 Character: a word in the row's margin, not a second button.
 
 - **Shape:** no border, no ground, no padding; a band-voice label in ink, underlined
@@ -1158,6 +1283,10 @@ moves. No other transition on the page changes anything but colour or opacity.
   included, on one 34rem edge. Prose that is the object itself — a review on its
   permalink — takes the 34rem value measure instead, which is where the body step
   lands inside the 65–75 characters a line of prose wants.
+- **Do** hold a jacket whole in whatever well it lands in, letting the well's own
+  ground show above and below it. Never crop a cover to fill a taller well.
+- **Do** print a refusal under the object that refused — the spine, the field, the row
+  — not once under the list that holds it.
 - **Do** theme browser surfaces (selection, caret, scrollbar, focus ring, tap highlight) whenever a
   new one appears.
 - **Do** hold both 390px and 1440px as finished layouts; whole-cell repack, never a
@@ -1190,5 +1319,7 @@ moves. No other transition on the page changes anything but colour or opacity.
   mark, or the dash inside a code. Icons and separators are authored SVG paths.
 - **Don't** invent entries, ratings, reviews, counts, or activity to populate a
   design. The production database is empty; every state must be honest to that.
+- **Don't** give a book a band colour, a jacket colour, or a fallback for merely being
+  saved. A waiting book is ink until it is read.
 - **Don't** add a second animated moment. If something must move, replace the band
   wipe rather than joining it.

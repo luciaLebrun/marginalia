@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { WordmarkBand } from "./WordmarkBand";
-import { ACCOUNT_LINK, type MastheadLink } from "@/lib/masthead-link";
+import { ACCOUNT_LINK, TO_READ_LINK, type MastheadLink } from "@/lib/masthead-link";
 
 /**
  * The masthead is a tri-band at page scale — colour, field, record — so the
@@ -17,7 +17,9 @@ export function Masthead({
   count,
   handle = null,
   bio = null,
-  link = ACCOUNT_LINK,
+  // The reader's own diary: their list, then their account.
+  link = [TO_READ_LINK, ACCOUNT_LINK],
+  tally,
 }: Readonly<{
   name: string | null;
   /**
@@ -38,10 +40,13 @@ export function Masthead({
    * The record band's way onward. Defaults to the account; a profile passes
    * whatever suits who is looking, and null for a visitor with nowhere to go.
    */
-  link?: MastheadLink | null;
+  link?: MastheadLink | readonly MastheadLink[] | null;
+  /** The record band's own words, where the page is not a diary's tally. */
+  tally?: string;
 }>) {
   const noun = count === 1 ? "book" : "books";
-  const tally = count === 0 ? "Nothing logged yet" : `${count} ${noun} logged`;
+  const record = tally ?? (count === 0 ? "Nothing logged yet" : `${count} ${noun} logged`);
+  const links = link === null ? [] : [link].flat();
 
   return (
     <header>
@@ -77,15 +82,20 @@ export function Masthead({
           step. A separate nav bar would be a fourth band this page does not
           have, and this one is already the page's ruled foot. */}
       <div className="flex items-center justify-between gap-4 bg-ink px-4 py-3 text-paper sm:px-6">
-        <p className="band-label">{tally}</p>
-        {link && (
-          <Link
-            href={link.href}
-            // The global focus ring is ink, which vanishes on this band.
-            className="band-label underline decoration-paper/40 underline-offset-4 transition-colors hover:decoration-paper focus-visible:outline-paper"
-          >
-            {link.label}
-          </Link>
+        <p className="band-label">{record}</p>
+        {links.length > 0 && (
+          <nav aria-label="Your pages" className="flex items-center gap-5">
+            {links.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                // The global focus ring is ink, which vanishes on this band.
+                className="band-label underline decoration-paper/40 underline-offset-4 transition-colors hover:decoration-paper focus-visible:outline-paper"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
         )}
       </div>
     </header>
