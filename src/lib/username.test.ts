@@ -6,7 +6,9 @@ import {
   RESERVED,
   handlePath,
   normalizeUsername,
+  FALLBACK_SUGGESTION,
   parseHandle,
+  suggestUsername,
   usernameError,
 } from "./username";
 
@@ -143,5 +145,34 @@ describe("handlePath", () => {
     for (const name of ["lucia", "abc", "reader_2026"]) {
       expect(parseHandle(encodeURIComponent(handlePath(name).slice(1)))).toBe(name);
     }
+  });
+});
+
+/*
+ * MRG-058: the claim form hinted "lucia" to everyone. The hint is now the
+ * reader's own name, held to the same rules as a claim.
+ */
+describe("suggestUsername", () => {
+  it("builds a handle from the reader's own name, accents folded", () => {
+    expect(suggestUsername("Hélène Martin")).toBe("helene_martin");
+    expect(suggestUsername("  Zoë  O'Brien-Smith ")).toBe("zoe_o_brien_smith");
+  });
+
+  it("starts with a letter and stays within the limit", () => {
+    expect(suggestUsername("42 Jean-Baptiste de la Fontaine")).toBe("jean_baptiste_de_la");
+    expect(suggestUsername("Maximilian Alexander Longname").length).toBeLessThanOrEqual(MAX_LENGTH);
+  });
+
+  it("is always a handle the claim would accept", () => {
+    for (const name of ["Hélène Martin", "Ana", "Jean-Baptiste de la Fontaine", "李小龙", "Bo", "", null]) {
+      expect(normalizeUsername(suggestUsername(name))).not.toBeNull();
+    }
+  });
+
+  it("falls back to a neutral example when the name gives nothing usable", () => {
+    expect(suggestUsername(null)).toBe(FALLBACK_SUGGESTION);
+    expect(suggestUsername("李小龙")).toBe(FALLBACK_SUGGESTION);
+    expect(suggestUsername("Bo")).toBe(FALLBACK_SUGGESTION);
+    expect(suggestUsername("Admin")).toBe(FALLBACK_SUGGESTION);
   });
 });

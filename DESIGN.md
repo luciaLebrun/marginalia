@@ -494,7 +494,8 @@ of the system, and it is what makes a second typeface unnecessary.
 - **Meta** (500, 0.6875rem, soft ink, tabular): dates, "Unrated", counts, the
   reading span, and on a review permalink the "First published" line and the read
   date under the signature. Field hints, inline errors and the log sheet's
-  rating readout ("Unrated", "N of 5", at 500) sit one step up at 0.8125rem.
+  rating readout ("Unrated", "N of 5", at 500) sit one step up at 0.8125rem, as does
+  the address in the claim form's ink band (500, in paper, lowercase).
 
 ### Named Rules
 
@@ -509,6 +510,12 @@ proportional digits make that column ripple.
 **The Band Voice Rule.** Condensed tracked-out caps are the voice of *content
 carried on a band* — an author, a state, a count, a control, a field's own label.
 They are never used as a kicker or eyebrow above a heading, and never as body copy.
+A band that carries a live value rather than naming content drops the voice: the
+claim form's ink band prints the address the handle becomes, `/@` and the typed
+handle, lowercased, at 0.8125rem and 500 in normal case, because a handle is
+lowercase. Until the reader types it holds a ruled blank after `/@`, never the
+suggestion in the field, so a hint is never printed as if it were already an address.
+The band is `aria-hidden`; the field is what a screen reader reads.
 
 **The Value Over Label Rule.** A form's value is set larger than its label: label in
 the 0.6875rem band voice, value at the 1.375rem field step, on a ruled line with no
@@ -661,7 +668,8 @@ page, not by chrome:
   ruled line, a control that is not yet available, the date slip's closing
   "Log a read" line, a text button's underline, the reread tick's empty box, a link's
   underline (hairline tone on paper; the band's foreground at 40% on a band; alarm
-  at 40% inside a refusal sentence).
+  at 40% inside a refusal sentence), and the claim band's blank after `/@` (a 4rem,
+  1px line in the band's foreground at 50%).
 - **Filled or focused** — the same stroke at solid ink: a code cell holding a
   character, a field being typed in (`focus-within`), a search result under the pointer
   or keyboard focus, a date-slip line under the pointer or on keyboard focus (its own
@@ -984,7 +992,8 @@ header over an article.
 ### Field Row
 
 One row of a form — the account sheet's and the log sheet's — and the only text-entry
-pattern in the system.
+pattern in the system. The claim form's handle takes the same line and states under
+its heading.
 Character: a line on a printed form, filled in.
 
 - **Shape:** no box, no fill, no radius. A 2px ruled line under the value, capped at
@@ -994,11 +1003,20 @@ Character: a line on a printed form, filled in.
   soft-ink `@` where the value is a handle. A multi-line note uses
   `field-sizing: content` so the box grows to the text rather than clipping it. A log
   sheet's review is the one value set at the body step instead (see the Value Over
-  Label Rule).
+  Label Rule). A placeholder is a hint, never a prefilled value, set at the body
+  weight (400) in full soft ink, never faded below it. The claim form's is a handle
+  built from the reader's own name by `suggestUsername()` ("your_name" when the name
+  gives nothing usable), never a handle that belongs to someone else.
 - **States:** hairline at rest, solid ink on `focus-within`, alarm on the failed
   field. A hint sits under the line in soft ink at 0.8125rem and switches to alarm
   when what the reader has typed will destroy something (renaming a handle kills the
-  old address). The field-level error prints under the hint in the same tone.
+  old address). The field-level error prints under the hint in the same tone. The
+  line's tone is set by class, so ink on `focus-within` is never held down by a
+  resting colour. The claim form is `noValidate`: an empty handle is refused in its
+  own alarm sentence ("Type your own username — the one shown is only a
+  suggestion."), never the browser's bubble, and the refusal stands down on the
+  reader's next keystroke — sentence, alarm line and `aria-invalid` together — because
+  what was refused is no longer in the field.
 
 ### Code Cells (signature component)
 

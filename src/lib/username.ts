@@ -82,6 +82,32 @@ export function normalizeUsername(input: string): string | null {
   return candidate;
 }
 
+/** What the claim form shows when a name gives nothing usable. */
+export const FALLBACK_SUGGESTION = "your_name";
+
+/**
+ * A username built from the reader's own name, for the claim form's
+ * placeholder — "Hélène Martin" becomes "helene_martin".
+ *
+ * Only a hint, never a claim: the reader still types their own. Accents are
+ * folded away rather than dropped, anything else becomes one underscore, and
+ * the result is cut to the limit and held to the same rules as a real claim.
+ * A name that cannot make a valid handle (all digits, too short, reserved)
+ * falls back to a neutral example.
+ */
+export function suggestUsername(name: string | null | undefined): string {
+  const slug = (name ?? "")
+    .normalize("NFD")
+    .replaceAll(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9]+/g, "_")
+    .replace(/^[^a-z]+/, "")
+    .slice(0, MAX_LENGTH)
+    .replace(/_+$/, "");
+
+  return normalizeUsername(slug) ?? FALLBACK_SUGGESTION;
+}
+
 /**
  * Why this username was refused, in words a person can act on.
  *

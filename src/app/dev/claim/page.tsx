@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ClaimForm } from "@/components/ClaimForm";
 import { WordmarkBand } from "@/components/WordmarkBand";
 import { getDb, schema } from "@/db";
-import { handlePath } from "@/lib/username";
+import { handlePath, suggestUsername } from "@/lib/username";
 
 /**
  * Development harness for the claim form, matching `/dev/shelf`.
@@ -15,7 +15,7 @@ export default async function DevClaimPage() {
   if (process.env.NODE_ENV === "production") notFound();
 
   const [user] = await getDb()
-    .select({ id: schema.user.id, username: schema.user.username })
+    .select({ id: schema.user.id, username: schema.user.username, name: schema.user.name })
     .from(schema.user)
     .where(eq(schema.user.id, "dev-newcomer"));
 
@@ -42,7 +42,7 @@ export default async function DevClaimPage() {
           . Clear it in the database to exercise the form again.
         </p>
       ) : (
-          <ClaimForm devUserId={user.id} />
+          <ClaimForm suggestion={suggestUsername(user.name)} devUserId={user.id} />
         )}
       </div>
     </main>
