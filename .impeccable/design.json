@@ -336,17 +336,17 @@
       "name": "Shelf Grid",
       "kind": "custom",
       "refersTo": "entry-card",
-      "description": "Whole-cell repack at 2 / 3 / 4 / 6 columns with a 1px hairline gap. Unfilled positions in a partial row are ruled by a non-repeating gradient tiled to the column count; real cells paint over it.",
+      "description": "Whole-cell repack at 2 / 3 / 4 / 6 columns with a 1px hairline gap. Unfilled positions in a partial row are ruled by a non-repeating gradient tiled to the column count; real cells paint over it. A link in the grid (entry, search result, log cell) is raised in paint order while hovered or focused, so the next cell never covers its focus ring; nothing moves.",
       "html": "<div class=\"ds-shelf\"><div class=\"ds-shelf-cell\"></div><div class=\"ds-shelf-cell\"></div><div class=\"ds-shelf-cell\"></div></div>",
-      "css": ".ds-shelf { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 1px; background-color: #F4F1E8; background-image: linear-gradient(to right, rgba(22,19,15,0.15) 0 1px, transparent 1px); background-repeat: repeat-x; background-size: calc((100% + 1px) / 2) 100%; } @media (min-width: 40rem) { .ds-shelf { grid-template-columns: repeat(3, minmax(0, 1fr)); background-size: calc((100% + 1px) / 3) 100%; } } @media (min-width: 64rem) { .ds-shelf { grid-template-columns: repeat(4, minmax(0, 1fr)); background-size: calc((100% + 1px) / 4) 100%; } } @media (min-width: 80rem) { .ds-shelf { grid-template-columns: repeat(6, minmax(0, 1fr)); background-size: calc((100% + 1px) / 6) 100%; } } .ds-shelf-cell { aspect-ratio: 2 / 3; border: 1px solid rgba(22,19,15,0.15); background: #EAE5D8; }"
+      "css": ".ds-shelf { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 1px; background-color: #F4F1E8; background-image: linear-gradient(to right, rgba(22,19,15,0.15) 0 1px, transparent 1px); background-repeat: repeat-x; background-size: calc((100% + 1px) / 2) 100%; } @media (min-width: 40rem) { .ds-shelf { grid-template-columns: repeat(3, minmax(0, 1fr)); background-size: calc((100% + 1px) / 3) 100%; } } @media (min-width: 64rem) { .ds-shelf { grid-template-columns: repeat(4, minmax(0, 1fr)); background-size: calc((100% + 1px) / 4) 100%; } } @media (min-width: 80rem) { .ds-shelf { grid-template-columns: repeat(6, minmax(0, 1fr)); background-size: calc((100% + 1px) / 6) 100%; } } .ds-shelf-cell { aspect-ratio: 2 / 3; border: 1px solid rgba(22,19,15,0.15); background: #EAE5D8; } .ds-shelf a { position: relative; } .ds-shelf a:hover, .ds-shelf a:focus-visible { z-index: 1; }"
     },
     {
       "name": "Browser Surfaces",
       "kind": "custom",
       "refersTo": "entry-card",
-      "description": "Selection, caret, focus ring and scrollbar, themed to paper and ink. Surfaces we did not draw still belong to the design.",
+      "description": "Selection, caret, focus ring and scrollbar, themed to paper and ink, and the tap highlight switched off so a tapped link shows only its printed ink border. Surfaces we did not draw still belong to the design.",
       "html": "<div class=\"ds-surfaces\"><p>Select this line to see the fiction band as the selection highlight.</p><input class=\"ds-input\" value=\"Caret picks up the band colour\" /></div>",
-      "css": ".ds-surfaces { font-family: Archivo, ui-sans-serif, system-ui, sans-serif; color: #16130F; background: #F4F1E8; padding: 16px; } .ds-surfaces ::selection { background: #E8501B; color: #16130F; } .ds-input { width: 100%; margin-top: 12px; padding: 8px 10px; border: 1px solid #16130F; border-radius: 0; background: #F4F1E8; color: #16130F; caret-color: #E8501B; font: inherit; font-size: 0.9375rem; } .ds-input:focus-visible { outline: 2px solid #16130F; outline-offset: 2px; }"
+      "css": ".ds-surfaces { font-family: Archivo, ui-sans-serif, system-ui, sans-serif; color: #16130F; background: #F4F1E8; padding: 16px; -webkit-tap-highlight-color: transparent; } .ds-surfaces ::selection { background: #E8501B; color: #16130F; } .ds-input { width: 100%; margin-top: 12px; padding: 8px 10px; border: 1px solid #16130F; border-radius: 0; background: #F4F1E8; color: #16130F; caret-color: #E8501B; font: inherit; font-size: 0.9375rem; } .ds-input:focus-visible { outline: 2px solid #16130F; outline-offset: 2px; }"
     }
   ],
   "narrative": {
@@ -394,7 +394,7 @@
       },
       {
         "name": "The Browser-Surface Rule",
-        "body": "Surfaces we did not draw still belong to the design. Selection, caret, scrollbar track and thumb, and the focus ring are all themed to paper and ink; none may be left at the OS default. The focus ring is 2px ink at a 2px offset everywhere except on a band that ink would vanish into. On an ink band the ring is paper; on a band whose ground is a book's colour (a book page's author band) the ring is that band's readableOn() foreground, because a fixed paper ring vanishes on a pale jacket as surely as ink vanishes on ink. Every control or link set on a band carries its band's ring.",
+        "body": "Surfaces we did not draw still belong to the design. Selection, caret, scrollbar track and thumb, and the focus ring are all themed to paper and ink; none may be left at the OS default. The tap highlight is switched off: a tapped cover-sized link must not flash the platform's grey or blue box, because its state is the printed ink border. The focus ring is 2px ink at a 2px offset everywhere except on a band that ink would vanish into. On an ink band the ring is paper; on a band whose ground is a book's colour (a book page's author band) the ring is that band's readableOn() foreground, because a fixed paper ring vanishes on a pale jacket as surely as ink vanishes on ink. Every control or link set on a band carries its band's ring.",
         "section": "colors"
       },
       {
@@ -461,7 +461,7 @@
       "Do use Archivo's width axis for voice: wide for the wordmark (wdth 118), condensed for band labels (wdth 88).",
       "Do design empty and no-cover states as real settings with real copy — an unfilled slot is ruled, a coverless book gets a typographic jacket, an empty invite run says what an invitation does, a book with no reads gets a slip with one ruled line, the one its first read is logged on.",
       "Do cap the measure of a ruled value at 34rem and of prose at 38rem, inside a band that still runs edge to edge. On a title page, hang every block, the title included, on one 34rem edge. Prose that is the object itself — a review on its permalink — takes the 34rem value measure instead, which is where the body step lands inside the 65–75 characters a line of prose wants.",
-      "Do theme browser surfaces (selection, caret, scrollbar, focus ring) whenever a new one appears.",
+      "Do theme browser surfaces (selection, caret, scrollbar, focus ring, tap highlight) whenever a new one appears.",
       "Do hold both 390px and 1440px as finished layouts; whole-cell repack, never a list fallback."
     ],
     "donts": [

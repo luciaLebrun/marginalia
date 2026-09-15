@@ -56,6 +56,9 @@ test.describe("reading diary", () => {
     // toHaveCSS retries, so the 150ms colour transition cannot race it.
     await expect(first).toHaveCSS("border-color", "rgb(22, 19, 15)");
     await expect(first).toHaveCSS("background-color", "rgb(244, 241, 232)");
+    // The ring sits outside the cell, across a 1px gap: raised, or the next
+    // cell paints over its right and bottom sides.
+    await expect(first).toHaveCSS("z-index", "1");
   });
 
   test("never addresses a cover by ISBN", async ({ page }) => {

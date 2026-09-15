@@ -66,6 +66,12 @@
     outline-offset: 2px;
   }
 
+  /* A tapped cover-sized link would flash the platform's grey or blue box;
+     state here is the printed ink border, per the Printed State Rule. */
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
   ::-webkit-scrollbar {
     width: 11px;
     height: 11px;
@@ -155,6 +161,20 @@
       grid-template-columns: repeat(6, minmax(0, 1fr));
       background-size: calc((100% + 1px) / 6) 100%;
     }
+  }
+
+  /*
+   * A linked cell's ring sits 2px outside it, across a 1px gap, so the next
+   * cell in DOM order painted over its right and bottom sides. Raising the
+   * pointed-at or focused cell changes paint order only — nothing moves.
+   * Covers every link in the grid: entries, search results, the log cell.
+   */
+  .shelf-grid a {
+    position: relative;
+  }
+  .shelf-grid a:hover,
+  .shelf-grid a:focus-visible {
+    z-index: 1;
   }
 }
 

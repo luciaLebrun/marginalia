@@ -400,7 +400,9 @@ what it is waiting for.
 
 **The Browser-Surface Rule.** Surfaces we did not draw still belong to the design.
 Selection, caret, scrollbar track and thumb, and the focus ring are all themed to
-paper and ink; none may be left at the OS default. The focus ring is 2px ink at a 2px offset everywhere except on a band that ink would vanish into. On an ink band the ring is paper; on a band whose ground is a book's colour (a book page's author band) the ring is that band's `readableOn()` foreground, because a fixed paper ring vanishes on a pale jacket as surely as ink vanishes on ink. Every control or link set on a band carries its band's ring.
+paper and ink; none may be left at the OS default. The tap highlight is switched off:
+a tapped cover-sized link must not flash the platform's grey or blue box, because its
+state is the printed ink border. The focus ring is 2px ink at a 2px offset everywhere except on a band that ink would vanish into. On an ink band the ring is paper; on a band whose ground is a book's colour (a book page's author band) the ring is that band's `readableOn()` foreground, because a fixed paper ring vanishes on a pale jacket as surely as ink vanishes on ink. Every control or link set on a band carries its band's ring.
 
 ## Typography
 
@@ -522,6 +524,10 @@ a 1400px stroke.
 **The shelf grid** is whole-cell repack at four steps: 2 columns below 40rem, 3 at
 ≥40rem, 4 at ≥64rem, 6 at ≥80rem. Cells are separated by a 1px gap over a paper
 background, so the join between two cells reads as a single printed hairline.
+Across that 1px gap the next cell would paint over a linked cell's 2px-offset focus
+ring, so every link in the grid — an Entry Card, a Search Result, the Log Cell — is
+raised in paint order while pointed at or focused. Only the stacking changes;
+nothing moves.
 Chronology runs down the grid; the "Log a book" cell always holds the first position
 of the first (most recent) year group.
 
@@ -1098,7 +1104,7 @@ moves. No other transition on the page changes anything but colour or opacity.
   included, on one 34rem edge. Prose that is the object itself — a review on its
   permalink — takes the 34rem value measure instead, which is where the body step
   lands inside the 65–75 characters a line of prose wants.
-- **Do** theme browser surfaces (selection, caret, scrollbar, focus ring) whenever a
+- **Do** theme browser surfaces (selection, caret, scrollbar, focus ring, tap highlight) whenever a
   new one appears.
 - **Do** hold both 390px and 1440px as finished layouts; whole-cell repack, never a
   list fallback.
