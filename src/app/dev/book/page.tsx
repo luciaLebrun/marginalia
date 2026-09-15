@@ -149,6 +149,8 @@ function State({ state }: Readonly<{ state: string }>) {
       return <BookTitlePage book={SUBTITLED} reads={[]} username="lucia" diaryHref={DIARY} />;
     case "authors":
       return <BookTitlePage book={MANY_AUTHORS} reads={[]} username="lucia" diaryHref={DIARY} />;
+    case "saved":
+      return <BookTitlePage book={DUNE} reads={[]} onToRead username="lucia" diaryHref={DIARY} />;
     case "shelf":
       return <BookTitlePage book={DUNE} reads={SHELF_READS} username="lucia" diaryHref={DIARY} />;
     case "fallback":

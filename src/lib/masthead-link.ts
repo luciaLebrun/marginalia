@@ -19,6 +19,7 @@ export interface MastheadLink {
 
 export const ACCOUNT_LINK: MastheadLink = { href: "/settings", label: "Your account" };
 export const DIARY_LINK: MastheadLink = { href: "/", label: "Your diary" };
+export const TO_READ_LINK: MastheadLink = { href: "/to-read", label: "To read" };
 
 export function profileMastheadLink(
   viewerId: string | null,

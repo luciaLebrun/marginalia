@@ -30,8 +30,15 @@ resulting record is pleasurable to scroll back through months later.
 Confirmed with the user: the primary job is **recording what you just
 finished** — a private log you enjoy revisiting. Friends are an audience for
 that record, not the reason to open the app. A friends' activity feed and
-discovery/to-read features are deliberately **not** the product's centre, and
-are out of scope for the first release.
+discovery features are deliberately **not** the product's centre.
+
+Confirmed with the user on 2026-09-15, at the first invited friend's request:
+a **to-read list** is in scope. It is a reader's own private list of books
+they mean to read — saved from the book page, kept on its own page apart from
+the diary, and emptied of a book when that book is logged. It serves the
+primary job rather than competing with it: the diary stays the record of what
+was read, and the list is only where the next read waits. It is never shown to
+anyone else and never becomes a feed or a recommendation surface.
 
 ## Positioning
 
@@ -92,8 +99,8 @@ Beyond the first release, two directions are stated rather than parked:
   here is authored, not neutral UI strings, so translating it will be writing
   rather than extraction.
 
-Explicitly undecided: whether a friends' feed, shelves/lists, reading progress,
-or saved quotes are ever built. They are parked, not planned.
+Explicitly undecided: whether a friends' feed, custom shelves or public lists,
+reading progress, or saved quotes are ever built. They are parked, not planned.
 
 ## Brand Commitments
 
