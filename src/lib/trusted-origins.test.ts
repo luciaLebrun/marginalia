@@ -1,12 +1,15 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { PREVIEW_ORIGIN_PATTERN, trustedOrigins } from "./trusted-origins";
+import { PREVIEW_ORIGIN_PATTERN, proxyCurrentURL, trustedOrigins } from "./trusted-origins";
 
-const ORIGINAL = process.env.VERCEL_ENV;
+const KEYS = ["VERCEL_ENV", "VERCEL_BRANCH_URL", "BETTER_AUTH_URL"] as const;
+const ORIGINAL = Object.fromEntries(KEYS.map((k) => [k, process.env[k]]));
 
 afterEach(() => {
-  if (ORIGINAL === undefined) delete process.env.VERCEL_ENV;
-  else process.env.VERCEL_ENV = ORIGINAL;
+  for (const k of KEYS) {
+    if (ORIGINAL[k] === undefined) delete process.env[k];
+    else process.env[k] = ORIGINAL[k];
+  }
 });
 
 describe("trustedOrigins", () => {
@@ -74,5 +77,33 @@ describe("the preview origin pattern", () => {
 
   it("carries no path, so only the origin is ever compared", () => {
     expect(PREVIEW_ORIGIN_PATTERN.slice("https://".length)).not.toContain("/");
+  });
+});
+
+/*
+ * Sign-in starts in a server action, where the proxy has no request host and
+ * fell back to VERCEL_URL — a host nobody browses, so the invite cookie never
+ * reached the sign-up and every invited account failed in production.
+ */
+describe("proxyCurrentURL", () => {
+  it("is the production URL in production, so the proxy skips", () => {
+    process.env.VERCEL_ENV = "production";
+    process.env.BETTER_AUTH_URL = "https://marginalia-roan.vercel.app";
+    process.env.VERCEL_BRANCH_URL = "marginalia-git-main-lucialebruns-projects.vercel.app";
+    expect(proxyCurrentURL()).toBe("https://marginalia-roan.vercel.app");
+  });
+
+  it("is the branch URL on a preview, where the door set its cookie", () => {
+    process.env.VERCEL_ENV = "preview";
+    process.env.VERCEL_BRANCH_URL = "marginalia-git-feature-x-lucialebruns-projects.vercel.app";
+    expect(proxyCurrentURL()).toBe(
+      "https://marginalia-git-feature-x-lucialebruns-projects.vercel.app",
+    );
+  });
+
+  it("leaves the plugin its default locally", () => {
+    delete process.env.VERCEL_ENV;
+    delete process.env.VERCEL_BRANCH_URL;
+    expect(proxyCurrentURL()).toBeUndefined();
   });
 });
