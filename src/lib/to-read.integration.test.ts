@@ -12,9 +12,20 @@ import { getToRead, isOnToRead, removeToRead, saveToRead } from "./to-read";
 const url = process.env.DATABASE_URL ?? "";
 const hasRealDb = url.length > 0 && !url.includes("placeholder");
 
-const READER = "_it_toread_reader";
-const OTHER = "_it_toread_other";
-const BOOKS = ["_it_toread_book_a", "_it_toread_book_b"];
+/*
+ * Scoped to this run. CI runs a workflow per push and per pull request, and
+ * both hit the same Neon branch: with fixed ids, one run's cleanup deletes the
+ * rows the other is asserting on, and its writes put back rows the other has
+ * just removed. The work keys stay OL-shaped because `book.ol_work_key` is
+ * unique and the column is read back as one.
+ */
+const RUN = process.env.GITHUB_RUN_ID ?? `local${process.pid}`;
+const KEY = [...RUN].reduce((hash, char) => (hash * 31 + char.codePointAt(0)!) % 900000, 7) + 100000;
+
+const READER = `_it_toread_reader_${RUN}`;
+const OTHER = `_it_toread_other_${RUN}`;
+const BOOKS = [`_it_toread_book_a_${RUN}`, `_it_toread_book_b_${RUN}`];
+const KEYS = [`OL${KEY}0W`, `OL${KEY}1W`];
 
 describe.skipIf(!hasRealDb)("the to-read list (integration)", () => {
   beforeAll(async () => {
@@ -22,15 +33,15 @@ describe.skipIf(!hasRealDb)("the to-read list (integration)", () => {
     await db
       .insert(schema.user)
       .values([
-        { id: READER, name: "To Read", email: "reader@toread.test" },
-        { id: OTHER, name: "Other", email: "other@toread.test" },
+        { id: READER, name: "To Read", email: `reader-${RUN}@toread.test` },
+        { id: OTHER, name: "Other", email: `other-${RUN}@toread.test` },
       ])
       .onConflictDoNothing();
     await db
       .insert(schema.book)
       .values([
-        { id: BOOKS[0], olWorkKey: "OL990000030W", title: "First Saved", authors: ["A"] },
-        { id: BOOKS[1], olWorkKey: "OL990000031W", title: "Second Saved", authors: [] },
+        { id: BOOKS[0], olWorkKey: KEYS[0], title: "First Saved", authors: ["A"] },
+        { id: BOOKS[1], olWorkKey: KEYS[1], title: "Second Saved", authors: [] },
       ])
       .onConflictDoNothing();
   });
@@ -54,7 +65,7 @@ describe.skipIf(!hasRealDb)("the to-read list (integration)", () => {
 
     const list = await getToRead(READER);
     expect(list.map((b) => b.bookId)).toEqual([BOOKS[1], BOOKS[0]]);
-    expect(list[1]).toMatchObject({ title: "First Saved", authors: ["A"], olWorkKey: "OL990000030W" });
+    expect(list[1]).toMatchObject({ title: "First Saved", authors: ["A"], olWorkKey: KEYS[0] });
   });
 
   it("is private: one reader's list never shows another's", async () => {
@@ -88,7 +99,7 @@ describe.skipIf(!hasRealDb)("the to-read list (integration)", () => {
   });
 
   it("refuses a book that is not in the database", async () => {
-    await expect(saveToRead(READER, "_it_no_such_book")).resolves.toEqual({ ok: false, reason: "missing" });
+    await expect(saveToRead(READER, `_it_no_such_book_${RUN}`)).resolves.toEqual({ ok: false, reason: "missing" });
     const rows = await getDb().select().from(schema.toRead).where(eq(schema.toRead.userId, READER));
     expect(rows).toEqual([]);
   });
