@@ -10,6 +10,7 @@ import {
   slipDate,
 } from "./book-view";
 import { CATEGORY_BANDS, INK, PAPER, fallbackBand } from "./color";
+import { cellDate } from "./slip-date";
 
 describe("descriptionParagraphs", () => {
   it("drops the editorial furniture Open Library keeps under a dashed rule", () => {
@@ -134,6 +135,18 @@ describe("slipDate", () => {
 
   it("says Undated rather than inventing a date", () => {
     expect(slipDate(null)).toBe("Undated");
+  });
+});
+
+describe("cellDate", () => {
+  // Either end of a UTC day: one fails west of Greenwich, the other east.
+  it("formats in UTC wherever the renderer is", () => {
+    expect(cellDate(new Date("2026-01-01T00:00:00Z"))).toBe("01 Jan");
+    expect(cellDate(new Date("2026-01-01T23:59:00Z"))).toBe("01 Jan");
+  });
+
+  it("prints a dash for an undated read", () => {
+    expect(cellDate(null)).toBe("—");
   });
 });
 

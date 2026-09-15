@@ -2,6 +2,7 @@ import { BandInk } from "./BandInk";
 import { Cover } from "./Cover";
 import { Rating } from "./Rating";
 import { fallbackBand, readableOn } from "@/lib/color";
+import { cellDate } from "@/lib/slip-date";
 
 export interface DiaryEntry {
   id: string;
@@ -17,11 +18,6 @@ export interface DiaryEntry {
   /** Logged since this reader last opened their diary. */
   isNew: boolean;
 }
-
-const MONTH = new Intl.DateTimeFormat("en-GB", {
-  day: "2-digit",
-  month: "short",
-});
 
 /**
  * One tri-band entry: colour band, jacket, record.
@@ -69,7 +65,7 @@ export function Entry({ entry }: Readonly<{ entry: DiaryEntry }>) {
             className="text-[0.6875rem] font-medium text-ink-soft"
             dateTime={entry.readAt?.toISOString().slice(0, 10)}
           >
-            {entry.readAt ? MONTH.format(entry.readAt) : "—"}
+            {cellDate(entry.readAt)}
           </time>
         </div>
       </div>

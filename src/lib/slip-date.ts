@@ -17,3 +17,14 @@ const SLIP_DATE = new Intl.DateTimeFormat("en-GB", {
 export function slipDate(readAt: Date | null): string {
   return readAt ? SLIP_DATE.format(readAt) : "Undated";
 }
+
+const CELL_DATE = new Intl.DateTimeFormat("en-GB", {
+  day: "2-digit",
+  month: "short",
+  timeZone: "UTC",
+});
+
+/** A diary cell's short date, in UTC for the same reason. */
+export function cellDate(readAt: Date | null): string {
+  return readAt ? CELL_DATE.format(readAt) : "—";
+}
