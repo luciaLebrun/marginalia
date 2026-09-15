@@ -97,6 +97,7 @@ const SHELF_READS: Read[] = [
     rating: 4.5,
     isReread: true,
     hasReview: true,
+    review: "Better the second time.",
   },
   {
     id: "2f9c1d4a-7b3e-4c8d-9a1f-5e6d7c8b9a02",
@@ -104,6 +105,7 @@ const SHELF_READS: Read[] = [
     rating: 4,
     isReread: false,
     hasReview: false,
+    review: null,
   },
 ];
 
@@ -114,6 +116,7 @@ const UNDATED_READS: Read[] = [
     rating: null,
     isReread: false,
     hasReview: false,
+    review: null,
   },
 ];
 

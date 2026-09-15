@@ -17,6 +17,8 @@ export interface Read {
   rating: number | null;
   isReread: boolean;
   hasReview: boolean;
+  /** The review as written, so the edit sheet opens holding it. */
+  review: string | null;
 }
 
 /**
@@ -50,6 +52,7 @@ export async function getReads(userId: string, bookId: string): Promise<Read[]> 
     rating: row.rating === null ? null : Number(row.rating),
     isReread: row.isReread,
     hasReview: Boolean(row.reviewText?.trim()),
+    review: row.reviewText,
   }));
 }
 
