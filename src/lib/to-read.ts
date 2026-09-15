@@ -16,6 +16,7 @@ export interface ToReadBook {
   title: string;
   authors: string[];
   coverId: number | null;
+  pageCount: number | null;
   savedAt: Date;
 }
 
@@ -60,6 +61,7 @@ export async function getToRead(userId: string): Promise<ToReadBook[]> {
       title: schema.book.title,
       authors: schema.book.authors,
       coverId: schema.book.coverId,
+      pageCount: schema.book.pageCount,
       savedAt: schema.toRead.createdAt,
     })
     .from(schema.toRead)

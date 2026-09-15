@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Cover } from "./Cover";
 import { DateSlip } from "./DateSlip";
+import { ToReadToggle } from "./ToReadToggle";
 import type { Book } from "@/db/schema";
 import {
   authorLine,
@@ -24,11 +25,14 @@ import {
 export function BookTitlePage({
   book,
   reads,
+  onToRead = false,
   username,
   diaryHref = "/",
 }: Readonly<{
   book: Book;
   reads: Read[];
+  /** Whether this book is on the reader's to-read list. */
+  onToRead?: boolean;
   /** The reader's handle, so each read on the slip can address its own page. */
   username: string;
   /** The dev harness points this at its own shelf. */
@@ -98,6 +102,10 @@ export function BookTitlePage({
           {/* Before the description, not after it: the reads and the line the
               next one goes on are the task, and a long blurb must not push
               them out of the first viewport on either device. */}
+          {/* Keyed on the stored state, so a logged read — which takes the book
+              off the list — re-renders the control fresh. */}
+          <ToReadToggle key={String(onToRead)} bookId={book.id} saved={onToRead} />
+
           <DateSlip reads={reads} bookId={book.id} username={username} />
 
           {paragraphs.length > 0 && (

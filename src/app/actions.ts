@@ -18,6 +18,7 @@ import { isOwner } from "@/lib/owner";
 import { claimUsername, updateAccount } from "@/lib/profile";
 import { entryPath, parseLogId } from "@/lib/entry";
 import { createRead, removeRead, updateRead } from "@/lib/read";
+import { removeToRead, saveToRead } from "@/lib/to-read";
 import { isLogReadField, readSchema, type LogReadField } from "@/lib/read-schema";
 import {
   handlePath,
@@ -435,4 +436,65 @@ function revalidateReads(username: string | null | undefined, logId: string | nu
     revalidatePath(handlePath(username));
     if (logId) revalidatePath(entryPath(username, logId));
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/* The to-read list                                                            */
+/* -------------------------------------------------------------------------- */
+
+export interface ToReadState {
+  /** Whether the book is on the list after this action, once one has run. */
+  saved: boolean | null;
+  /** The book the last action was about, so a refusal lands on its own spine. */
+  bookId: string | null;
+  error: string | null;
+  signedOut: boolean;
+}
+
+/**
+ * Put a book on, or take it off, the signed-in reader's to-read list (MRG-059).
+ *
+ * The reader comes from the session; the book id from the form is decided by
+ * the foreign key. The list is private, so nothing here can reach anyone
+ * else's.
+ */
+export async function toggleToReadAction(
+  previous: ToReadState,
+  formData: FormData,
+): Promise<ToReadState> {
+  const sentBook = formData.get("bookId");
+  const bookId = typeof sentBook === "string" ? sentBook.trim() : "";
+  const save = formData.get("intent") === "save";
+
+  const reader = await requireReader();
+  if (!reader) {
+    return {
+      ...previous,
+      bookId,
+      error: save ? "Not saved: you’re signed out." : "Not taken off: you’re signed out.",
+      signedOut: true,
+    };
+  }
+
+  if (!bookId) {
+    return { ...previous, bookId, error: "Open the book again and save it from there.", signedOut: false };
+  }
+
+  if (save) {
+    const result = await saveToRead(reader.id, bookId);
+    if (!result.ok) {
+      return {
+        ...previous,
+        bookId,
+        error: "Not saved: this book is no longer here. Find it again from search.",
+        signedOut: false,
+      };
+    }
+  } else {
+    await removeToRead(reader.id, bookId);
+  }
+
+  revalidatePath("/book/[workKey]", "page");
+  revalidatePath("/to-read");
+  return { saved: save, bookId, error: null, signedOut: false };
 }
