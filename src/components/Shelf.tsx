@@ -14,11 +14,14 @@ import { groupByYear } from "@/lib/diary";
 export function Shelf({
   entries,
   canLog = true,
+  linkBooks = true,
   readerName,
 }: Readonly<{
   entries: DiaryEntry[];
   /** False on someone else's profile: the action is not yours to take. */
   canLog?: boolean;
+  /** False for a signed-out visitor: the book page is signed-in only. */
+  linkBooks?: boolean;
   /** Whose shelf this is, for the empty state on a public profile. */
   readerName?: string;
 }>) {
@@ -36,7 +39,7 @@ export function Shelf({
           <div className="shelf-grid">
             {groupIndex === 0 && canLog && <LogCell />}
             {group.entries.map((entry) => (
-              <Entry key={entry.id} entry={entry} />
+              <Entry key={entry.id} entry={entry} linked={linkBooks} />
             ))}
           </div>
         </section>

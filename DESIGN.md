@@ -677,8 +677,12 @@ printed, impersonal, identical to its four hundred neighbours.
 - **Band three — record:** paper, separated by a hairline, 8px/10px padding. Title
   (balanced) on top; rating and date pinned to the bottom edge of the cell so the
   baseline holds across a ragged row.
-- **States:** none. The card is not interactive at rest and does not lift, tint, or
-  outline on hover.
+- **States:** for a signed-in reader — on their own diary or a friend's profile — the
+  whole cell is one link to its book page, named as one sentence (title, author,
+  rating, read date, reread). Hover and focus-visible take the border and the record
+  band's hairline to solid ink, as on a Search Result, with the standard focus ring;
+  it never lifts, tints or fills. For a signed-out visitor the book page does not
+  exist, so the card is inert: no link, no state.
 
 ### Search Result
 

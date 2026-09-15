@@ -37,6 +37,27 @@ test.describe("reading diary", () => {
     );
   });
 
+  /*
+   * MRG-051: a book is reachable from the shelf, not only from search. The
+   * whole cell is the link, named as one sentence, and its state is printed:
+   * the border goes to ink, nothing fills.
+   */
+  test("every entry cell opens its book page", async ({ page }) => {
+    const cells = page.locator("article > a");
+    expect(await cells.count()).toBe(await page.locator("article").count());
+    for (const href of await cells.evaluateAll((as) => as.map((a) => a.getAttribute("href")))) {
+      expect(href).toMatch(/^\/book\/OL\d+W$/);
+    }
+
+    const first = cells.first();
+    await expect(first).toHaveAttribute("aria-label", /, (rated [\d.]+ out of 5|unrated)/);
+    await expect(first).toHaveCSS("border-color", "rgba(22, 19, 15, 0.15)");
+    await first.focus();
+    // toHaveCSS retries, so the 150ms colour transition cannot race it.
+    await expect(first).toHaveCSS("border-color", "rgb(22, 19, 15)");
+    await expect(first).toHaveCSS("background-color", "rgb(244, 241, 232)");
+  });
+
   test("never addresses a cover by ISBN", async ({ page }) => {
     // ISBN-addressed covers are rate limited to 100 per IP per 5 minutes and
     // 403 for everyone behind the same egress. This is the load-bearing rule.
