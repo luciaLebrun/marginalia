@@ -215,7 +215,7 @@ function Field({
       event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => onChange(event.target.value),
     className:
-      "w-full bg-transparent py-1 text-[1.375rem] leading-snug font-semibold tracking-[-0.01em] outline-none placeholder:font-normal placeholder:text-ink-soft/60",
+      "w-full bg-transparent py-1 text-[1.375rem] leading-snug font-semibold tracking-[-0.01em] outline-none placeholder:font-normal placeholder:text-ink-soft",
   };
 
   return (

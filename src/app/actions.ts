@@ -67,6 +67,12 @@ export async function claimUsernameAction(
 
   const input = String(formData.get("username") ?? "");
 
+  // The form shows a handle built from the reader's name as its placeholder,
+  // which can read as already filled in.
+  if (input.trim() === "") {
+    return { error: "Type your own username — the one shown is only a suggestion." };
+  }
+
   // Say why before touching the database, so the reader gets a reason rather
   // than a generic refusal.
   const shapeError = usernameError(input);

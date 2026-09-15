@@ -142,6 +142,39 @@ test.describe("username claim", () => {
     await expect(field).toHaveAttribute("aria-invalid", "true");
   });
 
+  /*
+   * MRG-058: the hint was a hard-coded "lucia" — the author's own handle — on
+   * every new reader's form. It is now built from the reader's own name.
+   */
+  test("hints a handle from the reader's own name, not someone else's", async ({ page }) => {
+    await page.goto("/dev/claim", { waitUntil: "networkidle" });
+    if (await page.getByText(/already claimed as/i).isVisible().catch(() => false)) {
+      test.skip(true, "dev reader already has a username");
+    }
+
+    const field = page.getByLabel(/pick a username/i);
+    // The seeded reader is named "Newcomer": the hint must come from that name,
+    // not merely be handle-shaped (the fallback would be).
+    await expect(field).toHaveAttribute("placeholder", "newcomer");
+  });
+
+  test("refuses an empty handle in its own sentence, not the browser's bubble", async ({ page }) => {
+    await page.goto("/dev/claim", { waitUntil: "networkidle" });
+    if (await page.getByText(/already claimed as/i).isVisible().catch(() => false)) {
+      test.skip(true, "dev reader already has a username");
+    }
+
+    await page.getByRole("button", { name: /claim it/i }).click();
+    await expect(page.locator("#username-error")).toContainText("only a suggestion");
+    const field = page.getByLabel(/pick a username/i);
+    await expect(field).toHaveAttribute("aria-invalid", "true");
+
+    // Typing makes the refusal untrue, so it stands down.
+    await field.fill("helene_m");
+    await expect(page.locator("#username-error")).toHaveCount(0);
+    await expect(field).not.toHaveAttribute("aria-invalid", "true");
+  });
+
   test("the field is labelled and reachable by keyboard", async ({ page }) => {
     await page.goto("/dev/claim", { waitUntil: "networkidle" });
     if (await page.getByText(/already claimed as/i).isVisible().catch(() => false)) {
