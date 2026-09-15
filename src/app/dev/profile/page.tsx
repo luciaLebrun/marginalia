@@ -15,7 +15,7 @@ import { MAX_LENGTH as USERNAME_MAX } from "@/lib/username";
  * directly. What e2e cannot reach is a session, so this renders the same
  * masthead and shelf for the seeded reader as each viewer would see it:
  *
- * - `?viewer=visitor` (default) — signed out: the tally alone
+ * - `?viewer=visitor` (default) — signed out: the tally alone, inert cells
  * - `?viewer=owner` — the reader looking at their own profile
  * - `?viewer=friend` — another signed-in reader
  *
@@ -61,7 +61,12 @@ export default async function DevProfilePage({ searchParams }: PageProps<"/dev/p
         bio={bio}
         link={profileMastheadLink(viewerId, user.id)}
       />
-      <Shelf entries={entries} canLog={false} readerName={user.name} />
+      <Shelf
+        entries={entries}
+        canLog={false}
+        linkBooks={viewer !== "visitor"}
+        readerName={user.name}
+      />
     </main>
   );
 }
