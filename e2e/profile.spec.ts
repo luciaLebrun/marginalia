@@ -47,6 +47,7 @@ test.describe("public profile", () => {
 
     await expect(page.getByRole("link", { name: "Your account" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Your diary" })).toHaveCount(0);
+    await expect(page.locator("article a")).toHaveCount(0);
     await expect(page.getByText(/books? logged|Nothing logged yet/)).toBeVisible();
   });
 
@@ -90,6 +91,17 @@ test.describe("profile masthead by viewer (harness)", () => {
   test("offers a signed-out visitor nothing", async ({ page }) => {
     await page.goto("/dev/profile?viewer=visitor", { waitUntil: "networkidle" });
     await expect(page.locator("header a")).toHaveCount(0);
+    // The book page is signed-in only, so the cells are inert too.
+    await expect(page.locator("article a")).toHaveCount(0);
+  });
+
+  test("links a signed-in reader's cells to book pages", async ({ page }) => {
+    for (const viewer of ["owner", "friend"]) {
+      await page.goto(`/dev/profile?viewer=${viewer}`, { waitUntil: "networkidle" });
+      const cells = page.locator("article > a");
+      expect(await cells.count()).toBe(await page.locator("article").count());
+      await expect(cells.first()).toHaveAttribute("href", /^\/book\/OL\d+W$/);
+    }
   });
 
   test("shows the handle and bio in every view", async ({ page }) => {

@@ -103,7 +103,35 @@ unchanged: no concept roll, no new tone, type step or motion.
   Over Label Rule for a field that holds paragraphs of prose. Short values stay
   at the field step.
 
+## Edit or remove a read (MRG-054) — extension, confirmed with the user
+
+An addition inside this surface, inheriting the direction contract and the log
+sheet unchanged: no concept roll, no new tone, type step or motion.
+
+- Job: a reader who logged the wrong date, rating, review or reread flag — or
+  logged a read at all by mistake — corrects it where they see it, on the slip.
+- Each slip line gains "Edit" as a text control at its right end, outside the
+  line's link: the date, rating and Reread stay one link to the read's
+  permalink (MRG-019). Edit is a native disclosure, so it opens without JS.
+- Open, the same sheet as "Log a read" deploys in place under that line,
+  prefilled with the read's date (or Undated), rating, review and reread; the
+  line stays above it so the reader sees what they are changing. The commit
+  band reads "Save changes"; saving closes the sheet into the corrected line.
+- Remove lives inside the open edit sheet, under the commit: a "Remove this
+  read" text button. Pressed, it arms into a sentence in alarm — "Remove this
+  read for good? Its page goes too." — with an alarm-bordered "Remove" (the
+  Outline Button's armed state) and a "Keep it" text button. No typing, no
+  undo, no soft delete. The removed read's permalink 404s.
+- Removing the last read takes the book off the shelf: the author band goes
+  back to ink and the slip is its one blank line, as for a book never read.
+- Only the reader's own reads, enforced in the query by reader and read id,
+  never by the form. One schema shared with the log sheet.
+- States: line at rest · editing (open, prefilled) · saving · field error ·
+  save failed · saved · remove armed · removing · removed (announced; focus
+  returns to the slip heading) · signed out mid-edit.
+- Confirmed answers: in place on the slip; arm-then-confirm removal; the line
+  keeps its permalink link with Edit as a separate control.
+
 ## Unresolved
 
-- None blocking. Diary cells linking to their book page is MRG-051; a spoiler
-  flag is MRG-053; editing or removing a read is MRG-054.
+- None blocking. A spoiler flag is MRG-053.

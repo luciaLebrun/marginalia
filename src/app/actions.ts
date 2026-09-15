@@ -16,7 +16,8 @@ import {
 } from "@/lib/invite";
 import { isOwner } from "@/lib/owner";
 import { claimUsername, updateAccount } from "@/lib/profile";
-import { createRead } from "@/lib/read";
+import { entryPath, parseLogId } from "@/lib/entry";
+import { createRead, removeRead, updateRead } from "@/lib/read";
 import { isLogReadField, readSchema, type LogReadField } from "@/lib/read-schema";
 import {
   handlePath,
@@ -301,6 +302,10 @@ export interface LogReadState {
  * is a public endpoint, and an id in the form would let anyone write into
  * anyone's diary. The book id does come from the form; the foreign key decides
  * whether it is real, and a reader can only ever write into their own diary.
+ *
+ * With a `logId` it corrects that read instead (MRG-054) — the same sheet, the
+ * same schema, and the query scoped to this reader, so an id in the form
+ * reaches nobody else's read.
  */
 export async function logReadAction(
   previous: LogReadState,
@@ -337,21 +342,91 @@ export async function logReadAction(
     };
   }
 
-  const result = await createRead(reader.id, parsed.data);
+  const rawLogId = formData.get("logId");
+  const logId = typeof rawLogId === "string" ? parseLogId(rawLogId) : null;
+
+  if (rawLogId !== null && !logId) return { ...previous, ...GONE };
+
+  const result = logId
+    ? await updateRead(reader.id, logId, parsed.data)
+    : await createRead(reader.id, parsed.data);
+
+  if (!result.ok) {
+    return logId
+      ? { ...previous, ...GONE }
+      : {
+          ...previous,
+          error: "Not saved: this book is no longer here. Find it again from search.",
+          field: null,
+          signedOut: false,
+        };
+  }
+
+  revalidateReads(reader.username, logId);
+  return { error: null, field: null, signedOut: false, saved: previous.saved + 1 };
+}
+
+const GONE = {
+  error: "Not saved: this read is no longer here. It may have been removed.",
+  field: null,
+  signedOut: false,
+} as const;
+
+export interface RemoveReadState {
+  error: string | null;
+  signedOut: boolean;
+  /** Counts removals, so the slip can announce each one. */
+  removed: number;
+  /** The read a refusal belongs to, so it shows on that line's sheet alone. */
+  refusedId: string | null;
+  /** Counts refusals, so a sheet can tell a new refusal from one it dismissed. */
+  refused: number;
+}
+
+/** Remove one of the signed-in reader's own reads for good. */
+export async function removeReadAction(
+  previous: RemoveReadState,
+  formData: FormData,
+): Promise<RemoveReadState> {
+  const sent = formData.get("logId");
+  const rawLogId = typeof sent === "string" ? sent : "";
+  const refusal = { refusedId: rawLogId, refused: previous.refused + 1 };
+
+  const reader = await requireReader();
+  if (!reader) {
+    return {
+      ...previous,
+      ...refusal,
+      error: "Not removed: you’re signed out. Sign in again to remove this read.",
+      signedOut: true,
+    };
+  }
+
+  const logId = parseLogId(rawLogId);
+  const result = logId ? await removeRead(reader.id, logId) : { ok: false };
   if (!result.ok) {
     return {
       ...previous,
-      error: "Not saved: this book is no longer here. Find it again from search.",
-      field: null,
+      ...refusal,
+      error: "Not removed: this read is no longer here.",
       signedOut: false,
     };
   }
 
-  // The slip this was logged from, the diary, and the public profile all show
-  // it. Every book page, because the sheet does not know its own address.
+  revalidateReads(reader.username, logId);
+  return { ...previous, error: null, signedOut: false, removed: previous.removed + 1, refusedId: null };
+}
+
+/**
+ * Everywhere a read shows: the slip (every book page, because the sheet does
+ * not know its own address), the diary, the public profile, and the read's own
+ * page — which a correction changes and a removal ends.
+ */
+function revalidateReads(username: string | null | undefined, logId: string | null) {
   revalidatePath("/book/[workKey]", "page");
   revalidatePath("/");
-  if (reader.username) revalidatePath(handlePath(reader.username));
-
-  return { error: null, field: null, signedOut: false, saved: previous.saved + 1 };
+  if (username) {
+    revalidatePath(handlePath(username));
+    if (logId) revalidatePath(entryPath(username, logId));
+  }
 }

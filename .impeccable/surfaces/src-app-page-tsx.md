@@ -2,7 +2,7 @@
 version: 1
 slug: "src-app-page-tsx"
 primary_target: "src/app/page.tsx"
-related_targets: ["src/app/[handle]/page.tsx","src/components/Masthead.tsx","src/app/dev/profile/page.tsx"]
+related_targets: ["src/app/[handle]/page.tsx","src/components/Masthead.tsx","src/app/dev/profile/page.tsx","src/components/Entry.tsx","src/components/Shelf.tsx"]
 ---
 
 Scope: the reading diary grid — `/` for the signed-in reader and `/@[username]`
@@ -89,7 +89,24 @@ itself shipped with MRG-012; MRG-017 was rescoped by the user to identity.
   1440 and five at 390. The user chose to reword the hint ("A few lines under
   your handle on your diary") rather than lower the limit or clamp the bio.
 
+## Cells link to their book page (MRG-051) — extension, confirmed with the user
+
+An addition inside this surface, inheriting the direction contract unchanged:
+no concept roll, no new tone, type step or motion.
+
+- Job: a book is reachable from the shelf, not only from search — the reader
+  revisiting months of reading opens a book to see its slip or log a reread.
+- A signed-in reader's cell (own diary, or a friend's profile) is one link to
+  `/book/[workKey]`, named as one sentence: title, author, rating, read date,
+  reread. From a friend's profile the book page shows the viewer's own reads.
+- A signed-out visitor's cells are inert, as the postcard withholds its title
+  link and the masthead its diary link: the book page does not exist for them.
+- State per the Printed State Rule, as on a Search Result: hover and
+  focus-visible take the border and record hairline to ink; nothing fills.
+  `prefetch={false}` so a long shelf does not fetch every book page in view.
+- Confirmed answers: visitors get no link (not the permalink, not the door);
+  the target is the book page, not the entry permalink.
+
 ## Unresolved
 
-- None blocking. Cover colour extraction and the username claim (MRG-012) both
-  shipped; linking entry cells to their book pages is MRG-051.
+- None blocking.

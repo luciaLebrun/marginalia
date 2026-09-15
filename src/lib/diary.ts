@@ -2,6 +2,7 @@ import { eq, sql } from "drizzle-orm";
 
 import { getDb, schema } from "@/db";
 import type { DiaryEntry } from "@/components/Entry";
+import { slipDate } from "@/lib/slip-date";
 
 /**
  * The diary query. One indexed read, no external calls.
@@ -105,6 +106,22 @@ export function readingSpan(entries: DiaryEntry[], now = new Date()): string {
   const first = Math.min(...years);
   const last = Math.max(...years);
   return first === last ? String(first) : `${first}\u2013${last}`;
+}
+
+/**
+ * A linked cell's accessible name: one sentence rather than the author twice
+ * (band, then the jacket's alt text), keeping what the record band shows.
+ */
+export function entryLabel(entry: DiaryEntry): string {
+  return [
+    entry.title,
+    entry.authors[0] && `by ${entry.authors[0]}`,
+    entry.rating === null ? "unrated" : `rated ${entry.rating} out of 5`,
+    entry.readAt && `read ${slipDate(entry.readAt)}`,
+    entry.isReread && "reread",
+  ]
+    .filter(Boolean)
+    .join(", ");
 }
 
 /**

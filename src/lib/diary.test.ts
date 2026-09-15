@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { groupByYear, readingSpan } from "./diary";
+import { entryLabel, groupByYear, readingSpan } from "./diary";
 import type { DiaryEntry } from "@/components/Entry";
 
 function entry(id: string, readAt: string | null): DiaryEntry {
@@ -142,5 +142,17 @@ describe("readingSpan", () => {
 
   it("uses UTC, so a 1 January entry does not fall into the previous year", () => {
     expect(readingSpan([entry("newyear", "2026-01-01")])).toBe("2026");
+  });
+});
+
+describe("entryLabel", () => {
+  it("reads the record band as one sentence", () => {
+    const e = { ...entry("a", "2026-08-14"), title: "Dune", authors: ["Frank Herbert"], rating: 4.5 };
+    expect(entryLabel(e)).toBe("Dune, by Frank Herbert, rated 4.5 out of 5, read 14 Aug 2026");
+  });
+
+  it("says unrated and reread, and leaves out what is not known", () => {
+    const e = { ...entry("b", null), title: "Untitled", authors: [], isReread: true };
+    expect(entryLabel(e)).toBe("Untitled, unrated, reread");
   });
 });

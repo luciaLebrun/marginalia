@@ -261,12 +261,14 @@ test.describe("book page", () => {
     });
 
     test("ticks Reread in advance only when the slip already has a read", async ({ page }) => {
-      // Exact: a slip line's own label also ends in "reread".
+      // Exact: a slip line's own label also ends in "reread". Scoped to the
+      // log sheet: each line's closed edit sheet carries a Reread box too.
+      const logSheet = page.locator("details", { has: page.locator("summary", { hasText: "Log a read" }) });
       await openSheet(page, "new");
-      await expect(page.getByLabel("Reread", { exact: true })).not.toBeChecked();
+      await expect(logSheet.getByLabel("Reread", { exact: true })).not.toBeChecked();
 
       await openSheet(page, "shelf");
-      await expect(page.getByLabel("Reread", { exact: true })).toBeChecked();
+      await expect(logSheet.getByLabel("Reread", { exact: true })).toBeChecked();
     });
 
     /*
@@ -299,6 +301,135 @@ test.describe("book page", () => {
 
     test("never scrolls sideways with the sheet open", async ({ page }) => {
       await openSheet(page, "shelf");
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(0);
+    });
+  });
+
+  /*
+   * MRG-054: correct or remove a read from its own line. The harness has no
+   * session, so a commit is refused — which is itself the check that the
+   * actions never trust the form.
+   */
+  test.describe("editing a read", () => {
+    const line = (page: Page) => slip(page).locator("li").first();
+    const openEdit = async (page: Page) => {
+      await page.goto("/dev/book?state=shelf", { waitUntil: "networkidle" });
+      await line(page).locator("summary", { hasText: "Edit" }).click();
+    };
+
+    test("opens under its line, holding the read as it stands", async ({ page }) => {
+      await openEdit(page);
+      const sheet = line(page);
+
+      await expect(sheet.getByLabel("Finished")).toHaveValue("2026-08-14");
+      await expect(sheet.getByLabel("Rating")).toHaveAttribute("aria-valuetext", "4.5 out of 5");
+      await expect(sheet.getByLabel("Review")).toHaveValue("Better the second time.");
+      await expect(sheet.getByLabel("Reread", { exact: true })).toBeChecked();
+      await expect(sheet.getByRole("button", { name: "Save changes" })).toBeVisible();
+
+      // In place, under the line it corrects, which stays in view above it.
+      await expect(page).toHaveURL(/\/dev\/book\?state=shelf$/);
+      await expect(sheet.locator("a").first()).toBeVisible();
+    });
+
+    test("keeps the line one link to its permalink, with Edit outside it", async ({ page }) => {
+      await page.goto("/dev/book?state=shelf", { waitUntil: "networkidle" });
+      await expect(line(page).locator("a summary")).toHaveCount(0);
+      await expect(line(page).locator("summary")).toHaveAccessibleName("Edit");
+      await expect(line(page).locator("a")).toHaveAttribute("href", /\/log\//);
+    });
+
+    test("an undated, unrated read opens as Undated and Unrated", async ({ page }) => {
+      await page.goto("/dev/book?state=undated", { waitUntil: "networkidle" });
+      await line(page).locator("summary", { hasText: "Edit" }).click();
+      await expect(line(page).getByLabel("Finished")).toHaveValue("");
+      await expect(line(page).getByLabel("Rating")).toHaveAttribute("aria-valuetext", "Unrated");
+    });
+
+    test("arms removal into a sentence in alarm, and Keep it stands it down", async ({ page }) => {
+      await openEdit(page);
+      const sheet = line(page);
+
+      await sheet.getByRole("button", { name: "Remove this read" }).click();
+      const warning = sheet.getByText("Remove this read for good? Its page goes too.");
+      await expect(warning).toBeVisible();
+      await expect(warning).toHaveCSS("color", "rgb(149, 29, 16)");
+      // Focus lands on the way out, never on the irreversible control.
+      await expect(sheet.getByRole("button", { name: "Keep it" })).toBeFocused();
+      await expect(sheet.getByRole("button", { name: "Remove", exact: true })).toHaveCSS(
+        "border-color",
+        "rgb(149, 29, 16)",
+      );
+
+      await sheet.getByRole("button", { name: "Keep it" }).click();
+      await expect(warning).toBeHidden();
+      await expect(sheet.getByRole("button", { name: "Remove this read" })).toBeFocused();
+    });
+
+    test("refuses to save or remove without a signed-in reader", async ({ page }) => {
+      await openEdit(page);
+      const sheet = line(page);
+
+      await sheet.getByLabel("Review").fill("Changed my mind.");
+      await sheet.getByRole("button", { name: "Save changes" }).click();
+      await expect(sheet.locator("form [role=alert]").first()).toContainText("Not saved");
+      await expect(sheet.getByLabel("Review")).toHaveValue("Changed my mind.");
+
+      await sheet.getByRole("button", { name: "Remove this read" }).click();
+      await sheet.getByRole("button", { name: "Remove", exact: true }).click();
+      await expect(sheet.getByText(/Not removed: you’re signed out/)).toBeVisible();
+      // Refused, so the read is still on the slip.
+      await expect(slip(page).locator("li")).toHaveCount(2);
+    });
+
+    test("draws the open line's rule in ink, as the log line does", async ({ page }) => {
+      await page.goto("/dev/book?state=shelf", { waitUntil: "networkidle" });
+      const link = line(page).locator("a");
+      await expect(link).toHaveCSS("border-bottom-color", "rgba(0, 0, 0, 0)");
+      await line(page).locator("summary", { hasText: "Edit" }).click();
+      await expect(link).toHaveCSS("border-bottom-color", INK);
+    });
+
+    test("gives Edit a tap target the height of its line", async ({ page }) => {
+      await page.goto("/dev/book?state=shelf", { waitUntil: "networkidle" });
+      const box = await line(page).locator("summary").boundingBox();
+      expect(box?.width).toBeGreaterThanOrEqual(44);
+      expect(box?.height).toBeGreaterThanOrEqual(44);
+    });
+
+    test("keeps a refused removal on its own read, until it is stood down", async ({ page }) => {
+      await openEdit(page);
+      const first = line(page);
+      await first.getByRole("button", { name: "Remove this read" }).click();
+      await first.getByRole("button", { name: "Remove", exact: true }).click();
+      const refusal = first.getByText(/Not removed: you’re signed out/);
+      await expect(refusal).toBeVisible();
+      // It replaces the question rather than stacking under it.
+      await expect(first.getByText("Remove this read for good?")).toHaveCount(0);
+
+      const second = slip(page).locator("li").nth(1);
+      await second.locator("summary", { hasText: "Edit" }).click();
+      await second.getByRole("button", { name: "Remove this read" }).click();
+      await expect(second.getByText("Remove this read for good? Its page goes too.")).toBeVisible();
+      await expect(second.getByText(/Not removed/)).toHaveCount(0);
+
+      await first.getByRole("button", { name: "Keep it" }).click();
+      await first.getByRole("button", { name: "Remove this read" }).click();
+      await expect(first.getByText("Remove this read for good? Its page goes too.")).toBeVisible();
+      await expect(first.getByText(/Not removed/)).toHaveCount(0);
+    });
+
+    test("closes back to the line", async ({ page }) => {
+      await openEdit(page);
+      await line(page).locator("summary", { hasText: "Close" }).click();
+      await expect(line(page).getByLabel("Finished")).toBeHidden();
+    });
+
+    test("never scrolls sideways with an edit open", async ({ page }) => {
+      await openEdit(page);
       const overflow = await page.evaluate(
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
       );

@@ -3,7 +3,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import { getDb, schema } from "@/db";
 import { getReads } from "./book-view";
-import { createRead } from "./read";
+import { createRead, removeRead, updateRead } from "./read";
 import type { ReadInput } from "./read-schema";
 
 /**
@@ -15,6 +15,7 @@ const url = process.env.DATABASE_URL ?? "";
 const hasRealDb = url.length > 0 && !url.includes("placeholder");
 
 const READER = "_it_read_reader";
+const OTHER = "_it_read_other";
 const BOOK_ID = "_it_read_book";
 const BOOK_KEY = "OL990000020W";
 
@@ -31,7 +32,10 @@ describe.skipIf(!hasRealDb)("writing a read (integration)", () => {
     const db = getDb();
     await db
       .insert(schema.user)
-      .values({ id: READER, name: "Read Reader", email: "reader@read.test" })
+      .values([
+        { id: READER, name: "Read Reader", email: "reader@read.test" },
+        { id: OTHER, name: "Other Reader", email: "other@read.test" },
+      ])
       .onConflictDoNothing();
     await db
       .insert(schema.book)
@@ -40,12 +44,12 @@ describe.skipIf(!hasRealDb)("writing a read (integration)", () => {
   });
 
   afterEach(async () => {
-    await getDb().delete(schema.log).where(eq(schema.log.userId, READER));
+    await getDb().delete(schema.log).where(inArray(schema.log.userId, [READER, OTHER]));
   });
 
   afterAll(async () => {
     const db = getDb();
-    await db.delete(schema.user).where(inArray(schema.user.id, [READER]));
+    await db.delete(schema.user).where(inArray(schema.user.id, [READER, OTHER]));
     await db.delete(schema.book).where(eq(schema.book.id, BOOK_ID));
   });
 
@@ -98,6 +102,77 @@ describe.skipIf(!hasRealDb)("writing a read (integration)", () => {
     await expect(createRead("_it_no_such_reader", read)).resolves.toEqual({
       ok: false,
       reason: "missing",
+    });
+  });
+
+  /*
+   * MRG-054. A correction and a removal are both scoped by reader and read id
+   * in the query, so an id sent from a form reaches nobody else's diary.
+   */
+  describe("correcting and removing a read", () => {
+    const fields = { readAt: read.readAt, rating: read.rating, review: read.review, isReread: read.isReread };
+
+    it("corrects every field of the reader's own read, in place", async () => {
+      const created = await createRead(READER, read);
+      if (!created.ok) throw new Error("setup failed");
+
+      await expect(
+        updateRead(READER, created.id, {
+          ...fields,
+          readAt: null,
+          rating: 3,
+          review: null,
+          isReread: false,
+        }),
+      ).resolves.toEqual({ ok: true });
+
+      const reads = await getReads(READER, BOOK_ID);
+      expect(reads).toHaveLength(1);
+      expect(reads[0]).toMatchObject({
+        id: created.id,
+        readAt: null,
+        rating: 3,
+        review: null,
+        isReread: false,
+      });
+    });
+
+    it("refuses to correct or remove another reader's read, and changes nothing", async () => {
+      const theirs = await createRead(OTHER, read);
+      if (!theirs.ok) throw new Error("setup failed");
+
+      await expect(updateRead(READER, theirs.id, { ...fields, rating: 1 })).resolves.toEqual({
+        ok: false,
+        reason: "missing",
+      });
+      await expect(removeRead(READER, theirs.id)).resolves.toEqual({
+        ok: false,
+        reason: "missing",
+      });
+
+      expect(await getReads(OTHER, BOOK_ID)).toMatchObject([{ id: theirs.id, rating: 4.5 }]);
+    });
+
+    it("removes the reader's own read for good, leaving the others", async () => {
+      const first = await createRead(READER, { ...read, readAt: "2019-05-02" });
+      const second = await createRead(READER, read);
+      if (!first.ok || !second.ok) throw new Error("setup failed");
+
+      await expect(removeRead(READER, second.id)).resolves.toEqual({ ok: true });
+      expect((await getReads(READER, BOOK_ID)).map((r) => r.id)).toEqual([first.id]);
+
+      // Removing the last read takes the book off this reader's slip entirely.
+      await removeRead(READER, first.id);
+      expect(await getReads(READER, BOOK_ID)).toEqual([]);
+    });
+
+    it("says missing for a read that is already gone", async () => {
+      const missing = "00000000-0000-4000-8000-000000000000";
+      await expect(removeRead(READER, missing)).resolves.toEqual({ ok: false, reason: "missing" });
+      await expect(updateRead(READER, missing, fields)).resolves.toEqual({
+        ok: false,
+        reason: "missing",
+      });
     });
   });
 });

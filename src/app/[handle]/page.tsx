@@ -17,8 +17,9 @@ import { parseHandle } from "@/lib/username";
  * username, and everything else 404s — which is what keeps `/nonsense` from
  * rendering as an empty profile.
  *
- * The page is the same for everyone. The session is read for one thing only:
- * which way onward the masthead's record band offers.
+ * The page is the same for everyone. The session is read for two things only:
+ * which way onward the masthead's record band offers, and whether the cells
+ * link to book pages a visitor could not open.
  */
 export default async function ProfilePage({
   params,
@@ -49,7 +50,12 @@ export default async function ProfilePage({
         bio={profile.bio}
         link={profileMastheadLink(session?.user.id ?? null, profile.id)}
       />
-      <Shelf entries={entries} canLog={false} readerName={profile.name} />
+      <Shelf
+        entries={entries}
+        canLog={false}
+        linkBooks={session !== null}
+        readerName={profile.name}
+      />
     </main>
   );
 }

@@ -5,6 +5,7 @@ import { useActionState, useEffect, useId, useRef, useState } from "react";
 
 import { Rating } from "./Rating";
 import { logReadAction, type LogReadState } from "@/app/actions";
+import type { Read } from "@/lib/book-view";
 import { INK } from "@/lib/color";
 import { REVIEW_MAX, type LogReadField } from "@/lib/read-schema";
 import { slipDate } from "@/lib/slip-date";
@@ -62,6 +63,79 @@ function savedAnnouncement(saved: number): string {
   return `Read saved — ${saved} logged this visit.`;
 }
 
+/**
+ * One slip line's Edit (MRG-054): the same sheet, deployed under that line and
+ * holding the read as it stands. The action is the log sheet's; the `logId` it
+ * carries turns the insert into a correction of this reader's own read.
+ *
+ * Remove is handed in from the slip rather than owned here, because a removed
+ * read takes this component with it — the announcement and where focus goes
+ * next have to outlive the line.
+ */
+export function EditSheet({
+  bookId,
+  read,
+  remove,
+  removing,
+  removeError,
+  refusal,
+}: Readonly<{
+  bookId: string;
+  read: Read;
+  remove: (formData: FormData) => void;
+  removing: boolean;
+  removeError: React.ReactNode;
+  refusal: number;
+}>) {
+  const [state, submit, pending] = useActionState<LogReadState, FormData>(
+    logReadAction,
+    INITIAL_STATE,
+  );
+
+  return (
+    <>
+      <Sheet
+        key={state.saved}
+        bookId={bookId}
+        hasReads
+        state={state}
+        submit={submit}
+        pending={pending}
+        returning={state.saved > 0}
+        edit={{ read, remove, removing, removeError, refusal }}
+      />
+      <output className="sr-only">
+        {counted("Changes saved", state.saved)}
+      </output>
+    </>
+  );
+}
+
+interface EditMode {
+  read: Read;
+  remove: (formData: FormData) => void;
+  removing: boolean;
+  removeError: React.ReactNode;
+  refusal: number;
+}
+
+/** A readout that changes its words on every repeat, so each one is announced. */
+export function counted(message: string, count: number): string {
+  if (count === 0) return "";
+  if (count === 1) return `${message}.`;
+  return `${message} (${count}).`;
+}
+
+function commitLabel(pending: boolean, editing: boolean): string {
+  if (pending) return "Saving…";
+  return editing ? "Save changes" : "Save this read";
+}
+
+/** A stored read as the date input wants it. `read_at` is a UTC-midnight date. */
+function inputDate(readAt: Date | null): string {
+  return readAt ? readAt.toISOString().slice(0, 10) : "";
+}
+
 /** Today in the reader's own zone, as the date input wants it. */
 function localToday(): string {
   const now = new Date();
@@ -77,6 +151,7 @@ function Sheet({
   submit,
   pending,
   returning,
+  edit,
 }: Readonly<{
   bookId: string;
   hasReads: boolean;
@@ -85,15 +160,17 @@ function Sheet({
   pending: boolean;
   /** Remounted by a save, rather than rendered for the first time. */
   returning: boolean;
+  /** Present when this sheet corrects an existing read rather than logging one. */
+  edit?: EditMode;
 }>) {
   const ids = useId();
   const summaryRef = useRef<HTMLElement>(null);
-  const [primed, setPrimed] = useState(false);
+  const [primed, setPrimed] = useState(edit !== undefined);
   const [today, setToday] = useState<string | undefined>(undefined);
-  const [readAt, setReadAt] = useState("");
-  const [rating, setRating] = useState(0);
-  const [review, setReview] = useState("");
-  const [reread, setReread] = useState(hasReads);
+  const [readAt, setReadAt] = useState(inputDate(edit?.read.readAt ?? null));
+  const [rating, setRating] = useState(edit?.read.rating ?? 0);
+  const [review, setReview] = useState(edit?.read.review ?? "");
+  const [reread, setReread] = useState(edit ? edit.read.isReread : hasReads);
 
   // A save remounts the sheet closed. Hand keyboard focus back to the line it
   // was opened from, rather than letting it fall to the top of the page.
@@ -110,44 +187,22 @@ function Sheet({
       // than during render — the server does not know what day it is for them,
       // and a value rendered on one side only would not hydrate.
       onToggle={(event) => {
-        if (!event.currentTarget.open || primed) return;
+        if (!event.currentTarget.open) return;
         const date = localToday();
         setToday(date);
+        // An edit opens holding its own date; only a new read is dated today.
+        if (primed) return;
         // The toggle event is dispatched asynchronously, after the open
         // attribute changes, so a date typed in that gap must not be replaced.
         setReadAt((current) => (current === "" ? date : current));
         setPrimed(true);
       }}
     >
-      {/* The blank line itself. At rest a 2px hairline, as it was when inert;
-          pointed at, focused or open, the same line in solid ink. */}
-      <summary
-        ref={summaryRef}
-        className="flex h-[3.25rem] cursor-pointer list-none items-center justify-between gap-4 border-b-2 border-rule px-3 text-ink-soft transition-colors group-open:border-ink group-open:text-ink hover:border-ink hover:text-ink focus-visible:border-ink focus-visible:text-ink [&::-webkit-details-marker]:hidden"
-      >
-        <span className="band-label">
-          {/* The disclosure keeps its name open or closed — "Log a read,
-              expanded", never "Close, expanded" with an unnamed sheet under
-              it. Only the visible word and the drawn mark change. */}
-          <span className="group-open:sr-only">Log a read</span>
-          <span aria-hidden="true" className="hidden group-open:inline">
-            Close
-          </span>
-        </span>
-        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-          <path d="M1 7h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" />
-          <path
-            d="M7 1v12"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="square"
-            className="group-open:hidden"
-          />
-        </svg>
-      </summary>
+      {edit ? <EditSummary summaryRef={summaryRef} /> : <LogSummary summaryRef={summaryRef} />}
 
       <form action={submit} className="border-b border-rule">
         <input type="hidden" name="bookId" value={bookId} />
+        {edit && <input type="hidden" name="logId" value={edit.read.id} />}
 
         <Row label="Finished" htmlFor={`${ids}-date`} error={errorFor("readAt")} errorId={`${ids}-date-error`}>
           <div className="flex items-baseline gap-4">
@@ -283,7 +338,7 @@ function Sheet({
                 >
                   Sign in again
                 </Link>{" "}
-                to log this read.
+                {edit ? "to save these changes." : "to log this read."}
               </>
             ) : (
               state.error
@@ -301,11 +356,160 @@ function Sheet({
           className="band-label mt-4 flex w-full items-baseline bg-band-fiction px-3 py-4 text-left text-ink disabled:cursor-progress"
         >
           <span className="font-stretch-[118%] tracking-[0.2em]">
-            {pending ? "Saving…" : "Save this read"}
+            {commitLabel(pending, edit !== undefined)}
           </span>
         </button>
+
+        {edit && <RemoveRead {...edit} />}
       </form>
     </details>
+  );
+}
+
+/**
+ * The blank line itself. At rest a 2px hairline, as it was when inert;
+ * pointed at, focused or open, the same line in solid ink.
+ */
+function LogSummary({
+  summaryRef,
+}: Readonly<{ summaryRef: React.RefObject<HTMLElement | null> }>) {
+  return (
+      <summary
+        ref={summaryRef}
+        className="flex h-[3.25rem] cursor-pointer list-none items-center justify-between gap-4 border-b-2 border-rule px-3 text-ink-soft transition-colors group-open:border-ink group-open:text-ink hover:border-ink hover:text-ink focus-visible:border-ink focus-visible:text-ink [&::-webkit-details-marker]:hidden"
+      >
+        <span className="band-label">
+          {/* The disclosure keeps its name open or closed — "Log a read,
+              expanded", never "Close, expanded" with an unnamed sheet under
+              it. Only the visible word and the drawn mark change. */}
+          <span className="group-open:sr-only">Log a read</span>
+          <span aria-hidden="true" className="hidden group-open:inline">
+            Close
+          </span>
+        </span>
+        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+          <path d="M1 7h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" />
+          <path
+            d="M7 1v12"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="square"
+            className="group-open:hidden"
+          />
+        </svg>
+      </summary>
+  );
+}
+
+/**
+ * The slip line's Edit, set as words at the line's right end. It sits over the
+ * line rather than inside it — the line is a link, and a control may not live
+ * in a link — so it is placed absolutely and the line leaves it room.
+ */
+function EditSummary({
+  summaryRef,
+}: Readonly<{ summaryRef: React.RefObject<HTMLElement | null> }>) {
+  return (
+    // The whole height of the line and the width the link leaves it, so a
+    // thumb that lands near the word opens Edit rather than the permalink.
+    // The underline stays on the word. The box fills the line's corner, so its
+    // ring is drawn inside it rather than over the ink band and the measure.
+    <summary
+      ref={summaryRef}
+      className="band-label group/edit absolute top-0 right-0 flex h-14 w-16 cursor-pointer focus-visible:[outline-offset:-2px] list-none items-center justify-end pr-3 text-ink-soft transition-colors group-open:text-ink hover:text-ink [&::-webkit-details-marker]:hidden"
+    >
+      <span className="underline decoration-rule underline-offset-4 transition-colors group-open:decoration-ink group-hover/edit:decoration-ink">
+        {/* Named the same open or closed, as the log line is. */}
+        <span className="group-open:sr-only">Edit</span>
+        <span aria-hidden="true" className="hidden group-open:inline">
+          Close
+        </span>
+      </span>
+    </summary>
+  );
+}
+
+/**
+ * Remove, under the commit: a text button that arms into a sentence in alarm
+ * with the irreversible control beside a way out. Two deliberate presses, no
+ * typing — a diary line is not an account. The alarm says what it always says
+ * in this world: this is about to destroy something.
+ */
+function RemoveRead({ remove, removing, removeError, refusal }: Readonly<EditMode>) {
+  const ids = useId();
+  const [armed, setArmed] = useState(false);
+  // A refusal stays until the reader stands the removal down; re-arming asks
+  // the question afresh rather than showing an old refusal.
+  const [dismissed, setDismissed] = useState(-1);
+  const refusedHere = Boolean(removeError) && dismissed !== refusal;
+  const keepRef = useRef<HTMLButtonElement>(null);
+  const armRef = useRef<HTMLButtonElement>(null);
+  const [disarmed, setDisarmed] = useState(false);
+
+  // The pressed control is replaced by the confirmation, so focus would fall
+  // to the page. It lands on the way out, and returns to Remove when kept.
+  useEffect(() => {
+    if (armed) keepRef.current?.focus();
+    else if (disarmed) armRef.current?.focus();
+  }, [armed, disarmed]);
+
+  if (!armed) {
+    return (
+      <div className="px-3 py-4">
+        <button
+          ref={armRef}
+          type="button"
+          onClick={() => {
+            setDismissed(refusal);
+            setArmed(true);
+          }}
+          className="band-label underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink"
+        >
+          Remove this read
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <fieldset className="flex min-w-0 flex-col gap-3 px-3 py-4" aria-labelledby={`${ids}-confirm`}>
+      {/* A refusal replaces the question at the same body step, so the sheet
+          never stacks alarm sentences at two sizes. */}
+      {refusedHere ? (
+        <p id={`${ids}-confirm`} role="alert" className="text-[0.9375rem] leading-relaxed text-alarm">
+          {removeError}
+        </p>
+      ) : (
+        <p id={`${ids}-confirm`} className="text-[0.9375rem] leading-relaxed text-alarm">
+          Remove this read for good? Its page goes too.
+        </p>
+      )}
+      <div className="flex flex-wrap items-center gap-4">
+        <button
+          type="submit"
+          formAction={remove}
+          formNoValidate
+          disabled={removing}
+          aria-describedby={`${ids}-confirm`}
+          className="band-label border border-alarm px-3 py-2.5 transition-colors hover:bg-band-fiction focus-visible:bg-band-fiction disabled:cursor-progress"
+        >
+          {removing ? "Removing…" : "Remove"}
+        </button>
+        <button
+          ref={keepRef}
+          type="button"
+          onClick={() => {
+            setArmed(false);
+            setDisarmed(true);
+            setDismissed(refusal);
+          }}
+          disabled={removing}
+          className="band-label underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink disabled:cursor-default disabled:line-through disabled:decoration-ink disabled:opacity-50"
+        >
+          Keep it
+        </button>
+      </div>
+    </fieldset>
   );
 }
 

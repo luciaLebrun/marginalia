@@ -1,3 +1,5 @@
+import { and, eq } from "drizzle-orm";
+
 import { getDb, schema } from "@/db";
 import type { ReadInput } from "./read-schema";
 
@@ -43,6 +45,46 @@ export async function createRead(
     if (sqlState(error) === FOREIGN_KEY_VIOLATION) return { ok: false, reason: "missing" };
     throw error;
   }
+}
+
+export type ChangeReadResult = { ok: true } | { ok: false; reason: "missing" };
+
+/**
+ * Correct one of a reader's own reads: date, rating, review, reread.
+ *
+ * The reader and the read id are both in the WHERE, so a read that belongs to
+ * someone else is indistinguishable from one that does not exist — the form's
+ * id can never reach another reader's diary. The book is not editable: a read
+ * logged against the wrong book is removed and logged again.
+ */
+export async function updateRead(
+  userId: string,
+  logId: string,
+  input: Omit<ReadInput, "bookId">,
+): Promise<ChangeReadResult> {
+  const rows = await getDb()
+    .update(schema.log)
+    .set({
+      readAt: input.readAt,
+      rating: input.rating === null ? null : input.rating.toFixed(1),
+      reviewText: input.review,
+      isReread: input.isReread,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(schema.log.id, logId), eq(schema.log.userId, userId)))
+    .returning({ id: schema.log.id });
+
+  return rows.length > 0 ? { ok: true } : { ok: false, reason: "missing" };
+}
+
+/** Remove one of a reader's own reads for good. Scoped exactly as updateRead. */
+export async function removeRead(userId: string, logId: string): Promise<ChangeReadResult> {
+  const rows = await getDb()
+    .delete(schema.log)
+    .where(and(eq(schema.log.id, logId), eq(schema.log.userId, userId)))
+    .returning({ id: schema.log.id });
+
+  return rows.length > 0 ? { ok: true } : { ok: false, reason: "missing" };
 }
 
 /**
