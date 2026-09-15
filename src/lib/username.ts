@@ -103,7 +103,8 @@ export function suggestUsername(name: string | null | undefined): string {
     .replaceAll(/[^a-z0-9]+/g, "_")
     .replace(/^[^a-z]+/, "")
     .slice(0, MAX_LENGTH)
-    .replace(/_+$/, "");
+    // Runs are already one underscore, so at most one can trail the cut.
+    .replace(/_$/, "");
 
   return normalizeUsername(slug) ?? FALLBACK_SUGGESTION;
 }
