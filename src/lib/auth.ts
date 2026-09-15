@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 
 import { getDb, schema } from "@/db";
 import { INVITE_COOKIE, attributeInviteCode, enforceInvite } from "./invite";
-import { trustedOrigins } from "./trusted-origins";
+import { proxyCurrentURL, trustedOrigins } from "./trusted-origins";
 
 /**
  * Built lazily for the same reason as getDb(): `next build` runs with
@@ -88,15 +88,15 @@ function create() {
        * Lets a preview deployment sign in through Google without its own
        * redirect URI. Google is sent to BETTER_AUTH_URL — the one origin
        * registered for this environment — and the result is forwarded back to
-       * whichever deployment started the flow, which the plugin reads from
-       * Vercel's own VERCEL_URL.
+       * whichever deployment started the flow — named by proxyCurrentURL(),
+       * never the plugin's VERCEL_URL fallback, which is a host nobody browses
+       * and so never holds the invite cookie.
        *
        * It carries an encrypted, short-lived (60s) payload between the two
-       * origins, signed with BETTER_AUTH_SECRET, and it is skipped entirely
-       * when the request already arrives at the production URL. It exists for
-       * testing feature branches; it does nothing in production.
+       * origins, signed with BETTER_AUTH_SECRET. It exists for testing feature
+       * branches; in production it skips entirely.
        */
-      oAuthProxy(),
+      oAuthProxy({ currentURL: proxyCurrentURL() }),
 
       // Must stay last: it lets server actions set cookies Better Auth issues.
       nextCookies(),
