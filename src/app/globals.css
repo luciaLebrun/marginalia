@@ -41,6 +41,9 @@
     /* Scrollbar themed here rather than in a second html rule. */
     scrollbar-color: var(--color-ink-soft) var(--color-paper-sunk);
     scrollbar-width: thin;
+    /* A tapped cover-sized link would flash the platform's grey or blue box;
+       state here is the printed ink border, per the Printed State Rule. */
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
@@ -66,11 +69,6 @@
     outline-offset: 2px;
   }
 
-  /* A tapped cover-sized link would flash the platform's grey or blue box;
-     state here is the printed ink border, per the Printed State Rule. */
-  html {
-    -webkit-tap-highlight-color: transparent;
-  }
 
   ::-webkit-scrollbar {
     width: 11px;
