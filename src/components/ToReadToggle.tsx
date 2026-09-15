@@ -8,6 +8,11 @@ import { INK } from "@/lib/color";
 
 const INITIAL: ToReadState = { saved: null, bookId: null, error: null, signedOut: false };
 
+function savedAnnouncement(saved: boolean | null): string {
+  if (saved === null) return "";
+  return saved ? "Saved to your to-read list." : "Taken off your to-read list.";
+}
+
 /**
  * Want to read (MRG-059): keep this book on the reader's private list, in one
  * press, without logging a read.
@@ -76,9 +81,7 @@ export function ToReadToggle({
       )}
 
       {/* Its words change with the state, so a screen reader hears each one. */}
-      <output className="sr-only">
-        {state.saved === null ? "" : state.saved ? "Saved to your to-read list." : "Taken off your to-read list."}
-      </output>
+      <output className="sr-only">{savedAnnouncement(state.saved)}</output>
 
       {state.error && (
         <p role="alert" className="mt-3 text-[0.9375rem] leading-relaxed text-alarm">
