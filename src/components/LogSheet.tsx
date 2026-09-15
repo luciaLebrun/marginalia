@@ -105,7 +105,7 @@ export function EditSheet({
         edit={{ read, remove, removing, removeError, refusal }}
       />
       <output className="sr-only">
-        {state.saved === 0 ? "" : `Changes saved${state.saved > 1 ? ` (${state.saved})` : ""}.`}
+        {counted("Changes saved", state.saved)}
       </output>
     </>
   );
@@ -117,6 +117,18 @@ interface EditMode {
   removing: boolean;
   removeError: React.ReactNode;
   refusal: number;
+}
+
+/** A readout that changes its words on every repeat, so each one is announced. */
+export function counted(message: string, count: number): string {
+  if (count === 0) return "";
+  if (count === 1) return `${message}.`;
+  return `${message} (${count}).`;
+}
+
+function commitLabel(pending: boolean, editing: boolean): string {
+  if (pending) return "Saving…";
+  return editing ? "Save changes" : "Save this read";
 }
 
 /** A stored read as the date input wants it. `read_at` is a UTC-midnight date. */
@@ -186,36 +198,7 @@ function Sheet({
         setPrimed(true);
       }}
     >
-      {/* The blank line itself. At rest a 2px hairline, as it was when inert;
-          pointed at, focused or open, the same line in solid ink. */}
-      {edit ? (
-        <EditSummary summaryRef={summaryRef} />
-      ) : (
-      <summary
-        ref={summaryRef}
-        className="flex h-[3.25rem] cursor-pointer list-none items-center justify-between gap-4 border-b-2 border-rule px-3 text-ink-soft transition-colors group-open:border-ink group-open:text-ink hover:border-ink hover:text-ink focus-visible:border-ink focus-visible:text-ink [&::-webkit-details-marker]:hidden"
-      >
-        <span className="band-label">
-          {/* The disclosure keeps its name open or closed — "Log a read,
-              expanded", never "Close, expanded" with an unnamed sheet under
-              it. Only the visible word and the drawn mark change. */}
-          <span className="group-open:sr-only">Log a read</span>
-          <span aria-hidden="true" className="hidden group-open:inline">
-            Close
-          </span>
-        </span>
-        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-          <path d="M1 7h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" />
-          <path
-            d="M7 1v12"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="square"
-            className="group-open:hidden"
-          />
-        </svg>
-      </summary>
-      )}
+      {edit ? <EditSummary summaryRef={summaryRef} /> : <LogSummary summaryRef={summaryRef} />}
 
       <form action={submit} className="border-b border-rule">
         <input type="hidden" name="bookId" value={bookId} />
@@ -373,13 +356,48 @@ function Sheet({
           className="band-label mt-4 flex w-full items-baseline bg-band-fiction px-3 py-4 text-left text-ink disabled:cursor-progress"
         >
           <span className="font-stretch-[118%] tracking-[0.2em]">
-            {pending ? "Saving…" : edit ? "Save changes" : "Save this read"}
+            {commitLabel(pending, edit !== undefined)}
           </span>
         </button>
 
         {edit && <RemoveRead {...edit} />}
       </form>
     </details>
+  );
+}
+
+/**
+ * The blank line itself. At rest a 2px hairline, as it was when inert;
+ * pointed at, focused or open, the same line in solid ink.
+ */
+function LogSummary({
+  summaryRef,
+}: Readonly<{ summaryRef: React.RefObject<HTMLElement | null> }>) {
+  return (
+      <summary
+        ref={summaryRef}
+        className="flex h-[3.25rem] cursor-pointer list-none items-center justify-between gap-4 border-b-2 border-rule px-3 text-ink-soft transition-colors group-open:border-ink group-open:text-ink hover:border-ink hover:text-ink focus-visible:border-ink focus-visible:text-ink [&::-webkit-details-marker]:hidden"
+      >
+        <span className="band-label">
+          {/* The disclosure keeps its name open or closed — "Log a read,
+              expanded", never "Close, expanded" with an unnamed sheet under
+              it. Only the visible word and the drawn mark change. */}
+          <span className="group-open:sr-only">Log a read</span>
+          <span aria-hidden="true" className="hidden group-open:inline">
+            Close
+          </span>
+        </span>
+        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+          <path d="M1 7h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" />
+          <path
+            d="M7 1v12"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="square"
+            className="group-open:hidden"
+          />
+        </svg>
+      </summary>
   );
 }
 
@@ -454,7 +472,7 @@ function RemoveRead({ remove, removing, removeError, refusal }: Readonly<EditMod
   }
 
   return (
-    <div className="flex flex-col gap-3 px-3 py-4" role="group" aria-labelledby={`${ids}-confirm`}>
+    <fieldset className="flex min-w-0 flex-col gap-3 px-3 py-4" aria-labelledby={`${ids}-confirm`}>
       {/* A refusal replaces the question at the same body step, so the sheet
           never stacks alarm sentences at two sizes. */}
       {refusedHere ? (
@@ -491,7 +509,7 @@ function RemoveRead({ remove, removing, removeError, refusal }: Readonly<EditMod
           Keep it
         </button>
       </div>
-    </div>
+    </fieldset>
   );
 }
 

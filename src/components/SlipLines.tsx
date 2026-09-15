@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState, useEffect } from "react";
 
-import { EditSheet } from "./LogSheet";
+import { EditSheet, counted } from "./LogSheet";
 import { Rating } from "./Rating";
 import { removeReadAction, type RemoveReadState } from "@/app/actions";
 import type { Read } from "@/lib/book-view";
@@ -79,7 +79,7 @@ export function SlipLines({
         </ol>
       )}
       <output className="sr-only">
-        {state.removed === 0 ? "" : `Read removed${state.removed > 1 ? ` (${state.removed})` : ""}.`}
+        {counted("Read removed", state.removed)}
       </output>
     </>
   );

@@ -388,7 +388,8 @@ export async function removeReadAction(
   previous: RemoveReadState,
   formData: FormData,
 ): Promise<RemoveReadState> {
-  const rawLogId = String(formData.get("logId") ?? "");
+  const sent = formData.get("logId");
+  const rawLogId = typeof sent === "string" ? sent : "";
   const refusal = { refusedId: rawLogId, refused: previous.refused + 1 };
 
   const reader = await requireReader();
