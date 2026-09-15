@@ -58,7 +58,7 @@ export function SignInDoor() {
       <button
         type="submit"
         disabled={pending}
-        className="band-label w-full border-t border-ink bg-band-fiction px-2.5 py-3.5 text-left text-ink transition-opacity disabled:opacity-60"
+        className="band-label w-full border-t border-ink bg-band-fiction px-2.5 py-3.5 text-left text-ink disabled:cursor-progress"
       >
         {pending ? "Taking you to Google…" : "Continue with Google"}
       </button>
