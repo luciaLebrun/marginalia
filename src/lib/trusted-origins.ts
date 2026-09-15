@@ -34,3 +34,24 @@ export const PREVIEW_ORIGIN_PATTERN =
 export function trustedOrigins(): string[] {
   return process.env.VERCEL_ENV === "production" ? [] : [PREVIEW_ORIGIN_PATTERN];
 }
+
+/**
+ * Which origin the OAuth proxy treats as "the deployment that started this".
+ *
+ * Sign-in starts in a server action, where the plugin has no request to read
+ * a host from, so by default it falls back to `VERCEL_URL` — the per-deployment
+ * hash URL, which nobody browses. The result was forwarded there, the account
+ * created there, and the invite cookie the door set on the real host never
+ * arrived: every invited sign-up failed with "An invite code is required".
+ *
+ * - Production: `BETTER_AUTH_URL` itself. Equal to the proxy's production URL,
+ *   so the plugin skips entirely, as it was always meant to.
+ * - Preview: the branch URL (`VERCEL_BRANCH_URL`) — the host a branch preview
+ *   is actually opened on, and so the host holding the cookie.
+ * - Local: undefined, the plugin's own default.
+ */
+export function proxyCurrentURL(): string | undefined {
+  if (process.env.VERCEL_ENV === "production") return process.env.BETTER_AUTH_URL;
+  const branch = process.env.VERCEL_BRANCH_URL;
+  return branch ? `https://${branch}` : undefined;
+}
