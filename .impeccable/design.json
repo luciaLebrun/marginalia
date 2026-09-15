@@ -193,7 +193,7 @@
       {
         "name": "state-opacity",
         "value": "transition: opacity; disabled controls at 0.5-0.6",
-        "purpose": "A submitting or unavailable control dims and, when unavailable, is ruled through. The log sheet's commit band is the exception: while saving it holds full ink at full opacity and its verb reads Saving…. No spinner, no skeleton, no movement."
+        "purpose": "A submitting or unavailable control dims and, when unavailable, is ruled through. Commit bands are the exception: while submitting they hold full ink at full opacity and the verb is the live readout. No spinner, no skeleton, no movement."
       }
     ],
     "breakpoints": [
@@ -304,9 +304,9 @@
       "name": "Commit Band",
       "kind": "button",
       "refersTo": "commit-band",
-      "description": "A form's one commit as a fiction-orange band carrying the verb. On the account sheet (shown) it is the system's only viewport-pinned element, on a solid ink rule with a live count of pending fields, and is not rendered when nothing is pending. On the log sheet it runs in the flow, never pinned, and holds full ink at full opacity while saving, when its verb reads Saving….",
+      "description": "A form's one commit as a fiction-orange band carrying the verb. On the account sheet (shown) it is the system's only viewport-pinned element, on a solid ink rule with a live count of pending fields, and is not rendered when nothing is pending. On the log sheet it runs in the flow, never pinned. Every commit band holds full ink at full opacity while submitting, its verb the live readout (Saving…, Claiming…); only the cursor changes.",
       "html": "<div class=\"ds-commit\"><button class=\"ds-commit-btn\" type=\"submit\"><span class=\"ds-commit-verb\">Save</span><span class=\"ds-commit-count\">2 changes pending</span></button></div>",
-      "css": ".ds-commit { position: sticky; bottom: 0; border-top: 1px solid var(--color-ink, #16130F); background: var(--color-paper, #F4F1E8); font-family: Archivo, ui-sans-serif, system-ui, sans-serif; } .ds-commit-btn { display: flex; width: 100%; flex-wrap: wrap; align-items: baseline; column-gap: 16px; row-gap: 4px; border: 0; border-radius: 0; background: var(--color-band-fiction, #E8501B); color: var(--color-ink, #16130F); padding: 16px 24px; text-align: left; text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600; font-stretch: 88%; font-size: 0.6875rem; line-height: 1; font-variant-numeric: tabular-nums; transition: opacity 0.15s; } .ds-commit-btn:disabled { opacity: 0.6; } .ds-commit-btn:focus-visible { outline: 2px solid var(--color-ink, #16130F); outline-offset: 2px; } .ds-commit-verb { font-stretch: 118%; letter-spacing: 0.2em; }"
+      "css": ".ds-commit { position: sticky; bottom: 0; border-top: 1px solid var(--color-ink, #16130F); background: var(--color-paper, #F4F1E8); font-family: Archivo, ui-sans-serif, system-ui, sans-serif; } .ds-commit-btn { display: flex; width: 100%; flex-wrap: wrap; align-items: baseline; column-gap: 16px; row-gap: 4px; border: 0; border-radius: 0; background: var(--color-band-fiction, #E8501B); color: var(--color-ink, #16130F); padding: 16px 24px; text-align: left; text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600; font-stretch: 88%; font-size: 0.6875rem; line-height: 1; font-variant-numeric: tabular-nums; } .ds-commit-btn:disabled { cursor: progress; } .ds-commit-btn:focus-visible { outline: 2px solid var(--color-ink, #16130F); outline-offset: 2px; } .ds-commit-verb { font-stretch: 118%; letter-spacing: 0.2em; }"
     },
     {
       "name": "Outline Button",

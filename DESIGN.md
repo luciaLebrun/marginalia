@@ -984,9 +984,11 @@ log sheet. Character: a band, not a toolbar.
 - **States:** on the account sheet, absent entirely when nothing is pending; after a
   successful commit it is replaced in the flow by a soft-ink "Saved" line on a
   hairline, which is a record, not a toast. On the log sheet it is always present in
-  the open sheet; while saving its verb reads "Saving…", which is the live readout,
-  and the band holds full ink on full orange at full opacity. Only the cursor
-  changes; a faded band would be a greyed box.
+  the open sheet. **Every commit band** — the account sheet, the log sheet, the door
+  and the claim form — holds full ink on full orange at full opacity while it
+  submits, its verb becoming the live readout ("Saving…", "Claiming…", "Taking you
+  to Google…"). Only the cursor changes; a faded band would be a greyed box, and ink
+  at 60% on the fiction band falls under AA.
 
 ### Outline Button
 

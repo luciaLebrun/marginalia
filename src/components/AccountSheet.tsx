@@ -157,7 +157,7 @@ function CommitBand({
         type="submit"
         form={FORM_ID}
         disabled={pending}
-        className="band-label flex w-full flex-wrap items-baseline gap-x-4 gap-y-1 bg-band-fiction px-4 py-4 text-left text-ink transition-opacity disabled:opacity-60 sm:px-6"
+        className="band-label flex w-full flex-wrap items-baseline gap-x-4 gap-y-1 bg-band-fiction px-4 py-4 text-left text-ink disabled:cursor-progress sm:px-6"
       >
         <span className="font-stretch-[118%] tracking-[0.2em]">
           {pending ? "Saving…" : "Save"}
