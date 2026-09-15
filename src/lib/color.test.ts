@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ALARM,
   CATEGORY_BANDS,
+  bandColor,
   INK,
   PAPER,
   conditionBand,
@@ -130,6 +132,50 @@ describe("conditionBand", () => {
 
   it("falls back rather than throwing on junk", () => {
     expect(conditionBand("not-a-colour")).toBe(CATEGORY_BANDS[0]);
+  });
+
+  describe("never lands on the refusal tone", () => {
+    const hueGap = (hex: string) => {
+      const d = Math.abs(rgbToHsl(hexToRgb(hex)!).h - rgbToHsl(hexToRgb(ALARM)!).h) * 360;
+      return Math.min(d, 360 - d);
+    };
+
+    it("moves alarm itself, and its neighbours either side, off its hue", () => {
+      // The Dispossessed's stored band, a rustier red and a winier one.
+      for (const raw of [ALARM, "#961E11", "#931A1F"]) {
+        const band = conditionBand(raw);
+        expect(band).not.toBe(ALARM);
+        expect(hueGap(band)).toBeGreaterThanOrEqual(14);
+      }
+    });
+
+    it("pushes each side to its own side", () => {
+      const rust = rgbToHsl(hexToRgb(conditionBand("#961E11"))!).h * 360;
+      const wine = rgbToHsl(hexToRgb(conditionBand("#931A1F"))!).h * 360;
+      expect(rust).toBeGreaterThan(15);
+      expect(wine).toBeGreaterThan(300);
+    });
+
+    it("is stable, so a stored band re-conditioned on read does not drift", () => {
+      const once = conditionBand(ALARM);
+      expect(conditionBand(once)).toBe(once);
+    });
+
+    it("leaves a red that does not read as alarm alone", () => {
+      // The fiction orange-red, much lighter than alarm.
+      expect(conditionBand(CATEGORY_BANDS[0])).toBe(CATEGORY_BANDS[0]);
+    });
+  });
+});
+
+describe("bandColor", () => {
+  it("re-conditions a stored colour, so rows saved before a rule obey it", () => {
+    expect(bandColor(ALARM, "OL1W")).toBe(conditionBand(ALARM));
+    expect(bandColor(ALARM, "OL1W")).not.toBe(ALARM);
+  });
+
+  it("uses the category fallback when the cover gave no colour", () => {
+    expect(bandColor(null, "OL893414W")).toBe(fallbackBand("OL893414W"));
   });
 });
 

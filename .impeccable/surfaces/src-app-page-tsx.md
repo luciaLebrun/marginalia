@@ -2,7 +2,7 @@
 version: 1
 slug: "src-app-page-tsx"
 primary_target: "src/app/page.tsx"
-related_targets: []
+related_targets: ["src/app/[handle]/page.tsx","src/components/Masthead.tsx","src/app/dev/profile/page.tsx"]
 ---
 
 Scope: the reading diary grid — `/` for the signed-in reader and `/@[username]`
@@ -62,10 +62,34 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the
 finish review, the verdict, DESIGN.md, and every shipping raster carrying its
 provenance
 
+## Profile identity (MRG-017) — extension, confirmed with the user
+
+An addition inside this surface, so it inherits the direction contract above
+unchanged: no concept roll, no new tone, type step or motion. The profile's grid
+itself shipped with MRG-012; MRG-017 was rescoped by the user to identity.
+
+- Job: a friend opening `/@handle`, often from a link, sees whose diary this is
+  before scanning it; the owner opening their own `/@handle` sees what others
+  see.
+- Masthead band two, profile only: the name at display scale left and the
+  reading span right, as now; under the name the `@handle` in band voice, soft
+  ink; under that the bio as body copy in soft ink, capped at 38rem — a few lines
+  under the handle, as the account sheet now says. No bio, no line.
+- Masthead band three, profile only: the tally left; the right edge depends on
+  who is looking — the owner keeps "Your account" (`/settings`), a signed-in
+  friend gets "Your diary" (their own `/`), a signed-out visitor gets nothing.
+- Unchanged: the reader's own diary at `/`, the shelf, the grid, entry cells,
+  page titles.
+- States: owner · signed-in friend · signed-out visitor · with and without a
+  bio · a 240-character bio · a 20-character handle (the username limit) at 390.
+- Confirmed answers: rescope MRG-017 to profile identity; band three's link by
+  viewer as above. Linking entry cells to book pages stays MRG-051.
+- Confirmed after the finish review: the account sheet's bio hint promised
+  "two lines", but a bio at the 240-character limit runs about three lines at
+  1440 and five at 390. The user chose to reword the hint ("A few lines under
+  your handle on your diary") rather than lower the limit or clamp the bio.
+
 ## Unresolved
 
-- Cover colour extraction: server-side on book upsert, cached to a new
-  `book.coverColor` column. Falls back to a stable hash into the category colours.
-  Verify Open Library covers can be fetched and decoded before committing to it.
-- Username claim (MRG-012) is not built, so `/@[username]` has no route yet;
-  this build targets `/` first and the profile inherits it.
+- None blocking. Cover colour extraction and the username claim (MRG-012) both
+  shipped; linking entry cells to their book pages is MRG-051.

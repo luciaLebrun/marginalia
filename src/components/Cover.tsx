@@ -11,14 +11,24 @@ import { coverUrl } from "@/lib/books";
  * jacket sits inside it at its own proportions — letterboxed on paper rather
  * than cropped, because a cropped jacket loses its typography.
  */
+
+/** The shelf grid's four column steps. A cover set outside the grid passes its own. */
+const GRID_SIZES =
+  "(min-width: 80rem) 16vw, (min-width: 64rem) 24vw, (min-width: 40rem) 32vw, 48vw";
+
 export function Cover({
   coverId,
   title,
   authors,
+  sizes = GRID_SIZES,
+  scale = "cell",
 }: Readonly<{
   coverId: number | null;
   title: string;
   authors: string[];
+  sizes?: string;
+  /** "page" sets a coverless jacket at frontispiece size, for the book page. */
+  scale?: "cell" | "page";
 }>) {
   // "M" is 180px wide. A cell is ~231 CSS px on desktop, which is 462 device
   // px at DSF 2 — every jacket was being upscaled 2.6x and going visibly soft.
@@ -28,6 +38,8 @@ export function Cover({
   const small = coverUrl(coverId, "M");
 
   if (!src) {
+    if (scale === "page") return <PageJacket title={title} authors={authors} />;
+
     return (
       <div className="flex h-full w-full items-center justify-center bg-paper-sunk px-3 py-4">
         {/* Plenty of books have no cover. That is a real state, not an error,
@@ -50,11 +62,40 @@ export function Cover({
     <img
       src={src}
       srcSet={small ? `${small} 180w, ${src} 500w` : undefined}
-      sizes="(min-width: 80rem) 16vw, (min-width: 64rem) 24vw, (min-width: 40rem) 32vw, 48vw"
+      sizes={sizes}
       alt={authors.length ? `${title} by ${authors[0]}` : title}
       loading="lazy"
       decoding="async"
       className="h-full w-full object-contain"
     />
+  );
+}
+
+/**
+ * A coverless book at frontispiece size: a type-only jacket, set the way a
+ * paperback with no illustration was — the title large at the head, the
+ * author in the band voice at the foot. The shelf cell's small centred label
+ * blown up to 384px reads as an empty placeholder; this reads as a jacket.
+ *
+ * Hidden from assistive tech: the page's own heading already says the title,
+ * and a screen reader should not hear it twice.
+ */
+function PageJacket({ title, authors }: Readonly<{ title: string; authors: string[] }>) {
+  return (
+    <div
+      aria-hidden="true"
+      className="flex h-full w-full flex-col justify-between gap-4 bg-paper-sunk px-5 py-6 lg:px-7 lg:py-8"
+    >
+      {/* The headline step, holding 1.75rem until the frontispiece column is
+          wide enough for 2.25rem not to break a word. */}
+      <span className="text-[1.75rem] leading-none font-semibold tracking-[-0.02em] text-balance break-words lg:text-[2.25rem]">
+        {title}
+      </span>
+      {authors[0] && (
+        <span className="band-label leading-[1.4]! text-balance text-ink-soft">
+          {authors[0]}
+        </span>
+      )}
+    </div>
   );
 }

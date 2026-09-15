@@ -84,13 +84,20 @@ Hobby's image-transformation quota for images we do not own.
 
 | Route | Purpose |
 |---|---|
-| `/` | Logged out: landing. Logged in: your diary, newest first. |
-| `/signin`, `/signup` | Google OAuth; signup consumes an invite code. |
+| `/` | Signed out: the door. Signed in: your diary, newest first. |
+| `/claim` | First stop after signing in, for a reader with no handle yet. |
 | `/search?q=` | Search Open Library, cover-grid results. |
 | `/book/[workKey]` | Book page: metadata, your logs, all reviews. |
 | `/@[username]` | Profile: cover grid of latest reads. |
 | `/@[username]/log/[id]` | Review permalink. |
-| `/settings` | Username, bio, generate invite codes. |
+| `/settings` | Name, handle, bio; invitations; sign out; delete account. |
+| `/dev/*` | Development harnesses. `notFound()` outside development. |
+
+There are deliberately no `/signin` and `/signup` routes. A signed-out visitor
+lands on `/`, and the door there takes an optional invite code before handing
+off to Google — an existing member needs no code, because `enforceInvite()`
+runs only when a user row is being created. Two routes would have made the
+visitor classify themselves before doing anything, to reach the same gate.
 
 ## Environments
 

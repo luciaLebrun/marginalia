@@ -37,8 +37,8 @@ export function ClaimForm({
           Pick a username
         </label>
         <p className="text-[0.9375rem] leading-relaxed text-ink-soft">
-          It becomes the address of your diary, and it cannot be changed later.
-          Letters, numbers and underscores.
+          It becomes the address of your diary. You can change it later, but
+          the old address stops working. Letters, numbers and underscores.
         </p>
 
         <div className="mt-1 flex items-baseline border-b border-ink">
@@ -66,8 +66,7 @@ export function ClaimForm({
           <p
             id="username-error"
             role="alert"
-            className="text-[0.9375rem] leading-snug"
-            style={{ color: "#951D10" }}
+            className="text-[0.9375rem] leading-snug text-alarm"
           >
             {state.error}
           </p>

@@ -14,6 +14,7 @@ import { eq } from "drizzle-orm";
 import { getDb, schema } from "../src/db/index.ts";
 import { fetchWork, searchBooks } from "../src/lib/books/openlibrary.ts";
 import { bandColorFromCover } from "../src/lib/cover-color.ts";
+import { generateInviteCode } from "../src/lib/invite-code.ts";
 
 const USER_ID = "dev-reader";
 const EMAIL = "dev@marginalia.local";
@@ -58,6 +59,7 @@ const db = getDb();
 
 if (process.argv.includes("--clear")) {
   await db.delete(schema.log).where(eq(schema.log.userId, USER_ID));
+  await db.delete(schema.inviteCode).where(eq(schema.inviteCode.createdBy, USER_ID));
   await db.delete(schema.user).where(eq(schema.user.id, USER_ID));
   await db.delete(schema.user).where(eq(schema.user.id, NEWCOMER_ID));
   console.log("cleared dev users and their entries (books left cached)");
@@ -73,7 +75,10 @@ await db
 // /@lucia has to resolve for the profile route to be exercisable.
 await db
   .update(schema.user)
-  .set({ username: "lucia" })
+  .set({
+    username: "lucia",
+    bio: "Mostly science fiction, and whatever the last book made me want to read next.",
+  })
   .where(eq(schema.user.id, USER_ID));
 
 await db
@@ -136,3 +141,35 @@ for (const [query, readAt, rating] of SHELF) {
 }
 
 console.log(`\nseeded ${logged}/${SHELF.length} entries for @lucia`);
+
+
+/*
+ * An invite run in all three states, so `/dev/settings` shows what the owner
+ * actually sees rather than one row of one kind. The codes come from the real
+ * CSPRNG; only "who used one" is local fiction, and it never leaves this
+ * machine — the same rule the shelf above follows.
+ */
+await db.delete(schema.inviteCode).where(eq(schema.inviteCode.createdBy, USER_ID));
+
+const DAY = 24 * 60 * 60 * 1000;
+await db.insert(schema.inviteCode).values([
+  {
+    code: generateInviteCode(),
+    createdBy: USER_ID,
+    expiresAt: new Date(Date.now() + 30 * DAY),
+  },
+  {
+    code: generateInviteCode(),
+    createdBy: USER_ID,
+    usedBy: NEWCOMER_ID,
+    usedAt: new Date(Date.now() - 3 * DAY),
+    expiresAt: new Date(Date.now() + 27 * DAY),
+  },
+  {
+    code: generateInviteCode(),
+    createdBy: USER_ID,
+    expiresAt: new Date(Date.now() - 2 * DAY),
+  },
+]);
+
+console.log("seeded 3 invite codes: one unused, one used, one expired");

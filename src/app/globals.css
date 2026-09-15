@@ -16,6 +16,13 @@
   --color-ink-soft: #5d564c;
   --color-rule: #16130f26;
 
+  /*
+   * The one tone outside the paper/ink system: refusal. Ink cannot say "this
+   * failed" — every rule and border on the page is already ink — and the band
+   * colours all mean "a book". 7.6:1 on paper, so it carries body copy.
+   */
+  --color-alarm: #951d10;
+
   /* Penguin's category colours: the band set when a cover yields none. */
   --color-band-fiction: #e8501b;
   --color-band-crime: #007a5e;

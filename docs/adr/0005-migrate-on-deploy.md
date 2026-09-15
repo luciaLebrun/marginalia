@@ -50,3 +50,32 @@ is in the repository, reviewable in a diff, and the same for everyone.
   only Vercel uses this build command.
 - The production Neon branch still needs its first catch-up migration, which
   this deploy performs.
+- **Every deploy log carries a warning that does not apply to us**, and it is
+  recorded here so nobody chases it twice:
+
+  > `'@neondatabase/serverless' can only connect to remote Neon/Vercel
+  > Postgres/Supabase instances through a websocket`
+
+  `drizzle.config.ts` names no `driver`, so drizzle-kit picks one by looking at
+  what is installed. It finds `@neondatabase/serverless`, chooses
+  `drizzle-orm/neon-serverless` — the WebSocket `Pool` driver — and prints this
+  note to say that driver cannot reach a plain local Postgres over TCP. Our
+  database is remote Neon, so the constraint never binds. It is informational,
+  not a failure: `drizzle-kit migrate` exits 0 and reports "migrations applied
+  successfully" alongside it.
+
+  There is also no way to silence it from config — drizzle-kit's `driver` field
+  selects `aws-data-api`, `pglite`, `d1-http` and the like, not which Postgres
+  client to use.
+
+  A genuine migration failure looks nothing like this. `buildCommand` is
+  `pnpm db:migrate && pnpm build`, so a non-zero exit from migrate means
+  `next build` never runs and the deployment fails outright. A build that
+  completed is a build whose migrations applied.
+- **Migrations and the app deliberately use different drivers.** drizzle-kit
+  migrates over `neon-serverless` (WebSocket), while `src/db/index.ts` runs the
+  app on `neon-http`. That is the right split: HTTP suits one-shot serverless
+  queries, and the WebSocket session is what lets a migration run inside a
+  transaction. It is also why `transaction: false` is required on the Better
+  Auth adapter but *not* on migrations — the constraint belongs to neon-http
+  alone.

@@ -6,6 +6,11 @@
  * the caching, User-Agent, normalization and the CoverID rule stay in one place.
  */
 export { coverUrl, type CoverSize } from "./covers.ts";
-export { searchBooks, fetchWork, OpenLibraryError } from "./openlibrary.ts";
+export {
+  searchBooks,
+  fetchWork,
+  stripWorkPrefix,
+  OpenLibraryError,
+} from "./openlibrary.ts";
 export { enrich } from "./google-books.ts";
 export type { BookSummary, BookDetail } from "./types.ts";

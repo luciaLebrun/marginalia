@@ -1,9 +1,14 @@
 /**
  * Username rules and handle parsing. Pure — no I/O.
  *
- * A username is claimed once, is permanent, and becomes a public URL, so the
- * rules are deliberately strict: a handle someone has to spell aloud, or that
- * could be mistaken for one of our own routes, is worse than a rejected one.
+ * A username becomes a public URL, so the rules are deliberately strict: a
+ * handle someone has to spell aloud, or that could be mistaken for one of our
+ * own routes, is worse than a rejected one.
+ *
+ * It can be changed from the account sheet, and changing it frees the old one
+ * immediately — there is no handle history, so a link to the old address 404s
+ * and anybody may take the name. That is the trade this project chose over
+ * carrying a redirect table forever.
  */
 
 /** 3–20 characters, so it fits a masthead and is still typeable. */

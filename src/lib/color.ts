@@ -11,6 +11,8 @@ export const CATEGORY_BANDS = ["#E8501B", "#007A5E", "#00A0C6"] as const;
 
 export const PAPER = "#F4F1E8";
 export const INK = "#16130F";
+/** `--color-alarm`. The Refusal Tone Rule: never a band. */
+export const ALARM = "#951D10";
 
 export interface Rgb {
   r: number;
@@ -82,6 +84,24 @@ export function fallbackBand(olWorkKey: string): string {
 }
 
 /**
+ * The band a book wears: its stored cover colour, or the category fallback.
+ *
+ * The stored colour goes back through `conditionBand()` because rows saved
+ * before a conditioning rule existed still carry the old result. It is
+ * idempotent on a colour already in range, so this costs nothing else.
+ */
+export function bandColor(coverColor: string | null, olWorkKey: string): string {
+  return coverColor ? conditionBand(coverColor) : fallbackBand(olWorkKey);
+}
+
+const ALARM_HSL = rgbToHsl(hexToRgb(ALARM)!);
+// ponytail: a box in HSL, not a perceptual ΔE. Widen or move to OKLab if a
+// jacket outside it still reads as alarm on the page.
+const ALARM_HUE_REACH = 15 / 360;
+const ALARM_LIGHTNESS_REACH = 0.12;
+const ALARM_MIN_SATURATION = 0.5;
+
+/**
  * Push a colour into the range a band can actually use.
  *
  * Cover art hands us plenty of colours that fail as a field: near-white paper
@@ -93,13 +113,26 @@ export function conditionBand(hex: string): string {
   const rgb = hexToRgb(hex);
   if (!rgb) return CATEGORY_BANDS[0];
 
-  const { h, s, l } = rgbToHsl(rgb);
-  const conditioned = hslToRgb({
-    h,
-    s: Math.max(s, 0.35),
-    l: Math.min(Math.max(l, 0.28), 0.62),
-  });
-  return rgbToHex(conditioned);
+  const hsl = rgbToHsl(rgb);
+  const s = Math.max(hsl.s, 0.35);
+  const l = Math.min(Math.max(hsl.l, 0.28), 0.62);
+  return rgbToHex(hslToRgb({ h: offAlarm(hsl.h, s, l), s, l }));
+}
+
+/**
+ * A dark saturated red lands on the refusal tone, which may never be a band
+ * (*The Dispossessed* did). Push its hue to the nearer edge of the alarm's
+ * reach — rust on one side, wine on the other — rather than special-case a
+ * surface.
+ */
+function offAlarm(h: number, s: number, l: number): number {
+  const dh = ((h - ALARM_HSL.h + 1.5) % 1) - 0.5; // signed, -0.5..0.5
+  const near =
+    Math.abs(dh) < ALARM_HUE_REACH &&
+    Math.abs(l - ALARM_HSL.l) < ALARM_LIGHTNESS_REACH &&
+    s > ALARM_MIN_SATURATION;
+  if (!near) return h;
+  return (ALARM_HSL.h + (dh < 0 ? -1 : 1) * ALARM_HUE_REACH + 1) % 1;
 }
 
 export function rgbToHsl({ r, g, b }: Rgb): { h: number; s: number; l: number } {

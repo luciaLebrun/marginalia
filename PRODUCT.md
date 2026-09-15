@@ -77,6 +77,21 @@ Durable constraints:
 - Open Library work keys are not stable identifiers — the source merges
   duplicate works and leaves redirect stubs behind.
 
+Beyond the first release, two directions are stated rather than parked:
+
+- **A 3D render of the reading log** is the eventual centre of the product — a
+  shelf you look at rather than a grid you scan. It is **toggleable by
+  design**: the 2D interface remains a first-class equal and never becomes a
+  fallback, so the diary keeps working on a phone, under reduced-motion, and
+  for anyone who simply prefers it. This binds work happening now: the flat
+  interface must stay complete on its own terms rather than becoming a
+  degraded view of something else.
+- **French.** The author is French and the circle likely is too, so this is a
+  destination rather than box-ticking internationalisation. Whether English
+  survives alongside it is undecided. It bears on copy written now: the voice
+  here is authored, not neutral UI strings, so translating it will be writing
+  rather than extraction.
+
 Explicitly undecided: whether a friends' feed, shelves/lists, reading progress,
 or saved quotes are ever built. They are parked, not planned.
 
