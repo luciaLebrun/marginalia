@@ -46,7 +46,8 @@ function forbiddenReach(entry: string): string[] {
     if (seen.has(file)) continue;
     seen.add(file);
     const source = readFileSync(file, "utf8");
-    if (file !== entry && /^["']use server["']/m.test(source)) continue;
+    // The directive must open the file; an inline one inside a function is not a boundary.
+    if (file !== entry && /^\s*["']use server["']/.test(source)) continue;
     for (const specifier of imports(source)) {
       if (FORBIDDEN.some((bad) => specifier === bad || specifier.startsWith(`${bad}/`))) {
         hits.push(`${path.relative(SRC, file)} → ${specifier}`);
