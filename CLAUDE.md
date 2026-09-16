@@ -177,9 +177,13 @@ the same reason `getDb()` is.
 - **Tests run against fixtures in `tests/fixtures/`**, never the live API — a
   third-party outage must not be able to turn a PR red. `pnpm smoke:books` is
   the opt-in live check.
-- Covers render as a plain lazy `<img>`, **not** `next/image`. Open Library asks
+- Covers render as a plain `<img>`, **not** `next/image`. Open Library asks
   that public pages point `src` at their CDN, and it keeps us off Vercel Hobby's
-  image-transformation quota for images we do not own.
+  image-transformation quota for images we do not own. Grid covers are lazy; a
+  page-scale jacket is the LCP and loads eagerly at high priority.
+- **Client components import nothing that builds a Zod schema or reaches the
+  database.** Shared limits live in `src/lib/client-safe.ts`;
+  `client-imports.test.ts` fails the build otherwise (MRG-022).
 
 ## Frontend, UX review and optimisation → use Impeccable
 
