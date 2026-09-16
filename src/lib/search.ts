@@ -93,8 +93,3 @@ export function bandText(outcome: SearchOutcome): string {
     }
   }
 }
-
-/** Where a result leads. The book page renders from our database (MRG-015). */
-export function bookPath(olWorkKey: string): string {
-  return `/book/${olWorkKey}`;
-}

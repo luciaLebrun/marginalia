@@ -285,6 +285,16 @@ export async function deleteAccountAction(
   redirect("/");
 }
 
+/**
+ * Ending the session on this device, on the server: `nextCookies()` clears the
+ * cookie from here, so the browser never loads Better Auth's client (~65 KB
+ * gzipped) for one button, and the redirect re-renders the door as anonymous.
+ */
+export async function signOutAction(): Promise<void> {
+  await getAuth().api.signOut({ headers: await headers() });
+  redirect("/");
+}
+
 /* -------------------------------------------------------------------------- */
 /* The log sheet                                                               */
 /* -------------------------------------------------------------------------- */

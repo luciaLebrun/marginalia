@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { REVIEW_MAX } from "./client-safe";
+
 /**
  * The log sheet's shape, shared by the form and the server action.
  *
@@ -9,8 +11,7 @@ import { z } from "zod";
  * enforces again through this same schema.
  */
 
-/** Room for a considered paragraph or three; not a place to paste a book. */
-export const REVIEW_MAX = 5000;
+export { REVIEW_MAX };
 
 export type LogReadField = "readAt" | "rating" | "review";
 

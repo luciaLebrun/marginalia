@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Cover } from "./Cover";
 import type { BookSummary } from "@/lib/books";
-import { bookPath } from "@/lib/search";
+import { bookPath } from "@/lib/client-safe";
 
 /**
  * One search result: the entry's tri-band frame with the colour withheld.
