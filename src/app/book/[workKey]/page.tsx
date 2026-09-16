@@ -10,7 +10,7 @@ import { getAuth } from "@/lib/auth";
 import { findStoredBook, openBook, parseWorkKey } from "@/lib/book";
 import { getReads } from "@/lib/book-view";
 import { isOnToRead } from "@/lib/to-read";
-import { bookPath } from "@/lib/search";
+import { bookPath } from "@/lib/client-safe";
 
 /**
  * One book, opened.

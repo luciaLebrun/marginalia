@@ -1,29 +1,24 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useFormStatus } from "react-dom";
 
-import { signOut } from "@/lib/auth-client";
+import { signOutAction } from "@/app/actions";
 
-/**
- * Ending the session on this device. Not a form action: Better Auth clears the
- * session cookie through its own client, and the router refresh is what makes
- * the server re-render as anonymous.
- */
+/** Ending the session on this device. A plain form, so it works before hydration too. */
 export function SignOutButton() {
-  const router = useRouter();
-  const [pending, setPending] = useState(false);
+  return (
+    <form action={signOutAction}>
+      <Submit />
+    </form>
+  );
+}
 
+function Submit() {
+  const { pending } = useFormStatus();
   return (
     <button
-      type="button"
+      type="submit"
       disabled={pending}
-      onClick={async () => {
-        setPending(true);
-        await signOut();
-        router.replace("/");
-        router.refresh();
-      }}
       className="band-label border border-ink px-3 py-2.5 transition-colors hover:bg-band-fiction focus-visible:bg-band-fiction disabled:opacity-60"
     >
       {pending ? "Signing out…" : "Sign out"}

@@ -2,16 +2,10 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { getDb, schema } from "@/db";
+import { BIO_MAX, NAME_MAX } from "./client-safe";
 import { MAX_LENGTH as USERNAME_MAX, usernameError } from "./username";
 
-/** Long enough for a real name, short enough to set at display scale in the masthead. */
-export const NAME_MAX = 60;
-
-/**
- * A few lines under a handle on the public diary — about three on a laptop and
- * five on a phone at the limit. Not a place to write an essay.
- */
-export const BIO_MAX = 240;
+export { BIO_MAX, NAME_MAX };
 
 /**
  * The account form's shape, shared by the client form and the server action.

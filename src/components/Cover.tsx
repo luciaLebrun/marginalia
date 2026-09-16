@@ -64,7 +64,10 @@ export function Cover({
       srcSet={small ? `${small} 180w, ${src} 500w` : undefined}
       sizes={sizes}
       alt={authors.length ? `${title} by ${authors[0]}` : title}
-      loading="lazy"
+      // A page-scale jacket is the page's lead image and sits above the fold,
+      // so it is the LCP: fetch it at once. Grid covers wait for the scroll.
+      loading={scale === "page" ? "eager" : "lazy"}
+      fetchPriority={scale === "page" ? "high" : "auto"}
       decoding="async"
       className="h-full w-full object-contain"
     />

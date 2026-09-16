@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 
 import { saveAccountAction, type AccountState } from "@/app/actions";
-import { BIO_MAX, NAME_MAX } from "@/lib/account";
+import { BIO_MAX, NAME_MAX } from "@/lib/client-safe";
 import { MAX_LENGTH as USERNAME_MAX } from "@/lib/username";
 
 /*

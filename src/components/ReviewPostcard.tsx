@@ -5,7 +5,7 @@ import { Rating } from "./Rating";
 import { authorLine, bookBand } from "@/lib/book-view";
 import { PAPER } from "@/lib/color";
 import { reviewParagraphs, type LogEntry } from "@/lib/entry";
-import { bookPath } from "@/lib/search";
+import { bookPath } from "@/lib/client-safe";
 import { slipDate } from "@/lib/slip-date";
 import { handlePath } from "@/lib/username";
 

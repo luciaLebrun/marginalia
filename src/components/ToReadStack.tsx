@@ -6,7 +6,7 @@ import { useFormStatus } from "react-dom";
 
 import { Cover } from "./Cover";
 import { toggleToReadAction, type ToReadState } from "@/app/actions";
-import { bookPath } from "@/lib/search";
+import { bookPath } from "@/lib/client-safe";
 import { spineHeightRem, spineOffsetStep } from "@/lib/spine";
 import type { ToReadBook } from "@/lib/to-read";
 

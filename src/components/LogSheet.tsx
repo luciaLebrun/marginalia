@@ -7,7 +7,8 @@ import { Rating } from "./Rating";
 import { logReadAction, type LogReadState } from "@/app/actions";
 import type { Read } from "@/lib/book-view";
 import { INK } from "@/lib/color";
-import { REVIEW_MAX, type LogReadField } from "@/lib/read-schema";
+import { REVIEW_MAX } from "@/lib/client-safe";
+import type { LogReadField } from "@/lib/read-schema";
 import { slipDate } from "@/lib/slip-date";
 
 /*

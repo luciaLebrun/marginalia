@@ -5,7 +5,7 @@ import { Cover } from "./Cover";
 import { Rating } from "./Rating";
 import { bandColor, readableOn } from "@/lib/color";
 import { entryLabel } from "@/lib/diary";
-import { bookPath } from "@/lib/search";
+import { bookPath } from "@/lib/client-safe";
 import { cellDate } from "@/lib/slip-date";
 
 export interface DiaryEntry {

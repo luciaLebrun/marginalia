@@ -7,7 +7,6 @@ import {
   MAX_QUERY_LENGTH,
   SEARCH_LIMIT,
   bandText,
-  bookPath,
   parseQuery,
   runSearch,
   type Search,
@@ -125,11 +124,5 @@ describe("bandText", () => {
   it("names none and unavailable differently", () => {
     expect(bandText({ kind: "none", query: "q" })).toBe("No matches");
     expect(bandText({ kind: "unavailable", query: "q" })).toBe("Search unavailable");
-  });
-});
-
-describe("bookPath", () => {
-  it("addresses the book page by bare work key", () => {
-    expect(bookPath("OL893414W")).toBe("/book/OL893414W");
   });
 });
