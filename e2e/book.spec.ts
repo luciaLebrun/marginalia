@@ -154,13 +154,24 @@ test.describe("book page", () => {
       await expect(jacket).not.toHaveAttribute("srcset", /zoom/);
     });
 
-    test("actually decodes at the width it asked for, not an upscale", async ({ page }) => {
-      const natural = await page
+    /*
+     * The rule is "never upscaled", which is what `zoom` could not satisfy: its
+     * whole ladder tops out at 300px, so a 384 CSS px frontispiece was being
+     * fed a thumbnail. Asserted against the element's own rendered width rather
+     * than a fixed number, because the right answer differs by viewport — the
+     * browser correctly picks the 256w candidate for a narrow well and the
+     * 800w one for the desktop frontispiece.
+     */
+    test("decodes at or above its rendered width, never upscaled", async ({ page }) => {
+      const { natural, rendered } = await page
         .getByRole("img", { name: /^Dune by Frank Herbert$/ })
-        .evaluate((img) => (img as HTMLImageElement).naturalWidth);
-      // 300 is the ceiling of Google's zoom ladder; anything at or below it
-      // means we are back to upscaling a thumbnail into the frontispiece.
-      expect(natural).toBeGreaterThan(300);
+        .evaluate((img) => ({
+          natural: (img as HTMLImageElement).naturalWidth,
+          rendered: img.getBoundingClientRect().width,
+        }));
+
+      expect(natural).toBeGreaterThan(0);
+      expect(natural).toBeGreaterThanOrEqual(Math.floor(rendered));
     });
 
     test("carries no page curl and no plain http, which would be mixed content", async ({ page }) => {
