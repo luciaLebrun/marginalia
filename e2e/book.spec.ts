@@ -182,6 +182,18 @@ test.describe("book page", () => {
       expect(src).not.toContain("http://");
     });
 
+    /*
+     * Google's key names a *volume*, and a volume is an edition: the record
+     * behind this page is the 2005 printing, not the 1965 novel. The number is
+     * right; "First published" over it would not be.
+     */
+    test("calls the year this edition's, not the book's", async ({ page }) => {
+      const imprint = page.locator("dl");
+      await expect(imprint).toContainText("Published");
+      await expect(imprint).not.toContainText("First published");
+      await expect(imprint).toContainText("2005");
+    });
+
     test("names Google Books in the imprint and links to that volume", async ({ page }) => {
       await expect(page.getByRole("link", { name: "Google Books" })).toHaveAttribute(
         "href",
@@ -196,6 +208,32 @@ test.describe("book page", () => {
         .getByRole("img", { name: /^Dune by Frank Herbert$/ })
         .evaluate((img) => (img as HTMLImageElement).naturalWidth > 0);
       expect(loaded).toBe(true);
+    });
+  });
+
+  /*
+   * Google stores a publisher's marketing copy, in HTML, with the blurb walled
+   * between rules of press quotes and a prize banner filed as the subtitle.
+   * The page has to print the book and none of the shouting.
+   */
+  test.describe("a Google record written by a publicist", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto("/dev/book?state=banner", { waitUntil: "networkidle" });
+    });
+
+    test("sets the blurb as paragraphs, with no markup showing", async ({ page }) => {
+      const description = page.locator("article p").last();
+      await expect(description).toBeVisible();
+
+      const article = (await page.locator("article").textContent()) ?? "";
+      expect(article).toContain("Piranesi lives in the House");
+      expect(article).not.toMatch(/<\/?(?:b|i|br|p)\b/i);
+      expect(article).not.toContain("____");
+      expect(article).not.toContain("BESTSELLER");
+    });
+
+    test("refuses a jacket banner filed as the subtitle", async ({ page }) => {
+      await expect(page.locator("h1 + p")).toHaveCount(0);
     });
   });
 

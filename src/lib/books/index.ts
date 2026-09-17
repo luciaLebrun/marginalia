@@ -34,6 +34,29 @@ export {
 export type { BookSummary, BookDetail } from "./types.ts";
 
 /**
+ * A URL segment as text.
+ *
+ * Next hands a **page** its dynamic segment percent-encoded and a **route
+ * handler** the same segment decoded. A Google key carries a colon, so
+ * `/book/gb:B1hSG45JCX4C` reached the page as `gb%3AB1hSG45JCX4C` and failed
+ * the guard below: every Google book opened as "not found", while Open
+ * Library's bare keys, which encode to themselves, went through. That is also
+ * why it survived a route-handler probe.
+ *
+ * Decoding before validating is safe here because what follows is an
+ * allowlist, not a denylist: `%2F` becomes a slash and is then refused like
+ * any other slash. A malformed escape is left as it stands, to be refused the
+ * same way, rather than throwing out of a guard.
+ */
+function decodeSegment(raw: string): string {
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
+/**
  * A book key as it arrives from a URL segment: untrusted. Returns the
  * canonical key — "gb:B1hSG45JCX4C" or "OL45804W" — or null.
  *
@@ -42,7 +65,7 @@ export type { BookSummary, BookDetail } from "./types.ts";
  * resource entirely.
  */
 export function parseBookKey(raw: string): string | null {
-  const trimmed = raw.trim();
+  const trimmed = decodeSegment(raw).trim();
 
   const volumeId = parseVolumeId(trimmed);
   if (volumeId) return `${GOOGLE_KEY_PREFIX}${volumeId}`;
