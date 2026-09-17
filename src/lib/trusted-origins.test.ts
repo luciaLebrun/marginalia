@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { PREVIEW_ORIGIN_PATTERN, proxyCurrentURL, trustedOrigins } from "./trusted-origins";
+import { PREVIEW_ORIGIN_PATTERN, requestOrigin, trustedOrigins } from "./trusted-origins";
 
-const KEYS = ["VERCEL_ENV", "VERCEL_BRANCH_URL", "BETTER_AUTH_URL"] as const;
+const KEYS = ["VERCEL_ENV"] as const;
 const ORIGINAL = Object.fromEntries(KEYS.map((k) => [k, process.env[k]]));
 
 afterEach(() => {
@@ -81,29 +81,42 @@ describe("the preview origin pattern", () => {
 });
 
 /*
- * Sign-in starts in a server action, where the proxy has no request host and
- * fell back to VERCEL_URL — a host nobody browses, so the invite cookie never
- * reached the sign-up and every invited account failed in production.
+ * The bug this exists for: sign-in began on the per-deployment host, Google was
+ * sent to BETTER_AUTH_URL, and the callback landed on the branch alias — a host
+ * that had never seen the state cookie. "State not persisted correctly".
  */
-describe("proxyCurrentURL", () => {
-  it("is the production URL in production, so the proxy skips", () => {
-    process.env.VERCEL_ENV = "production";
-    process.env.BETTER_AUTH_URL = "https://marginalia-roan.vercel.app";
-    process.env.VERCEL_BRANCH_URL = "marginalia-git-main-lucialebruns-projects.vercel.app";
-    expect(proxyCurrentURL()).toBe("https://marginalia-roan.vercel.app");
+describe("requestOrigin", () => {
+  const of = (h: Record<string, string>) => requestOrigin(new Headers(h));
+
+  it("names the host the reader is on, not the one the alias points at", () => {
+    expect(
+      of({
+        "x-forwarded-proto": "https",
+        "x-forwarded-host": "marginalia-pnfrko59y-lucialebruns-projects.vercel.app",
+      }),
+    ).toBe("https://marginalia-pnfrko59y-lucialebruns-projects.vercel.app");
   });
 
-  it("is the branch URL on a preview, where the door set its cookie", () => {
-    process.env.VERCEL_ENV = "preview";
-    process.env.VERCEL_BRANCH_URL = "marginalia-git-feature-x-lucialebruns-projects.vercel.app";
-    expect(proxyCurrentURL()).toBe(
-      "https://marginalia-git-feature-x-lucialebruns-projects.vercel.app",
+  it("prefers the forwarded host, which is the one in the address bar", () => {
+    expect(
+      of({
+        "x-forwarded-proto": "https",
+        "x-forwarded-host": "marginalia-roan.vercel.app",
+        host: "marginalia-emf7squhc-lucialebruns-projects.vercel.app",
+      }),
+    ).toBe("https://marginalia-roan.vercel.app");
+  });
+
+  it("keeps the scheme it was given, so local development stays http", () => {
+    expect(of({ "x-forwarded-proto": "http", host: "localhost:3000" })).toBe(
+      "http://localhost:3000",
     );
   });
 
-  it("leaves the plugin its default locally", () => {
-    delete process.env.VERCEL_ENV;
-    delete process.env.VERCEL_BRANCH_URL;
-    expect(proxyCurrentURL()).toBeUndefined();
+  /* Half a host is a guess, and guessing is the whole bug. */
+  it("declines rather than guess when the headers are not there", () => {
+    expect(of({})).toBeUndefined();
+    expect(of({ host: "marginalia-roan.vercel.app" })).toBeUndefined();
+    expect(of({ "x-forwarded-proto": "https" })).toBeUndefined();
   });
 });
