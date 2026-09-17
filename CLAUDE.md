@@ -79,7 +79,7 @@ return 403 past that — which breaks the cover grid for everyone behind the sam
 egress IP. `coverUrl()` in `src/lib/books/covers.ts` accepts a CoverID and
 nothing else, on purpose. Do not add an ISBN variant.
 
-**3. Our database is the record; Open Library is not.**
+**3. Our database is the record; neither source is.**
 A book is copied into the `book` table the first time it is opened, and read
 from Postgres forever after. Diaries, profiles and reviews must keep working
 when openlibrary.org is down — which, being Internet Archive infrastructure, it
@@ -88,15 +88,15 @@ profile or an existing review.
 
 `openBook()` in `src/lib/book.ts` is the only app code that writes to `book`,
 and the only path by which a book is opened. It returns `found`, `not-found` or
-`unavailable`, and a stored row is returned without reaching Open Library.
-Reach for it rather than calling `fetchWork()` from a page.
+`unavailable`, and a stored row is returned without reaching either source.
+Reach for it rather than calling `fetchBook()` from a page.
 
 **4. Work keys can be redirect stubs. Always resolve through `fetchWork()`.**
 Open Library merges duplicate works and leaves a `/type/redirect` stub at the
 old key, holding only a `location`. A stub has no title, authors or covers, so
 a caller that does not follow it creates a book titled after its own key. Any
 key can become one at any time, *including one already saved in `book`*. Trust
-the resolved `olWorkKey` that `fetchWork()` returns over the one you passed in.
+the resolved `sourceKey` that `fetchWork()` returns over the one you passed in.
 
 **5. `fetchWork()` returning null means "no such book". A throw means "Open
 Library is down".**
@@ -158,8 +158,23 @@ the same reason `getDb()` is.
 
 ## Conventions
 
-- **Open Library keys are stored bare**: `OL893415W`, never `/works/OL893415W`.
-  Use `stripWorkPrefix()` at every boundary.
+- **Google Books is the primary source; Open Library is the fallback**
+  (MRG-063). `searchBooks()` in `src/lib/books/index.ts` asks Google, and asks
+  Open Library only when Google is unconfigured, erroring, or has nothing. Keys
+  carry their source: a Google volume is tagged `gb:B1hSG45JCX4C`, an Open
+  Library work stays bare `OL893415W`, never `/works/OL893415W` — use
+  `stripWorkPrefix()` at every boundary. `parseBookKey()` is the guard for both,
+  and a key is never handed to the other source: it would answer with a
+  different book. The cost of the swap, which is permanent: a Google key
+  identifies an *edition*, an Open Library key a *work*, so two readers can
+  open two volumes of the same book and get two rows. ISBN-13 is the only
+  bridge.
+- **A jacket comes from whichever source the row was opened at.** Open Library
+  addresses covers by CoverID and serves sizes; Google gives one URL per volume
+  and none. `jacket()` in `src/lib/books/covers.ts` picks, and is the only
+  place that knows the difference. Only `books.google.com` may be pointed at
+  from a stored `coverUrl` — `jacketFromImageLinks()` enforces it, because that
+  value becomes an `<img src>` on a public page.
 - **`log` is a diary entry, not a rating.** `(userId, bookId)` is deliberately
   not unique — rereads are separate rows. `rating` and `reviewText` are both
   nullable, independently.
@@ -178,7 +193,8 @@ the same reason `getDb()` is.
   third-party outage must not be able to turn a PR red. `pnpm smoke:books` is
   the opt-in live check.
 - Covers render as a plain `<img>`, **not** `next/image`. Open Library asks
-  that public pages point `src` at their CDN, and it keeps us off Vercel Hobby's
+  that public pages point `src` at their CDN, Google Books jackets are pointed
+  at for the same reason, and it keeps us off Vercel Hobby's
   image-transformation quota for images we do not own. Grid covers are lazy; a
   page-scale jacket is the LCP and loads eagerly at high priority.
 - **Client components import nothing that builds a Zod schema or reaches the
@@ -240,7 +256,7 @@ skills in `.claude/skills/`.
 src/app/          routes (App Router)
 src/components/   UI
 src/db/           schema.ts, index.ts (getDb), migrations/
-src/lib/books/    the ONLY door to Open Library / Google Books
+src/lib/books/    the ONLY door to Google Books (primary) / Open Library
 src/lib/auth.ts   Better Auth config
 tests/fixtures/   recorded API responses
 docs/             architecture.md + adr/   ← decisions live here, not in Obsidian

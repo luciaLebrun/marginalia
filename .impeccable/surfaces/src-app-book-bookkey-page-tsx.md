@@ -1,11 +1,11 @@
 ---
 version: 1
-slug: "src-app-book-workkey-page-tsx"
-primary_target: "src/app/book/[workKey]/page.tsx"
+slug: "src-app-book-bookkey-page-tsx"
+primary_target: "src/app/book/[bookKey]/page.tsx"
 related_targets: ["src/components/BookTitlePage.tsx","src/components/DateSlip.tsx","src/components/BookStates.tsx","src/components/LogSheet.tsx","src/components/SlipLines.tsx","src/components/ToReadToggle.tsx"]
 ---
 
-Scope: `/book/[workKey]` — one book, opened through `openBook()`. Reached
+Scope: `/book/[bookKey]` — one book, opened through `openBook()`. Reached
 from a search result now, and from the diary later. Signed-in only. Visitor
 mode: Operate.
 

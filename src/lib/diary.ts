@@ -27,8 +27,9 @@ export async function getDiary(
       title: schema.book.title,
       authors: schema.book.authors,
       coverId: schema.book.coverId,
+      coverUrl: schema.book.coverUrl,
       coverColor: schema.book.coverColor,
-      olWorkKey: schema.book.olWorkKey,
+      sourceKey: schema.book.sourceKey,
     })
     .from(schema.log)
     .innerJoin(schema.book, eq(schema.log.bookId, schema.book.id))
@@ -47,8 +48,9 @@ export async function getDiary(
     title: row.title,
     authors: row.authors,
     coverId: row.coverId,
+    coverUrl: row.coverUrl,
     coverColor: row.coverColor,
-    olWorkKey: row.olWorkKey,
+    sourceKey: row.sourceKey,
     // numeric comes back as a string; the UI wants a number or nothing.
     rating: row.rating === null ? null : Number(row.rating),
     readAt: row.readAt === null ? null : new Date(row.readAt),

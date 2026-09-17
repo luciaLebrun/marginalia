@@ -32,7 +32,7 @@ const summaries = normalizeSearchResponse(search);
 
 const DUNE = {
   ...mergeGoogleVolume(normalizeWorkResponse(summaries[0], work), google),
-  olWorkKey: "OL893414W",
+  sourceKey: "OL893414W",
   coverId: 11481354,
 };
 
@@ -51,10 +51,11 @@ function entry(overrides: Partial<LogEntry> = {}): LogEntry {
     reader: READER,
     book: {
       id: "dev-dune",
-      olWorkKey: DUNE.olWorkKey,
+      sourceKey: DUNE.sourceKey,
       title: DUNE.title,
       authors: DUNE.authors,
       coverId: DUNE.coverId ?? null,
+      coverUrl: null,
       coverColor: "#70631F",
       firstPublishYear: DUNE.firstPublishYear ?? null,
     },
@@ -85,10 +86,11 @@ export default async function DevEntryPage({ searchParams }: PageProps<"/dev/ent
     shown = entry({
       book: {
         id: "dev-coverless",
-        olWorkKey: coverless.olWorkKey,
+        sourceKey: coverless.sourceKey,
         title: coverless.title,
         authors: coverless.authors,
         coverId: null,
+        coverUrl: null,
         coverColor: null,
         firstPublishYear: coverless.firstPublishYear ?? null,
       },

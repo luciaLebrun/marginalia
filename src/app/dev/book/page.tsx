@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import google from "../../../../tests/fixtures/google-books-dune.json";
+import googleSearch from "../../../../tests/fixtures/google-books-search-dune.json";
 import search from "../../../../tests/fixtures/openlibrary-search-dune.json";
 import freakonomics from "../../../../tests/fixtures/openlibrary-search-freakonomics.json";
 import subtitled from "../../../../tests/fixtures/openlibrary-search-subtitled.json";
@@ -15,7 +16,7 @@ import { WordmarkBand } from "@/components/WordmarkBand";
 import type { Book } from "@/db/schema";
 import { toBookRow } from "@/lib/book";
 import type { Read } from "@/lib/book-view";
-import { mergeGoogleVolume } from "@/lib/books/google-books";
+import { mergeGoogleVolume, normalizeVolume } from "@/lib/books/google-books";
 import { normalizeSearchResponse, normalizeWorkResponse } from "@/lib/books/openlibrary";
 
 /**
@@ -30,6 +31,8 @@ import { normalizeSearchResponse, normalizeWorkResponse } from "@/lib/books/open
  * - `fallback` — the same, with no extracted colour: the stable fallback band,
  *   which for this key is the wordmark's own orange.
  * - `undated` — one read with no date and no rating.
+ * - `google` — the same book as Google Books now returns it: a Google jacket
+ *   (one src, no srcset, its own proportions) and a Google source row.
  * - `nocover` — a real coverless result: the type-only jacket.
  * - `subtitle` — a real book whose record carries a subtitle.
  * - `authors` — a real book with three names, to wrap the author band.
@@ -62,7 +65,7 @@ function stored(
 const DUNE = stored(
   {
     ...mergeGoogleVolume(normalizeWorkResponse(summaries[0], work), google),
-    olWorkKey: "OL893414W",
+    sourceKey: "OL893414W",
     coverId: 11481354,
   },
   "dev-dune",
@@ -70,6 +73,19 @@ const DUNE = stored(
 );
 
 const DUNE_WITHOUT_COLOUR: Book = { ...DUNE, coverColor: null };
+
+/*
+ * The same book from the primary source (MRG-063), so the two jackets can be
+ * compared side by side: a Google volume addresses its cover by URL and offers
+ * no size ladder, and its record row links to Google Books rather than Open
+ * Library. The colour is what `bandColorFromCover()` extracts from that
+ * jacket — a different scan of the same book, so a different band.
+ */
+const DUNE_GOOGLE = stored(
+  normalizeVolume((googleSearch as { items: unknown[] }).items[0])!,
+  "dev-dune-google",
+  "#6B5B3E",
+);
 
 const coverless = summaries.find((summary) => summary.coverId === undefined);
 const COVERLESS = coverless
@@ -143,6 +159,8 @@ function State({ state }: Readonly<{ state: string }>) {
       return <BookUnavailable diaryHref={DIARY} />;
     case "missing":
       return <BookNotFound diaryHref={DIARY} />;
+    case "google":
+      return <BookTitlePage book={DUNE_GOOGLE} reads={SHELF_READS} username="lucia" diaryHref={DIARY} />;
     case "nocover":
       return <BookTitlePage book={COVERLESS} reads={[]} username="lucia" diaryHref={DIARY} />;
     case "subtitle":

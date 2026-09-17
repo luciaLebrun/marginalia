@@ -35,7 +35,7 @@ describe.skipIf(!hasRealDb)("diary (integration)", () => {
       .values([
         {
           id: BOOK_A,
-          olWorkKey: "OL_IT_DIARY_A",
+          sourceKey: "OL_IT_DIARY_A",
           title: "The Older Book",
           authors: ["A. Author"],
           coverId: 111,
@@ -43,7 +43,7 @@ describe.skipIf(!hasRealDb)("diary (integration)", () => {
         },
         {
           id: BOOK_B,
-          olWorkKey: "OL_IT_DIARY_B",
+          sourceKey: "OL_IT_DIARY_B",
           title: "The Newer Book",
           authors: ["B. Author"],
           coverId: null,

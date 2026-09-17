@@ -21,6 +21,6 @@ export const NAME_MAX = 60;
 export const BIO_MAX = 240;
 
 /** Where a book leads. The book page renders from our database (MRG-015). */
-export function bookPath(olWorkKey: string): string {
-  return `/book/${olWorkKey}`;
+export function bookPath(sourceKey: string): string {
+  return `/book/${sourceKey}`;
 }

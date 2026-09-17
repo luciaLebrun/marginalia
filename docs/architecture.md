@@ -16,23 +16,46 @@ browser
   ▼
 Next.js (App Router, RSC) ── Vercel Hobby
   │                    │
-  │                    └── src/lib/books/ ──► openlibrary.org   (search only)
-  │                                       └─► googleapis.com    (enrichment)
+  │                    └── src/lib/books/ ──► googleapis.com    (primary)
+  │                                       └─► openlibrary.org   (fallback)
   ▼
 Postgres ── Neon Free
 ```
 
-Covers are loaded by the browser directly from `covers.openlibrary.org`; they
-never pass through our server.
+Covers are loaded by the browser directly from `books.google.com` or
+`covers.openlibrary.org`, whichever source the book was opened at; they never
+pass through our server.
+
+## The two sources
+
+**Google Books is primary, Open Library is the fallback** (MRG-063). Google's
+relevance on the query a reader actually types is markedly better, so
+`searchBooks()` asks it first and reaches Open Library only when Google is
+unconfigured, erroring, or has nothing.
+
+Google is asked only with an API key. Keyless requests carry a daily quota of
+zero, and Vercel shares egress IPs between projects, so keyless in production
+would break everyone's search at once. Without `GOOGLE_BOOKS_API_KEY` the app
+runs entirely on Open Library, which needs none.
+
+The cost, which is permanent and worth remembering: a Google key identifies an
+**edition** (a volume), an Open Library key a **work**. Two readers can open two
+volumes of the same book and get two `book` rows, splitting its page. The stored
+ISBN-13 is the only bridge. This was accepted deliberately, for the relevance.
+
+Keys therefore carry their source: `gb:B1hSG45JCX4C` for a Google volume, a bare
+`OL45804W` for an Open Library work. Books opened before the swap keep working
+untouched, and a key is never offered to the other source — it would answer with
+a different book.
 
 ## The central invariant: the database is the record
 
-Open Library is a *search index*, not our datastore. The first time anyone opens
-a book, we copy it into the `book` table. From then on the book renders from
-Postgres and no external call is made.
+Neither source is our datastore. The first time anyone opens a book, we copy it
+into the `book` table. From then on the book renders from Postgres and no
+external call is made.
 
-This is why the app stays usable when openlibrary.org is unreachable — which,
-being Internet Archive infrastructure, happens for 30–45 minutes at a time on a
+This is why the app stays usable when a source is unreachable — Open Library,
+being Internet Archive infrastructure, is down for 30–45 minutes at a time on a
 regular basis. Under an outage, only search and first-time lookups degrade;
 every existing diary, profile and review is a pure Postgres read.
 
@@ -59,7 +82,7 @@ Indexes, one per hot query:
 |---|---|
 | `log(user_id, read_at DESC)` | the profile / diary |
 | `log(book_id)` | the book page's review list |
-| `book(ol_work_key)` unique | the cache lookup on every book open |
+| `book(source_key)` unique | the cache lookup on every book open |
 
 `log → book` is `ON DELETE RESTRICT`: a book someone reviewed must not vanish
 from under the review. Everything hanging off `user` cascades, so deleting an
@@ -76,9 +99,16 @@ Because Vercel's serverless egress shares IPs, one user scrolling a grid could
 `coverUrl()` accepts a CoverID and nothing else. There is intentionally no
 ISBN-based variant.
 
+Google addresses covers by URL instead, and offers no size ladder, so a Google
+row stores `book.coverUrl` and renders one `src` with no `srcset`. `jacket()` in
+`src/lib/books/covers.ts` is the only place that knows the difference. Only
+`books.google.com` may be pointed at from a stored `coverUrl`, enforced at
+normalization: that value becomes an `<img src>` on a public page.
+
 Covers render as a plain lazy `<img>` rather than `next/image`: Open Library
-asks that public pages point `src` at their CDN, and it keeps us off Vercel
-Hobby's image-transformation quota for images we do not own.
+asks that public pages point `src` at their CDN, Google jackets are pointed at
+for the same reason, and it keeps us off Vercel Hobby's image-transformation
+quota for images we do not own.
 
 ## Routes
 
@@ -86,8 +116,8 @@ Hobby's image-transformation quota for images we do not own.
 |---|---|
 | `/` | Signed out: the door. Signed in: your diary, newest first. |
 | `/claim` | First stop after signing in, for a reader with no handle yet. |
-| `/search?q=` | Search Open Library, cover-grid results. |
-| `/book/[workKey]` | Book page: metadata, your logs, all reviews. |
+| `/search?q=` | Search Google Books, then Open Library; cover-grid results. |
+| `/book/[bookKey]` | Book page: metadata, your logs, all reviews. |
 | `/@[username]` | Profile: cover grid of latest reads. |
 | `/@[username]/log/[id]` | Review permalink. |
 | `/settings` | Name, handle, bio; invitations; sign out; delete account. |

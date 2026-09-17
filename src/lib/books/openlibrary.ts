@@ -62,7 +62,7 @@ export function normalizeSearchResponse(body: unknown): BookSummary[] {
       continue;
     }
     out.push({
-      olWorkKey: stripWorkPrefix(raw.key),
+      sourceKey: stripWorkPrefix(raw.key),
       title: raw.title,
       subtitle: typeof raw.subtitle === "string" ? raw.subtitle : undefined,
       authors: Array.isArray(raw.author_name)
@@ -168,7 +168,7 @@ async function fetchJson(url: string, revalidate: number): Promise<unknown> {
 const ONE_DAY = 60 * 60 * 24;
 
 /** Search works. Returns [] for a blank query rather than hitting the API. */
-export async function searchBooks(
+export async function searchWorks(
   query: string,
   limit = 20,
 ): Promise<BookSummary[]> {
@@ -190,8 +190,8 @@ const MAX_REDIRECTS = 3;
  * Library is unreachable or erroring, so the caller can show "temporarily
  * unavailable" rather than a misleading "book not found".
  */
-export async function fetchWork(olWorkKey: string): Promise<BookDetail | null> {
-  let key = stripWorkPrefix(olWorkKey);
+export async function fetchWork(sourceKey: string): Promise<BookDetail | null> {
+  let key = stripWorkPrefix(sourceKey);
   const seen = new Set<string>();
 
   // Resolve redirects first, so the search below runs against the real key.
@@ -212,17 +212,17 @@ export async function fetchWork(olWorkKey: string): Promise<BookDetail | null> {
     if (!target) {
       // A real work. Its endpoint carries the description and covers but no
       // author names or publish year, so pair it with a search on the same key.
-      const summaries = await searchBooks(`key:/works/${key}`, 1).catch(
+      const summaries = await searchWorks(`key:/works/${key}`, 1).catch(
         () => [] as BookSummary[],
       );
       const title = (body as { title?: unknown }).title;
       const summary: BookSummary = summaries[0] ?? {
-        olWorkKey: key,
+        sourceKey: key,
         title: typeof title === "string" ? title : key,
         authors: [],
       };
       // Always trust the resolved key over whatever the caller passed in.
-      return normalizeWorkResponse({ ...summary, olWorkKey: key }, body);
+      return normalizeWorkResponse({ ...summary, sourceKey: key }, body);
     }
 
     key = target;

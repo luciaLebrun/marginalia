@@ -13,8 +13,9 @@ export interface DiaryEntry {
   title: string;
   authors: string[];
   coverId: number | null;
+  coverUrl: string | null;
   coverColor: string | null;
-  olWorkKey: string;
+  sourceKey: string;
   rating: number | null;
   readAt: Date | null;
   isReread: boolean;
@@ -40,7 +41,7 @@ export function Entry({
   entry,
   linked = false,
 }: Readonly<{ entry: DiaryEntry; linked?: boolean }>) {
-  const band = bandColor(entry.coverColor, entry.olWorkKey);
+  const band = bandColor(entry.coverColor, entry.sourceKey);
   const tone = readableOn(band);
 
   const cell = (
@@ -59,6 +60,7 @@ export function Entry({
       <div className="aspect-[2/3] overflow-hidden bg-paper-sunk">
         <Cover
           coverId={entry.coverId}
+          coverUrl={entry.coverUrl}
           title={entry.title}
           authors={entry.authors}
         />
@@ -90,7 +92,7 @@ export function Entry({
     <article className="flex flex-col">
       {linked ? (
         <Link
-          href={bookPath(entry.olWorkKey)}
+          href={bookPath(entry.sourceKey)}
           aria-label={entryLabel(entry)}
           // A shelf can hold hundreds of cells; prefetching every book page in
           // view would spend the free tier on pages nobody opened.

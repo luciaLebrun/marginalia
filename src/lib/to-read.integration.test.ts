@@ -40,8 +40,8 @@ describe.skipIf(!hasRealDb)("the to-read list (integration)", () => {
     await db
       .insert(schema.book)
       .values([
-        { id: BOOKS[0], olWorkKey: KEYS[0], title: "First Saved", authors: ["A"] },
-        { id: BOOKS[1], olWorkKey: KEYS[1], title: "Second Saved", authors: [] },
+        { id: BOOKS[0], sourceKey: KEYS[0], title: "First Saved", authors: ["A"] },
+        { id: BOOKS[1], sourceKey: KEYS[1], title: "Second Saved", authors: [] },
       ])
       .onConflictDoNothing();
   });
@@ -65,7 +65,7 @@ describe.skipIf(!hasRealDb)("the to-read list (integration)", () => {
 
     const list = await getToRead(READER);
     expect(list.map((b) => b.bookId)).toEqual([BOOKS[1], BOOKS[0]]);
-    expect(list[1]).toMatchObject({ title: "First Saved", authors: ["A"], olWorkKey: KEYS[0] });
+    expect(list[1]).toMatchObject({ title: "First Saved", authors: ["A"], sourceKey: KEYS[0] });
   });
 
   it("is private: one reader's list never shows another's", async () => {

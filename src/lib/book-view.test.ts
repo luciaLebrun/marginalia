@@ -8,6 +8,7 @@ import {
   descriptionParagraphs,
   imprintRows,
   slipDate,
+  sourceRecord,
 } from "./book-view";
 import { CATEGORY_BANDS, INK, PAPER, fallbackBand } from "./color";
 import { cellDate } from "./slip-date";
@@ -95,7 +96,7 @@ describe("authorLine", () => {
 describe("imprintRows", () => {
   it("lists what is known, in order, with the source linked last", () => {
     expect(
-      imprintRows({ firstPublishYear: 1965, pageCount: 604, olWorkKey: "OL893414W" }),
+      imprintRows({ firstPublishYear: 1965, pageCount: 604, sourceKey: "OL893414W" }),
     ).toEqual([
       { label: "First published", value: "1965" },
       { label: "Pages", value: "604" },
@@ -108,13 +109,13 @@ describe("imprintRows", () => {
   });
 
   it("names the source for a reader and keeps the work key in the address", () => {
-    const [source] = imprintRows({ firstPublishYear: null, pageCount: null, olWorkKey: "OL1W" });
+    const [source] = imprintRows({ firstPublishYear: null, pageCount: null, sourceKey: "OL1W" });
     expect(source.value).not.toMatch(/OL\d+W/);
     expect(source.href).toContain("OL1W");
   });
 
   it("omits a value Open Library did not have instead of printing a dash", () => {
-    const rows = imprintRows({ firstPublishYear: null, pageCount: null, olWorkKey: "OL1W" });
+    const rows = imprintRows({ firstPublishYear: null, pageCount: null, sourceKey: "OL1W" });
     expect(rows.map((row) => row.label)).toEqual(["Source"]);
   });
 });
@@ -160,7 +161,7 @@ describe("describeReads", () => {
 });
 
 describe("bookBand", () => {
-  const book = { coverColor: "#2F5D8A", olWorkKey: "OL893414W" };
+  const book = { coverColor: "#2F5D8A", sourceKey: "OL893414W" };
 
   it("is ink with paper text until the book is on the reader's shelf", () => {
     expect(bookBand(book, false)).toEqual({ background: INK, color: PAPER });
@@ -171,14 +172,35 @@ describe("bookBand", () => {
   });
 
   it("falls back to the stable category band when the cover gave no colour", () => {
-    const band = bookBand({ coverColor: null, olWorkKey: "OL893414W" }, true);
+    const band = bookBand({ coverColor: null, sourceKey: "OL893414W" }, true);
     expect(band.background).toBe(fallbackBand("OL893414W"));
     expect(CATEGORY_BANDS).toContain(band.background);
   });
 
   it("picks the readable foreground, never a fixed one", () => {
     // Paper on the fiction orange is 3.32:1 and fails AA.
-    const orange = bookBand({ coverColor: "#E8501B", olWorkKey: "OL1W" }, true);
+    const orange = bookBand({ coverColor: "#E8501B", sourceKey: "OL1W" }, true);
     expect(orange.color).toBe(INK);
+  });
+});
+
+describe("sourceRecord", () => {
+  /*
+   * The tag on the key decides, not what is primary today: a book opened when
+   * Open Library was the only source is still an Open Library record, and
+   * sending a reader to Google for it would show them a different book.
+   */
+  it("sends a Google book to its volume on Google Books", () => {
+    expect(sourceRecord("gb:B1hSG45JCX4C")).toEqual({
+      name: "Google Books",
+      href: "https://books.google.com/books?id=B1hSG45JCX4C",
+    });
+  });
+
+  it("still sends a book stored before the swap to Open Library", () => {
+    expect(sourceRecord("OL893414W")).toEqual({
+      name: "Open Library",
+      href: "https://openlibrary.org/works/OL893414W",
+    });
   });
 });

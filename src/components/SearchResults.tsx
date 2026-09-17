@@ -28,7 +28,7 @@ export async function SearchResults({
         <div className="px-4 py-6 sm:px-6">
           <ol className="shelf-grid">
             {outcome.books.map((book) => (
-              <SearchResult key={book.olWorkKey} book={book} />
+              <SearchResult key={book.sourceKey} book={book} />
             ))}
           </ol>
         </div>

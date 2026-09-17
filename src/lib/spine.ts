@@ -32,10 +32,10 @@ export function spineHeightRem(pageCount: number | null): number {
  * key, so the pile never reshuffles between visits — a list that rearranges
  * itself reads as broken, not as real.
  */
-export function spineOffsetStep(olWorkKey: string): 0 | 1 | 2 | 3 {
+export function spineOffsetStep(sourceKey: string): 0 | 1 | 2 | 3 {
   let hash = 0;
-  for (let i = 0; i < olWorkKey.length; i++) {
-    hash = (hash * 31 + (olWorkKey.codePointAt(i) ?? 0)) >>> 0;
+  for (let i = 0; i < sourceKey.length; i++) {
+    hash = (hash * 31 + (sourceKey.codePointAt(i) ?? 0)) >>> 0;
   }
   return (hash % 4) as 0 | 1 | 2 | 3;
 }

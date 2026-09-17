@@ -1,14 +1,260 @@
-import type { BookDetail } from "./types.ts";
+import type { BookDetail, BookSummary } from "./types.ts";
 
 const ORIGIN = "https://www.googleapis.com/books/v1";
 const ONE_WEEK = 60 * 60 * 24 * 7;
+const ONE_DAY = 60 * 60 * 24;
+
+/**
+ * Google Books, the primary source (MRG-063).
+ *
+ * Google is asked first because its relevance on the query a reader actually
+ * types — a title, half a title, a title and an author — is markedly better
+ * than Open Library's. Open Library is the fallback, and stays the source of
+ * every book opened before this change.
+ *
+ * The cost of the swap, recorded here because it is easy to forget: a Google
+ * key identifies an *edition* (a volume), where an Open Library work key
+ * identifies a *work*. Two readers can therefore log two volumes of the same
+ * book and get two rows. There is no cheap fix — the ISBN-13 we store is the
+ * only bridge — and the relevance was judged worth it.
+ */
+
+/**
+ * Google keys are stored and addressed tagged: "gb:B1hSG45JCX4C". Open Library
+ * keys stay bare ("OL45804W"), so every link made before the swap still opens.
+ */
+export const GOOGLE_KEY_PREFIX = "gb:";
+
+/**
+ * A volume id as it arrives from a URL segment: untrusted. Returns the bare id
+ * or null for anything that is not one.
+ *
+ * This is a guard, not a nicety — the id is interpolated into a Google Books
+ * path, so without it "gb:../../oauth" would ask Google for another resource.
+ * Ids are base64url-ish and have been 12 characters for as long as anyone has
+ * looked, but the length is Google's to change, so only the charset is fixed.
+ */
+export function parseVolumeId(key: string): string | null {
+  if (!key.startsWith(GOOGLE_KEY_PREFIX)) return null;
+  const id = key.slice(GOOGLE_KEY_PREFIX.length);
+  return /^[A-Za-z0-9_-]{6,40}$/.test(id) ? id : null;
+}
+
+/** Thrown when Google answers with an error status, so a caller can fall back. */
+export class GoogleBooksError extends Error {
+  status: number;
+
+  constructor(status: number, url: string) {
+    super(`Google Books ${status} for ${url}`);
+    this.name = "GoogleBooksError";
+    this.status = status;
+  }
+}
+
+/**
+ * Google is used at all only with a key. Unauthenticated queries are rate
+ * limited per IP and Vercel shares egress IPs between every project on it, so
+ * keyless in production means everyone's search breaks at once. No key is a
+ * supported state: search simply stays on Open Library.
+ */
+export function apiKey(): string | undefined {
+  return process.env.GOOGLE_BOOKS_API_KEY || undefined;
+}
+
+/** Only the fields we keep. The default volume payload is ten times this. */
+const VOLUME_FIELDS =
+  "id,volumeInfo(title,subtitle,authors,publishedDate,industryIdentifiers,pageCount,description,imageLinks)";
+
+interface RawImageLinks {
+  extraLarge?: unknown;
+  large?: unknown;
+  medium?: unknown;
+  small?: unknown;
+  thumbnail?: unknown;
+  smallThumbnail?: unknown;
+}
+
+interface RawVolumeInfo {
+  title?: unknown;
+  subtitle?: unknown;
+  authors?: unknown;
+  publishedDate?: unknown;
+  industryIdentifiers?: unknown;
+  pageCount?: unknown;
+  description?: unknown;
+  imageLinks?: RawImageLinks;
+}
+
+/**
+ * Pure. The jacket URL for a volume, or undefined when Google has no scan.
+ *
+ * Google hands these out over plain http and with a page-curl graphic burnt
+ * into the right edge, neither of which we want: the first is mixed content on
+ * an https page, the second is a picture of a book rather than a jacket. Both
+ * are fixed in the URL. `zoom` is raised to 2 (~256px wide) because a shelf
+ * cell is ~231 CSS px, and a zoom=1 thumbnail at 128px is visibly soft on it.
+ *
+ * Only the named sizes are trusted as-is; they are already the large scans.
+ */
+export function jacketFromImageLinks(
+  links: RawImageLinks | undefined,
+): string | undefined {
+  const raw =
+    links?.extraLarge ??
+    links?.large ??
+    links?.medium ??
+    links?.small ??
+    links?.thumbnail ??
+    links?.smallThumbnail;
+  if (typeof raw !== "string" || !raw) return undefined;
+
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return undefined;
+  }
+  // Google is the only host we will point an <img> at from this field.
+  if (!/(^|\.)google\.com$/.test(url.hostname)) return undefined;
+
+  url.protocol = "https:";
+  url.searchParams.delete("edge");
+  if (url.searchParams.get("zoom") === "1") url.searchParams.set("zoom", "2");
+  return url.toString();
+}
+
+/** Pick the ISBN-13 out of Google's mixed identifier list. */
+export function pickIsbn13(identifiers: unknown): string | undefined {
+  if (!Array.isArray(identifiers)) return undefined;
+  for (const entry of identifiers as { type?: unknown; identifier?: unknown }[]) {
+    if (
+      entry?.type === "ISBN_13" &&
+      typeof entry.identifier === "string" &&
+      /^\d{13}$/.test(entry.identifier)
+    ) {
+      return entry.identifier;
+    }
+  }
+  return undefined;
+}
+
+/** `publishedDate` is "1965", "1965-06" or "1965-06-01". We want the year. */
+export function publishYear(value: unknown): number | undefined {
+  if (typeof value !== "string") return undefined;
+  const year = Number.parseInt(value.slice(0, 4), 10);
+  return Number.isInteger(year) && year > 0 ? year : undefined;
+}
+
+/**
+ * Pure. One volume as our BookDetail, or null when it is too thin to render.
+ *
+ * A volume with no id or no title cannot be linked to or listed, so it is
+ * dropped rather than half-shown — the same rule the Open Library normalizer
+ * keeps.
+ */
+export function normalizeVolume(item: unknown): BookDetail | null {
+  const volume = (item ?? {}) as { id?: unknown; volumeInfo?: RawVolumeInfo };
+  const info = volume.volumeInfo;
+  if (typeof volume.id !== "string" || !volume.id) return null;
+  if (typeof info?.title !== "string" || !info.title) return null;
+
+  const description =
+    typeof info.description === "string" ? info.description.trim() : "";
+
+  return {
+    sourceKey: `${GOOGLE_KEY_PREFIX}${volume.id}`,
+    title: info.title,
+    subtitle: typeof info.subtitle === "string" ? info.subtitle : undefined,
+    authors: Array.isArray(info.authors)
+      ? info.authors.filter((a): a is string => typeof a === "string")
+      : [],
+    firstPublishYear: publishYear(info.publishedDate),
+    coverUrl: jacketFromImageLinks(info.imageLinks),
+    isbn13: pickIsbn13(info.industryIdentifiers),
+    pageCount:
+      typeof info.pageCount === "number" && info.pageCount > 0
+        ? info.pageCount
+        : undefined,
+    description: description || undefined,
+    source: "google",
+  };
+}
+
+/** Pure. A /volumes search body as summaries, dropping what cannot be shown. */
+export function normalizeSearchResponse(body: unknown): BookSummary[] {
+  const items = (body as { items?: unknown })?.items;
+  if (!Array.isArray(items)) return [];
+
+  const out: BookSummary[] = [];
+  for (const item of items) {
+    const detail = normalizeVolume(item);
+    if (detail) out.push(detail);
+  }
+  return out;
+}
+
+async function fetchJson(url: string, revalidate: number): Promise<unknown> {
+  const res = await fetch(url, {
+    headers: { Accept: "application/json" },
+    next: { revalidate },
+  });
+  if (!res.ok) throw new GoogleBooksError(res.status, url);
+  return res.json();
+}
+
+/**
+ * Search volumes. `printType=books` keeps magazine scans out of a reading
+ * diary, and Google's own cap on `maxResults` is 40.
+ *
+ * **Throws** on any error status so the caller can fall back to Open Library
+ * rather than show an outage as "no such book".
+ */
+export async function searchVolumes(
+  query: string,
+  limit = 20,
+): Promise<BookSummary[]> {
+  const q = query.trim();
+  if (!q) return [];
+
+  const url =
+    `${ORIGIN}/volumes?q=${encodeURIComponent(q)}` +
+    `&maxResults=${Math.min(limit, 40)}&printType=books&orderBy=relevance` +
+    `&fields=${encodeURIComponent(`items(${VOLUME_FIELDS})`)}` +
+    `&key=${apiKey() ?? ""}`;
+
+  return normalizeSearchResponse(await fetchJson(url, ONE_DAY));
+}
+
+/**
+ * Fetch one volume by its bare id.
+ *
+ * Returns null when the volume does not exist (404, and Google answers 503 for
+ * some withdrawn ids too, which we cannot tell from an outage — a 404 is the
+ * only "gone" we trust). **Throws** otherwise, so the book page can say
+ * "unavailable" rather than "not found".
+ */
+export async function fetchVolume(id: string): Promise<BookDetail | null> {
+  const url =
+    `${ORIGIN}/volumes/${id}?fields=${encodeURIComponent(VOLUME_FIELDS)}` +
+    `&key=${apiKey() ?? ""}`;
+
+  let body: unknown;
+  try {
+    body = await fetchJson(url, ONE_DAY);
+  } catch (error) {
+    if (error instanceof GoogleBooksError && error.status === 404) return null;
+    throw error;
+  }
+  return normalizeVolume(body);
+}
 
 /**
  * Pure. Merge a Google Books volume onto a BookDetail, filling only the gaps.
  *
- * Open Library stays authoritative for identity (key, title, authors) — this
- * only supplies the fields Open Library is commonly thin on: description and
- * page count. We never overwrite a value we already have.
+ * Used the other way round from the rest of this file: when Open Library was
+ * the source, it stays authoritative for identity (key, title, authors) and
+ * this only supplies the fields it is commonly thin on. We never overwrite a
+ * value we already have.
  */
 export function mergeGoogleVolume(
   detail: BookDetail,
@@ -54,13 +300,16 @@ export function buildQuery(detail: BookDetail): string {
 }
 
 /**
- * Best-effort enrichment. Google Books is a nice-to-have on a free quota of
- * ~1000 requests/day, so every failure path returns the input unchanged —
- * enrichment must never be able to fail a book page.
+ * Best-effort enrichment of an **Open Library** book. Google Books is a
+ * nice-to-have on a free quota of ~1000 requests/day, so every failure path
+ * returns the input unchanged — enrichment must never fail a book page.
  */
 export async function enrich(detail: BookDetail): Promise<BookDetail> {
-  const key = process.env.GOOGLE_BOOKS_API_KEY;
+  const key = apiKey();
   if (!key) return detail;
+
+  // A book Google already gave us: re-asking Google fills nothing.
+  if (detail.source === "google") return detail;
 
   // Only worth a request when we are actually missing something.
   if (detail.description && detail.pageCount) return detail;

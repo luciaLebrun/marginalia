@@ -46,11 +46,12 @@ const PAGES: Record<string, number> = {
 const STACK: ToReadBook[] = summaries
   .filter((summary) => summary.title in PAGES)
   .map((summary, index) => ({
-    bookId: `dev-toread-${summary.olWorkKey}`,
-    olWorkKey: summary.olWorkKey,
+    bookId: `dev-toread-${summary.sourceKey}`,
+    sourceKey: summary.sourceKey,
     title: summary.title,
     authors: summary.authors,
     coverId: summary.title in COVERS ? COVERS[summary.title] : (summary.coverId ?? null),
+    coverUrl: summary.coverUrl ?? null,
     pageCount: PAGES[summary.title],
     savedAt: new Date(Date.UTC(2026, 8, 14 - index)),
   }))

@@ -121,8 +121,13 @@ export const book = pgTable(
   {
     id: text("id").primaryKey(),
 
-    /** Open Library work key, stored bare: "OL45804W", not "/works/OL45804W". */
-    olWorkKey: text("ol_work_key").notNull(),
+    /**
+     * The book's key at its source, and its URL segment. Google Books volumes
+     * are tagged ("gb:B1hSG45JCX4C"); Open Library work keys stay bare
+     * ("OL45804W", never "/works/OL45804W") so every link made before Google
+     * became the primary source still opens. See src/lib/books/index.ts.
+     */
+    sourceKey: text("source_key").notNull(),
     /** Optional edition key ("OL7353617M") when we resolved a specific one. */
     olEditionKey: text("ol_edition_key"),
 
@@ -139,6 +144,13 @@ export const book = pgTable(
     coverId: integer("cover_id"),
 
     /**
+     * An absolute jacket URL, for a source that addresses covers by URL rather
+     * than by id — Google Books. Exclusive with coverId in practice: a row has
+     * whichever its source gave. Null on both means the book has no jacket.
+     */
+    coverUrl: text("cover_url"),
+
+    /**
      * Band colour derived from the cover art once, at upsert, and stored.
      * Null means the cover was monochrome, absent or undecodable — the UI then
      * falls back to a stable category colour. Never computed at render time.
@@ -149,11 +161,11 @@ export const book = pgTable(
     pageCount: integer("page_count"),
     description: text("description"),
 
-    /** Which source filled this row: "openlibrary" or "openlibrary+google". */
+    /** Which source filled this row: "google", "openlibrary" or "openlibrary+google". */
     source: text("source").notNull().default("openlibrary"),
     cachedAt: timestamp("cached_at").notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("book_ol_work_key_idx").on(t.olWorkKey)],
+  (t) => [uniqueIndex("book_source_key_idx").on(t.sourceKey)],
 );
 
 /**

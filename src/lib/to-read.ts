@@ -12,10 +12,11 @@ const FOREIGN_KEY_VIOLATION = "23503";
 
 export interface ToReadBook {
   bookId: string;
-  olWorkKey: string;
+  sourceKey: string;
   title: string;
   authors: string[];
   coverId: number | null;
+  coverUrl: string | null;
   pageCount: number | null;
   savedAt: Date;
 }
@@ -57,10 +58,11 @@ export async function getToRead(userId: string): Promise<ToReadBook[]> {
   const rows = await getDb()
     .select({
       bookId: schema.book.id,
-      olWorkKey: schema.book.olWorkKey,
+      sourceKey: schema.book.sourceKey,
       title: schema.book.title,
       authors: schema.book.authors,
       coverId: schema.book.coverId,
+      coverUrl: schema.book.coverUrl,
       pageCount: schema.book.pageCount,
       savedAt: schema.toRead.createdAt,
     })

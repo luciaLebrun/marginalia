@@ -101,7 +101,7 @@ no concept roll, no new tone, type step or motion.
 - Job: a book is reachable from the shelf, not only from search — the reader
   revisiting months of reading opens a book to see its slip or log a reread.
 - A signed-in reader's cell (own diary, or a friend's profile) is one link to
-  `/book/[workKey]`, named as one sentence: title, author, rating, read date,
+  `/book/[bookKey]`, named as one sentence: title, author, rating, read date,
   reread. From a friend's profile the book page shows the viewer's own reads.
 - A signed-out visitor's cells are inert, as the postcard withholds its title
   link and the masthead its diary link: the book page does not exist for them.

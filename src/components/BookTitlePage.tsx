@@ -52,6 +52,7 @@ export function BookTitlePage({
           <div className="aspect-[2/3] overflow-hidden border border-rule bg-paper-sunk">
             <Cover
               coverId={book.coverId}
+                coverUrl={book.coverUrl}
               title={book.title}
               authors={book.authors}
               sizes="(min-width: 40rem) min(24rem, 33vw), 60vw"
