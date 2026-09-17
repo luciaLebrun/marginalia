@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 
 import google from "../../../../tests/fixtures/google-books-dune.json";
+import googlePiranesi from "../../../../tests/fixtures/google-books-volume-piranesi.json";
+import googleVolume from "../../../../tests/fixtures/google-books-volume-dune.json";
 import search from "../../../../tests/fixtures/openlibrary-search-dune.json";
 import freakonomics from "../../../../tests/fixtures/openlibrary-search-freakonomics.json";
 import subtitled from "../../../../tests/fixtures/openlibrary-search-subtitled.json";
@@ -15,7 +17,7 @@ import { WordmarkBand } from "@/components/WordmarkBand";
 import type { Book } from "@/db/schema";
 import { toBookRow } from "@/lib/book";
 import type { Read } from "@/lib/book-view";
-import { mergeGoogleVolume } from "@/lib/books/google-books";
+import { mergeGoogleVolume, normalizeVolume } from "@/lib/books/google-books";
 import { normalizeSearchResponse, normalizeWorkResponse } from "@/lib/books/openlibrary";
 
 /**
@@ -30,6 +32,11 @@ import { normalizeSearchResponse, normalizeWorkResponse } from "@/lib/books/open
  * - `fallback` — the same, with no extracted colour: the stable fallback band,
  *   which for this key is the wordmark's own orange.
  * - `undated` — one read with no date and no rating.
+ * - `google` — the same book as Google Books now returns it: a Google jacket
+ *   (one src, no srcset, its own proportions) and a Google source row.
+ * - `banner` — the Google record at its most publisher-written: a prize
+ *   banner filed as the subtitle, and a blurb walled between two rules of
+ *   press quotes. The page must print the book and none of the shouting.
  * - `nocover` — a real coverless result: the type-only jacket.
  * - `subtitle` — a real book whose record carries a subtitle.
  * - `authors` — a real book with three names, to wrap the author band.
@@ -62,7 +69,7 @@ function stored(
 const DUNE = stored(
   {
     ...mergeGoogleVolume(normalizeWorkResponse(summaries[0], work), google),
-    olWorkKey: "OL893414W",
+    sourceKey: "OL893414W",
     coverId: 11481354,
   },
   "dev-dune",
@@ -70,6 +77,39 @@ const DUNE = stored(
 );
 
 const DUNE_WITHOUT_COLOUR: Book = { ...DUNE, coverColor: null };
+
+/*
+ * The same book as a *click* really fetches it (MRG-063): the volume endpoint,
+ * not the search one. The distinction is the whole reason the Google page's
+ * defects went unseen here — a search hit carries a short plain-text snippet,
+ * while the volume carries what Google actually stores, which is publisher
+ * marketing copy in HTML, and a `publishedDate` of the 2005 printing rather
+ * than 1965. This state is the one that proves both are handled.
+ *
+ * A Google volume also addresses its cover by URL and offers no size ladder,
+ * and its record row links to Google Books rather than Open Library. The
+ * colour is what `bandColorFromCover()` really extracts from that jacket, run
+ * against the live image (2026-09-17) — the yellow DUNE panel on the 40th
+ * Anniversary scan, where Open Library's copy gives olive. It earns its place
+ * twice over: a different scan of the same book legitimately gives a different
+ * band, and this is the only state in which the band is light enough that
+ * `readableOn()` sets the author in ink rather than paper (10.88:1, against
+ * 5.32:1 for the Open Library band).
+ */
+const DUNE_GOOGLE = stored(
+  normalizeVolume(googleVolume)!,
+  "dev-dune-google",
+  "#DEC65E",
+);
+
+/*
+ * Google's marketing copy at full strength, recorded from the volume endpoint.
+ * Its `subtitle` is "WINNER OF THE WOMEN'S PRIZE 2021" — a jacket banner, not
+ * a subtitle — and its description walls four real paragraphs between two
+ * underscore rules of press quotes. Not on the shelf, so the band is ink and
+ * no colour has to be invented for it.
+ */
+const BANNERED = stored(normalizeVolume(googlePiranesi)!, "dev-bannered");
 
 const coverless = summaries.find((summary) => summary.coverId === undefined);
 const COVERLESS = coverless
@@ -143,6 +183,10 @@ function State({ state }: Readonly<{ state: string }>) {
       return <BookUnavailable diaryHref={DIARY} />;
     case "missing":
       return <BookNotFound diaryHref={DIARY} />;
+    case "google":
+      return <BookTitlePage book={DUNE_GOOGLE} reads={SHELF_READS} username="lucia" diaryHref={DIARY} />;
+    case "banner":
+      return <BookTitlePage book={BANNERED} reads={[]} username="lucia" diaryHref={DIARY} />;
     case "nocover":
       return <BookTitlePage book={COVERLESS} reads={[]} username="lucia" diaryHref={DIARY} />;
     case "subtitle":

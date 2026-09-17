@@ -8,6 +8,26 @@ description: Rules and contracts for fetching book metadata from Open Library an
 All book metadata enters the app through `src/lib/books/`. Nothing else may call
 `openlibrary.org` or `googleapis.com`.
 
+**Both sources are searched every time and merged** (MRG-063 + MRG-067, ADR
+0009). Google leads the results, capped at `GOOGLE_SLOTS`; Open Library is
+guaranteed the remaining slots. Do NOT "simplify" this back into a fallback:
+a fallback fires on an empty result and never on a wrong one, and Google
+returns twenty confident wrong results for queries as ordinary as
+`dune herbert`.
+
+**Why Google is first: latency stability, NOT relevance.** Open Library is
+faster idle (403ms vs 771ms median) but triples under eight concurrent searches
+(1238ms / 2635ms p95) where Google stays flat (797ms / 1718ms), and it has
+recurring 30-45 minute outages. Google's *ranking* is the worse of the two and
+is not tunable — see MRG-067 before "fixing" search relevance. Keys carry their source:
+`gb:B1hSG45JCX4C` for a Google volume, bare `OL45804W` for an Open Library work.
+A key is never offered to the other source — it would answer with a different
+book. `parseBookKey()` guards both forms.
+
+The permanent cost: a Google key identifies an **edition**, an Open Library key
+a **work**, so two readers can open two volumes of one book and get two rows.
+ISBN-13 is the only bridge.
+
 ## The CoverID rule (most important)
 
 `covers.openlibrary.org` is **rate limited to 100 requests per IP per 5 minutes
@@ -62,10 +82,54 @@ descriptive `User-Agent` and `next: { revalidate: 86400 }`. Keep both.
 
 ## Google Books
 
-Enrichment only, and only for gaps (`description`, `pageCount`). Requires a free
-API key (~1000 req/day). **Every failure path must return the input unchanged** —
-enrichment must never be able to fail a book page. Open Library stays
-authoritative for identity: key, title, authors.
+Base `https://www.googleapis.com/books/v1`. **Requires an API key.** Keyless
+requests now carry a daily quota of *zero* (verified 2026-09-17: 429
+`RESOURCE_EXHAUSTED`, `quota_limit_value: 0`), and Vercel shares egress IPs, so
+keyless in production breaks everyone's search at once. No key is a supported
+state: `searchBooks()` simply stays on Open Library.
+
+- **Search**: `/volumes?q=…&printType=books&fields=…` — always send `fields`;
+  the default payload is roughly ten times what we keep. `maxResults` caps at 40.
+- **Volume**: `/volumes/{id}` — the same shape as one search item.
+- Results are **editions**, not works. This is the granularity cost above.
+- `publishedDate` is "1965", "1965-06" or "1965-06-01"; take the year only.
+- `industryIdentifiers` is a mixed list — pick the `ISBN_13` entry.
+- Throws `GoogleBooksError` with the status so `searchBooks()` can fall back.
+  A 404 from `/volumes/{id}` is a real "no such volume" and returns null.
+
+### Jacket URLs — ask by `w`, never by `zoom`
+
+`imageLinks` entries all address the same scan and differ only in the rendition
+requested. **The `zoom` parameter is a short ladder of small renditions whose
+highest number is not the largest image.** Measured against a live volume:
+
+| request | actual |
+|---|---|
+| `zoom=1` | 128x192 |
+| `zoom=2` | 300x462 |
+| `zoom=5` (what `smallThumbnail` carries) | 128x192 |
+| `w=800` | 800x1232 |
+| `w=1280` | 1280x1972 |
+
+So `jacketFromImageLinks()` drops `zoom` entirely and rewrites the URL to a
+width, and `jacket()` builds a real srcset (256/512/800) with
+`withJacketWidth()`. Do not reintroduce `zoom` — it silently caps the
+frontispiece, which is the LCP, at a 300px upscale.
+
+Also fixed in the URL: `https` is forced (the API returns `http`, which is mixed
+content on our pages) and `edge=curl` is stripped (a page-curl graphic burnt
+into the scan — a picture of a book rather than a jacket).
+
+**Only `books.google.com` may be pointed at from `book.cover_url`.** That value
+becomes an `<img src>` on a public page, so the host is checked at
+normalization, not at render.
+
+### Enrichment
+
+`enrich()` still exists for the fallback direction: an **Open Library** book
+with gaps (`description`, `pageCount`) is topped up from Google. It is a no-op
+for a `source: "google"` row — re-asking Google fills nothing. **Every failure
+path must return the input unchanged**; enrichment must never fail a book page.
 
 ## When Open Library is down
 

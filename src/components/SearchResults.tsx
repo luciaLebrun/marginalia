@@ -28,7 +28,7 @@ export async function SearchResults({
         <div className="px-4 py-6 sm:px-6">
           <ol className="shelf-grid">
             {outcome.books.map((book) => (
-              <SearchResult key={book.olWorkKey} book={book} />
+              <SearchResult key={book.sourceKey} book={book} />
             ))}
           </ol>
         </div>
@@ -57,14 +57,19 @@ export async function SearchResults({
 }
 
 /**
- * While Open Library answers: the band says so, and the grid it will fill is
- * drawn as ruled empty positions — a sheet waiting for print, not skeleton
- * cards pretending to be books.
+ * While a source answers: the band says so, and the grid it will fill is drawn
+ * as ruled empty positions — a sheet waiting for print, not skeleton cards
+ * pretending to be books.
+ *
+ * It cannot name the source it is waiting on. Since MRG-063 a search may be
+ * answered by Google Books or, if that finds nothing, by Open Library, and
+ * which one is not known until the answer arrives — so naming either here
+ * would be wrong about half the time.
  */
 export function SearchPending({ diaryHref = "/" }: Readonly<{ diaryHref?: string }>) {
   return (
     <>
-      <RecordBand text="Searching Open Library…" diaryHref={diaryHref} />
+      <RecordBand text="Searching…" diaryHref={diaryHref} />
       <div className="px-4 py-6 sm:px-6">
         <div aria-hidden="true" className="shelf-grid min-h-[22rem]" />
       </div>

@@ -39,7 +39,7 @@ describe.skipIf(!hasRealDb)("writing a read (integration)", () => {
       .onConflictDoNothing();
     await db
       .insert(schema.book)
-      .values({ id: BOOK_ID, olWorkKey: BOOK_KEY, title: "A Read Test", authors: [] })
+      .values({ id: BOOK_ID, sourceKey: BOOK_KEY, title: "A Read Test", authors: [] })
       .onConflictDoNothing();
   });
 

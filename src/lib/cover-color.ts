@@ -9,7 +9,8 @@ import { conditionBand, rgbToHex, rgbToHsl } from "./color.ts";
  * database is the record, so no page render ever waits on this.
  *
  * Uses a pure-JS JPEG decoder rather than sharp: sharp is a native binary, and
- * Open Library always serves `-L.jpg`, so there is nothing to gain from one.
+ * both sources serve JPEG — Open Library as `-M.jpg`, Google Books as
+ * `books/content?...` — so there is nothing to gain from one.
  */
 
 /** Buckets are coarse on purpose — cover scans are noisy. */
@@ -87,19 +88,20 @@ export function dominantColor(
  * category colour — a cover we cannot decode must never block saving a book.
  */
 export async function bandColorFromCover(
-  coverId: number | null | undefined,
+  url: string | null | undefined,
 ): Promise<string | null> {
-  if (coverId == null || coverId <= 0) return null;
+  if (!url) return null;
 
   try {
-    const res = await fetch(
-      `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`,
-      { redirect: "follow", next: { revalidate: 60 * 60 * 24 * 30 } },
-    );
+    const res = await fetch(url, {
+      redirect: "follow",
+      next: { revalidate: 60 * 60 * 24 * 30 },
+    });
     if (!res.ok) return null;
 
     const buffer = Buffer.from(await res.arrayBuffer());
-    // Open Library serves a 1x1 placeholder for missing covers.
+    // Open Library serves a 1x1 placeholder for a missing cover, and Google a
+    // "no image" gif; either way, nothing that small carries a band colour.
     if (buffer.length < 1024) return null;
 
     const decoded = jpeg.decode(buffer, { useTArray: true });

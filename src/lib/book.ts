@@ -4,8 +4,9 @@ import { getDb, schema } from "@/db";
 import type { Book, NewBook } from "@/db/schema";
 import {
   enrich,
-  fetchWork,
-  stripWorkPrefix,
+  fetchBook,
+  parseBookKey,
+  sampleUrl,
   type BookDetail,
 } from "@/lib/books";
 import { bandColorFromCover } from "@/lib/cover-color";
@@ -14,8 +15,9 @@ import { bandColorFromCover } from "@/lib/cover-color";
  * Opening a book: the one place a book enters our database.
  *
  * A book is copied into `book` the first time anyone opens it and read from
- * Postgres forever after (ADR 0004). Only that first open touches Open Library,
- * so a book someone has already opened keeps rendering through an outage.
+ * Postgres forever after (ADR 0004). Only that first open touches a source, so
+ * a book someone has already opened keeps rendering through an outage — and
+ * keeps rendering from the source it was opened at, whatever is primary now.
  *
  * The page renders one of three outcomes, and as with search the distinction
  * that matters is between "not-found" and "unavailable": an outage must never
@@ -29,47 +31,37 @@ export type BookOutcome =
 
 /** Everything a first open reaches outside Postgres, injectable for tests. */
 export interface BookSources {
-  fetchWork: (olWorkKey: string) => Promise<BookDetail | null>;
+  fetchBook: (sourceKey: string) => Promise<BookDetail | null>;
   enrich: (detail: BookDetail) => Promise<BookDetail>;
-  bandColor: (coverId: number | null | undefined) => Promise<string | null>;
+  bandColor: (detail: BookDetail) => Promise<string | null>;
 }
 
-const openLibrary: BookSources = {
-  fetchWork,
+const live: BookSources = {
+  fetchBook,
   enrich,
-  bandColor: bandColorFromCover,
+  bandColor: (detail) => bandColorFromCover(sampleUrl(detail)),
 };
 
-/**
- * A work key as it arrives from a URL segment: untrusted. Accepts the bare
- * form or the `/works/` form, and nothing that is not shaped like a work key.
- *
- * This is a guard, not a nicety — `fetchWork()` interpolates the key into an
- * Open Library path, so without it `/book/..%2Fsearch` would ask Open Library
- * for a different resource entirely.
- */
-export function parseWorkKey(raw: string): string | null {
-  const key = stripWorkPrefix(raw.trim());
-  return /^OL\d+W$/.test(key) ? key : null;
-}
+export { parseBookKey } from "@/lib/books";
 
 /**
  * Pure. The row a fetched book becomes, minus the id and timestamp the insert
  * supplies. Absent fields are written as null rather than left undefined, so a
- * row says "Open Library did not have this" explicitly.
+ * row says "the source did not have this" explicitly.
  */
 export function toBookRow(
   detail: BookDetail,
   coverColor: string | null,
 ): Omit<NewBook, "id" | "cachedAt"> {
   return {
-    olWorkKey: detail.olWorkKey,
+    sourceKey: detail.sourceKey,
     olEditionKey: detail.olEditionKey ?? null,
     title: detail.title,
     subtitle: detail.subtitle ?? null,
     authors: detail.authors,
     firstPublishYear: detail.firstPublishYear ?? null,
     coverId: detail.coverId ?? null,
+    coverUrl: detail.coverUrl ?? null,
     coverColor,
     isbn13: detail.isbn13 ?? null,
     pageCount: detail.pageCount ?? null,
@@ -78,11 +70,11 @@ export function toBookRow(
   };
 }
 
-async function findBook(olWorkKey: string): Promise<Book | null> {
+async function findBook(sourceKey: string): Promise<Book | null> {
   const [row] = await getDb()
     .select()
     .from(schema.book)
-    .where(eq(schema.book.olWorkKey, olWorkKey))
+    .where(eq(schema.book.sourceKey, sourceKey))
     .limit(1);
   return row ?? null;
 }
@@ -90,33 +82,33 @@ async function findBook(olWorkKey: string): Promise<Book | null> {
 /**
  * The stored row for a work key, or null when nobody has opened it yet.
  *
- * Postgres only, never Open Library — for callers such as page metadata that
+ * Postgres only, never a source — for callers such as page metadata that
  * must not be the thing that triggers a first open.
  */
 export async function findStoredBook(raw: string): Promise<Book | null> {
-  const key = parseWorkKey(raw);
+  const key = parseBookKey(raw);
   return key ? findBook(key) : null;
 }
 
 /**
  * Open a book by work key, copying it into `book` if nobody has before.
  *
- * The returned book's `olWorkKey` can differ from the key asked for: Open
+ * The returned book's `sourceKey` can differ from the key asked for: Open
  * Library leaves redirect stubs behind merged works, and the row is always
  * stored under the surviving key. Whether to redirect to it is the caller's
- * comparison to make.
+ * comparison to make. Google keys never move like this — a volume is a volume.
  *
  * A stored row is trusted as it stands, even if its key has since become a
- * stub upstream — re-checking would put Open Library back on the render path.
+ * stub upstream — re-checking would put the source back on the render path.
  *
  * No retry, for the reason search has none. Database errors are not caught:
- * they are ours, not Open Library's, and must not read as "unavailable".
+ * they are ours, not the source's, and must not read as "unavailable".
  */
 export async function openBook(
   raw: string,
-  sources: BookSources = openLibrary,
+  sources: BookSources = live,
 ): Promise<BookOutcome> {
-  const key = parseWorkKey(raw);
+  const key = parseBookKey(raw);
   if (!key) return { kind: "not-found" };
 
   const stored = await findBook(key);
@@ -124,23 +116,23 @@ export async function openBook(
 
   let detail: BookDetail | null;
   try {
-    detail = await sources.fetchWork(key);
+    detail = await sources.fetchBook(key);
   } catch (error) {
-    console.error("Open Library work lookup failed", error);
+    console.error("book lookup failed", error);
     return { kind: "unavailable" };
   }
   if (!detail) return { kind: "not-found" };
 
   // A stub can lead to a work someone already opened under its surviving key.
-  if (detail.olWorkKey !== key) {
-    const resolved = await findBook(detail.olWorkKey);
+  if (detail.sourceKey !== key) {
+    const resolved = await findBook(detail.sourceKey);
     if (resolved) return { kind: "found", book: resolved };
   }
 
   // Both are best-effort and never throw; neither depends on the other.
   const [enriched, coverColor] = await Promise.all([
     sources.enrich(detail),
-    sources.bandColor(detail.coverId),
+    sources.bandColor(detail),
   ]);
 
   // Two readers opening the same new book race here. The unique index on
@@ -149,12 +141,12 @@ export async function openBook(
   const [inserted] = await getDb()
     .insert(schema.book)
     .values({ id: crypto.randomUUID(), ...toBookRow(enriched, coverColor) })
-    .onConflictDoNothing({ target: schema.book.olWorkKey })
+    .onConflictDoNothing({ target: schema.book.sourceKey })
     .returning();
 
-  const book = inserted ?? (await findBook(detail.olWorkKey));
+  const book = inserted ?? (await findBook(detail.sourceKey));
   if (!book) {
-    throw new Error(`book ${detail.olWorkKey} conflicted on insert but cannot be read`);
+    throw new Error(`book ${detail.sourceKey} conflicted on insert but cannot be read`);
   }
   return { kind: "found", book };
 }

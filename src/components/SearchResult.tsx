@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Cover } from "./Cover";
 import type { BookSummary } from "@/lib/books";
-import { bookPath } from "@/lib/search";
+import { bookPath, publishedLabel } from "@/lib/client-safe";
 
 /**
  * One search result: the entry's tri-band frame with the colour withheld.
@@ -26,7 +26,7 @@ export function SearchResult({ book }: Readonly<{ book: BookSummary }>) {
   const label = [
     book.title,
     author && `by ${author}`,
-    year && `first published ${year}`,
+    year && `${publishedLabel(book.sourceKey).toLowerCase()} ${year}`,
   ]
     .filter(Boolean)
     .join(", ");
@@ -36,7 +36,7 @@ export function SearchResult({ book }: Readonly<{ book: BookSummary }>) {
     // where one title runs to two lines.
     <li className="self-stretch">
       <Link
-        href={bookPath(book.olWorkKey)}
+        href={bookPath(book.sourceKey)}
         aria-label={label}
         // Opening a book copies it into our database (MRG-014). Prefetching
         // would do that for every result in view, not the one the reader chose.
@@ -54,6 +54,7 @@ export function SearchResult({ book }: Readonly<{ book: BookSummary }>) {
         <div className="aspect-[2/3] overflow-hidden bg-paper-sunk">
           <Cover
             coverId={book.coverId ?? null}
+            coverUrl={book.coverUrl ?? null}
             title={book.title}
             authors={book.authors}
           />

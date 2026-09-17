@@ -4,7 +4,7 @@ import searchFixture from "../../../tests/fixtures/openlibrary-search-dune.json"
 import workFixture from "../../../tests/fixtures/openlibrary-work-dune.json";
 import googleFixture from "../../../tests/fixtures/google-books-dune.json";
 import redirectFixture from "../../../tests/fixtures/openlibrary-work-redirect.json";
-import { fetchWork, searchBooks } from "./openlibrary";
+import { fetchWork, searchWorks } from "./openlibrary";
 import { enrich } from "./google-books";
 import type { BookDetail } from "./types";
 
@@ -25,15 +25,15 @@ afterEach(() => {
   delete process.env.GOOGLE_BOOKS_API_KEY;
 });
 
-describe("searchBooks", () => {
+describe("searchWorks", () => {
   it("short-circuits a blank query without touching the network", async () => {
-    await expect(searchBooks("   ")).resolves.toEqual([]);
+    await expect(searchWorks("   ")).resolves.toEqual([]);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("sends an explicit field list, a limit, and a User-Agent", async () => {
     fetchMock.mockResolvedValue(res(searchFixture));
-    await searchBooks("dune herbert", 5);
+    await searchWorks("dune herbert", 5);
 
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toContain("https://openlibrary.org/search.json");
@@ -47,20 +47,20 @@ describe("searchBooks", () => {
 
   it("asks Next to cache for 24h, as Open Library requests", async () => {
     fetchMock.mockResolvedValue(res(searchFixture));
-    await searchBooks("dune");
+    await searchWorks("dune");
     expect(fetchMock.mock.calls[0][1].next.revalidate).toBe(86400);
   });
 
   it("returns normalized summaries", async () => {
     fetchMock.mockResolvedValue(res(searchFixture));
-    const results = await searchBooks("dune");
+    const results = await searchWorks("dune");
     expect(results).toHaveLength(3);
-    expect(results[0].olWorkKey).toBe("OL893415W");
+    expect(results[0].sourceKey).toBe("OL893415W");
   });
 
   it("throws with the status code when Open Library errors", async () => {
     fetchMock.mockResolvedValue(res(null, false, 503));
-    await expect(searchBooks("dune")).rejects.toThrow(/503/);
+    await expect(searchWorks("dune")).rejects.toThrow(/503/);
   });
 });
 
@@ -102,7 +102,7 @@ describe("fetchWork", () => {
     const detail = await fetchWork("OL893415W");
     expect(detail!.title).toBe("Dune");
     // The resolved key wins over the one the caller passed in.
-    expect(detail!.olWorkKey).toBe("OL893414W");
+    expect(detail!.sourceKey).toBe("OL893414W");
     expect(detail!.description).toContain("Arrakis");
   });
 
@@ -166,7 +166,7 @@ describe("fetchWork", () => {
 
 describe("enrich", () => {
   const thin: BookDetail = {
-    olWorkKey: "OL893415W",
+    sourceKey: "OL893415W",
     title: "Dune",
     authors: ["Frank Herbert"],
     isbn13: "9780441013593",

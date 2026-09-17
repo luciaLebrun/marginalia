@@ -1,13 +1,14 @@
-import { coverUrl } from "@/lib/books";
+import { jacket } from "@/lib/books";
 
 /**
  * A book jacket in the pale centre band.
  *
  * A plain lazy <img>, not next/image: Open Library asks that public pages point
  * src at their CDN, and it keeps us off Vercel Hobby's transformation quota for
- * images we do not own.
+ * images we do not own. Google Books jackets are pointed at for the same
+ * reason.
  *
- * Open Library cover ratios are inconsistent, so the frame is fixed and the
+ * Cover ratios are inconsistent at both sources, so the frame is fixed and the
  * jacket sits inside it at its own proportions — letterboxed on paper rather
  * than cropped, because a cropped jacket loses its typography.
  */
@@ -18,26 +19,24 @@ const GRID_SIZES =
 
 export function Cover({
   coverId,
+  coverUrl,
   title,
   authors,
   sizes = GRID_SIZES,
   scale = "cell",
 }: Readonly<{
   coverId: number | null;
+  /** A Google Books jacket URL. Set instead of coverId, never as well. */
+  coverUrl?: string | null;
   title: string;
   authors: string[];
   sizes?: string;
   /** "page" sets a coverless jacket at frontispiece size, for the book page. */
   scale?: "cell" | "page";
 }>) {
-  // "M" is 180px wide. A cell is ~231 CSS px on desktop, which is 462 device
-  // px at DSF 2 — every jacket was being upscaled 2.6x and going visibly soft.
-  // "L" is the shipping asset; "M" stays in the srcset so small viewports
-  // still pay a small bill. Both are CoverID URLs; see ADR 0004.
-  const src = coverUrl(coverId, "L");
-  const small = coverUrl(coverId, "M");
+  const art = jacket({ coverId, coverUrl });
 
-  if (!src) {
+  if (!art) {
     if (scale === "page") return <PageJacket title={title} authors={authors} />;
 
     return (
@@ -60,11 +59,14 @@ export function Cover({
     // Hobby's transformation quota on images we neither own nor host.
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={src}
-      srcSet={small ? `${small} 180w, ${src} 500w` : undefined}
+      src={art.src}
+      srcSet={art.srcSet}
       sizes={sizes}
       alt={authors.length ? `${title} by ${authors[0]}` : title}
-      loading="lazy"
+      // A page-scale jacket is the page's lead image and sits above the fold,
+      // so it is the LCP: fetch it at once. Grid covers wait for the scroll.
+      loading={scale === "page" ? "eager" : "lazy"}
+      fetchPriority={scale === "page" ? "high" : "auto"}
       decoding="async"
       className="h-full w-full object-contain"
     />

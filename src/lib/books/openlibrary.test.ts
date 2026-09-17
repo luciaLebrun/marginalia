@@ -48,7 +48,7 @@ describe("normalizeSearchResponse", () => {
 
   it("maps a complete doc onto our shape", () => {
     expect(results[0]).toEqual({
-      olWorkKey: "OL893415W",
+      sourceKey: "OL893415W",
       title: "Dune",
       subtitle: undefined,
       authors: ["Frank Herbert"],

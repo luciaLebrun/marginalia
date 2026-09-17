@@ -6,7 +6,7 @@ import { useFormStatus } from "react-dom";
 
 import { Cover } from "./Cover";
 import { toggleToReadAction, type ToReadState } from "@/app/actions";
-import { bookPath } from "@/lib/search";
+import { bookPath } from "@/lib/client-safe";
 import { spineHeightRem, spineOffsetStep } from "@/lib/spine";
 import type { ToReadBook } from "@/lib/to-read";
 
@@ -70,10 +70,10 @@ function Spine({
   refusal: ToReadState | null;
 }>) {
   const height = spineHeightRem(book.pageCount);
-  const href = bookPath(book.olWorkKey);
+  const href = bookPath(book.sourceKey);
 
   return (
-    <li style={{ "--step": spineOffsetStep(book.olWorkKey) } as React.CSSProperties}>
+    <li style={{ "--step": spineOffsetStep(book.sourceKey) } as React.CSSProperties}>
       {/* The whole spine lies off true by a stable step — up to half a rem on
           a phone, a rem and a half on a laptop — and gives up that width, so
           both its edges move and the pile never runs past its measure. */}
@@ -119,7 +119,7 @@ function Spine({
             className="flex shrink-0 items-center overflow-hidden border-l border-paper/20 bg-ink"
             style={{ width: `${(height * 2) / 3}rem` }}
           >
-            <Cover coverId={book.coverId} title={book.title} authors={book.authors} sizes="5rem" />
+            <Cover coverId={book.coverId} coverUrl={book.coverUrl} title={book.title} authors={book.authors} sizes="5rem" />
           </Link>
         )}
       </div>

@@ -4,11 +4,13 @@ import { searchBooks, type BookSummary } from "@/lib/books";
 
 /**
  * Search, as the page needs it. Pure apart from the search function it is
- * handed, which defaults to Open Library through `src/lib/books`.
+ * handed, which defaults to `src/lib/books` — Google Books first, Open Library
+ * as the fallback. Which source answered is that module's business, not this
+ * one's: by the time an outcome is built, a book is a book.
  *
  * The page renders one of four outcomes, and the distinction that matters most
- * is between "none" and "unavailable": an Open Library outage must never read
- * as "no such book", or a reader goes looking for a typo that is not there.
+ * is between "none" and "unavailable": an outage must never read as "no such
+ * book", or a reader goes looking for a typo that is not there.
  */
 
 /** Works shown per search. Enough to find a book by title; more is scrolling. */
@@ -50,9 +52,10 @@ export type Search = (query: string, limit: number) => Promise<BookSummary[]>;
 /**
  * Run a search and say which state the page is in.
  *
- * No retry: in a request path a retry only spends the reader's time, and Open
- * Library's outages last minutes, not milliseconds. A throw of any kind — an
- * `OpenLibraryError` or a transport failure from fetch — is "unavailable".
+ * No retry: in a request path a retry only spends the reader's time, and these
+ * outages last minutes, not milliseconds. Falling back from Google to Open
+ * Library already happens a layer down, so a throw reaching here means both
+ * sources are gone — any kind of throw is "unavailable".
  */
 export async function runSearch(
   query: string,
@@ -64,7 +67,7 @@ export async function runSearch(
   try {
     books = await search(query, SEARCH_LIMIT);
   } catch (error) {
-    console.error("Open Library search failed", error);
+    console.error("book search failed at every source", error);
     return { kind: "unavailable", query };
   }
 
@@ -92,9 +95,4 @@ export function bandText(outcome: SearchOutcome): string {
       return `${count} ${count === 1 ? "book" : "books"}`;
     }
   }
-}
-
-/** Where a result leads. The book page renders from our database (MRG-015). */
-export function bookPath(olWorkKey: string): string {
-  return `/book/${olWorkKey}`;
 }

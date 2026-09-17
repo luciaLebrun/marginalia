@@ -1,13 +1,20 @@
 /** A book as it appears in a search result grid. */
 export interface BookSummary {
-  /** Open Library work key, stored bare: "OL45804W". */
-  olWorkKey: string;
+  /**
+   * The book's key, and its URL segment. Source-tagged, because there are now
+   * two sources: a Google Books volume is "gb:B1hSG45JCX4C", an Open Library
+   * work stays bare, "OL45804W", so every link made before Google became
+   * primary still opens.
+   */
+  sourceKey: string;
   title: string;
   subtitle?: string;
   authors: string[];
   firstPublishYear?: number;
-  /** Open Library numeric CoverID. The ONLY safe input to a cover URL. */
+  /** Open Library numeric CoverID. The ONLY safe input to an OL cover URL. */
   coverId?: number;
+  /** An absolute jacket URL, for a source that addresses covers by URL (Google). */
+  coverUrl?: string;
   isbn13?: string;
   editionCount?: number;
 }
@@ -17,5 +24,5 @@ export interface BookDetail extends BookSummary {
   olEditionKey?: string;
   pageCount?: number;
   description?: string;
-  source: "openlibrary" | "openlibrary+google";
+  source: "google" | "openlibrary" | "openlibrary+google";
 }

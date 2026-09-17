@@ -1,0 +1,38 @@
+{
+  "kind": "books#volumes",
+  "totalItems": 2,
+  "items": [
+    {
+      "id": "B1hSG45JCX4C",
+      "volumeInfo": {
+        "title": "Dune",
+        "authors": ["Frank Herbert"],
+        "publishedDate": "1965-06-01",
+        "description": "Set on the desert planet Arrakis.",
+        "pageCount": 604,
+        "industryIdentifiers": [
+          { "type": "ISBN_10", "identifier": "0441013597" },
+          { "type": "ISBN_13", "identifier": "9780441013593" }
+        ],
+        "imageLinks": {
+          "smallThumbnail": "http://books.google.com/books/content?id=B1hSG45JCX4C&printsec=frontcover&img=1&zoom=5&edge=curl&source=gbs_api",
+          "thumbnail": "http://books.google.com/books/content?id=B1hSG45JCX4C&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api"
+        }
+      }
+    },
+    {
+      "id": "aZ-_09XyZabc",
+      "volumeInfo": {
+        "title": "Dune Messiah",
+        "subtitle": "Book Two",
+        "authors": ["Frank Herbert"],
+        "publishedDate": "1969",
+        "industryIdentifiers": [{ "type": "ISBN_13", "identifier": "9780593098233" }]
+      }
+    },
+    {
+      "id": "no-title-volume",
+      "volumeInfo": { "authors": ["Nobody"] }
+    }
+  ]
+}

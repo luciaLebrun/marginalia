@@ -30,7 +30,7 @@ describe.skipIf(!hasRealDb)("the date slip (integration)", () => {
       .onConflictDoNothing();
     await db
       .insert(schema.book)
-      .values({ id: BOOK_ID, olWorkKey: BOOK_KEY, title: "A Slip Test", authors: [] })
+      .values({ id: BOOK_ID, sourceKey: BOOK_KEY, title: "A Slip Test", authors: [] })
       .onConflictDoNothing();
     await db.insert(schema.log).values([
       { id: "_it_slip_1", userId: READER, bookId: BOOK_ID, readAt: "2024-03-02", rating: "4.5" },

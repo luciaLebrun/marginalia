@@ -7,7 +7,6 @@ import {
   MAX_QUERY_LENGTH,
   SEARCH_LIMIT,
   bandText,
-  bookPath,
   parseQuery,
   runSearch,
   type Search,
@@ -71,7 +70,7 @@ describe("runSearch", () => {
   it("marks a full page as limited, so the reader knows to narrow it", async () => {
     const full = Array.from({ length: SEARCH_LIMIT }, (_, i) => ({
       ...dune[0],
-      olWorkKey: `OL${i}W`,
+      sourceKey: `OL${i}W`,
     }));
     const outcome = await runSearch("dune", vi.fn<Search>().mockResolvedValue(full));
     expect(outcome).toMatchObject({ kind: "results", limited: true });
@@ -125,11 +124,5 @@ describe("bandText", () => {
   it("names none and unavailable differently", () => {
     expect(bandText({ kind: "none", query: "q" })).toBe("No matches");
     expect(bandText({ kind: "unavailable", query: "q" })).toBe("Search unavailable");
-  });
-});
-
-describe("bookPath", () => {
-  it("addresses the book page by bare work key", () => {
-    expect(bookPath("OL893414W")).toBe("/book/OL893414W");
   });
 });

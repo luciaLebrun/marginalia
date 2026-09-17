@@ -8,6 +8,7 @@ import {
   authorLine,
   bookBand,
   descriptionParagraphs,
+  displaySubtitle,
   imprintRows,
   type Read,
 } from "@/lib/book-view";
@@ -40,6 +41,7 @@ export function BookTitlePage({
 }>) {
   const band = bookBand(book, reads.length > 0);
   const paragraphs = descriptionParagraphs(book.description);
+  const subtitle = displaySubtitle(book.subtitle);
 
   return (
     <article>
@@ -52,6 +54,7 @@ export function BookTitlePage({
           <div className="aspect-[2/3] overflow-hidden border border-rule bg-paper-sunk">
             <Cover
               coverId={book.coverId}
+                coverUrl={book.coverUrl}
               title={book.title}
               authors={book.authors}
               sizes="(min-width: 40rem) min(24rem, 33vw), 60vw"
@@ -68,11 +71,11 @@ export function BookTitlePage({
             {book.title}
           </h1>
 
-          {book.subtitle && (
+          {subtitle && (
             // The field step at 500 in soft ink, as the masthead's reading
             // span is: supporting the title, never competing with it.
             <p className="mt-3 max-w-[34rem] text-[1.375rem] leading-snug font-medium tracking-[-0.01em] text-balance text-ink-soft">
-              {book.subtitle}
+              {subtitle}
             </p>
           )}
 

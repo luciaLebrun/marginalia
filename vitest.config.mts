@@ -28,7 +28,6 @@ export default defineConfig({
         "**/fixtures/**",
         "src/db/migrations/**",
         "src/lib/auth.ts",
-        "src/lib/auth-client.ts",
       ],
     },
   },

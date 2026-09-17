@@ -36,22 +36,20 @@ export function trustedOrigins(): string[] {
 }
 
 /**
- * Which origin the OAuth proxy treats as "the deployment that started this".
+ * The origin the reader is actually on, taken from the request.
  *
- * Sign-in starts in a server action, where the plugin has no request to read
- * a host from, so by default it falls back to `VERCEL_URL` — the per-deployment
- * hash URL, which nobody browses. The result was forwarded there, the account
- * created there, and the invite cookie the door set on the real host never
- * arrived: every invited sign-up failed with "An invite code is required".
+ * Sign-in starts in a server action, where Better Auth is handed no request and
+ * the OAuth proxy has no host to read. Left to guess, it names a host from the
+ * environment — `VERCEL_URL`, or `BETTER_AUTH_URL` — and a Vercel deployment
+ * answers to several: the branch alias, and a per-deployment one. Pick the
+ * wrong one and the flow ends on a host the reader never opened, where the
+ * state cookie, the invite cookie and the session all fail to meet.
  *
- * - Production: `BETTER_AUTH_URL` itself. Equal to the proxy's production URL,
- *   so the plugin skips entirely, as it was always meant to.
- * - Preview: the branch URL (`VERCEL_BRANCH_URL`) — the host a branch preview
- *   is actually opened on, and so the host holding the cookie.
- * - Local: undefined, the plugin's own default.
+ * So it comes from the request or not at all: `undefined` leaves the plugin its
+ * own default, which is what a call with no forwarding headers deserves.
  */
-export function proxyCurrentURL(): string | undefined {
-  if (process.env.VERCEL_ENV === "production") return process.env.BETTER_AUTH_URL;
-  const branch = process.env.VERCEL_BRANCH_URL;
-  return branch ? `https://${branch}` : undefined;
+export function requestOrigin(headers: Headers): string | undefined {
+  const host = headers.get("x-forwarded-host") ?? headers.get("host");
+  const protocol = headers.get("x-forwarded-proto");
+  return host && protocol ? `${protocol}://${host}` : undefined;
 }

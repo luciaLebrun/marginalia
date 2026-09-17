@@ -12,9 +12,10 @@
 import { eq } from "drizzle-orm";
 
 import { getDb, schema } from "../src/db/index.ts";
-import { fetchWork, searchBooks } from "../src/lib/books/openlibrary.ts";
+import { fetchBook, sampleUrl, searchBooks } from "../src/lib/books/index.ts";
 import { bandColorFromCover } from "../src/lib/cover-color.ts";
 import { generateInviteCode } from "../src/lib/invite-code.ts";
+import type { BookSummary } from "../src/lib/books/types.ts";
 
 const USER_ID = "dev-reader";
 const EMAIL = "dev@marginalia.local";
@@ -96,32 +97,33 @@ await db.delete(schema.log).where(eq(schema.log.userId, USER_ID));
 
 let logged = 0;
 for (const [query, readAt, rating] of SHELF) {
-  const results = await retry(query, () => searchBooks(query, 1));
+  const results: BookSummary[] | null = await retry(query, () => searchBooks(query, 1));
   const summary = results?.[0];
   if (!summary) continue;
 
-  const detail = await retry(summary.olWorkKey, () => fetchWork(summary.olWorkKey));
+  const detail = await retry(summary.sourceKey, () => fetchBook(summary.sourceKey));
   const book = detail ?? { ...summary, source: "openlibrary" as const };
 
-  const coverColor = await retry("colour", () => bandColorFromCover(book.coverId));
+  const coverColor = await retry("colour", () => bandColorFromCover(sampleUrl(book)));
 
   const [row] = await db
     .insert(schema.book)
     .values({
       id: crypto.randomUUID(),
-      olWorkKey: book.olWorkKey,
+      sourceKey: book.sourceKey,
       title: book.title,
       subtitle: book.subtitle,
       authors: book.authors,
       firstPublishYear: book.firstPublishYear,
       coverId: book.coverId,
+      coverUrl: book.coverUrl,
       coverColor,
       isbn13: book.isbn13,
       description: "description" in book ? book.description : undefined,
       source: book.source,
     })
     .onConflictDoUpdate({
-      target: schema.book.olWorkKey,
+      target: schema.book.sourceKey,
       set: { coverColor, cachedAt: new Date() },
     })
     .returning({ id: schema.book.id });
