@@ -4,7 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
  * The book page, in a real browser at both device classes.
  *
  * Runs against `/dev/book`, which renders the real components from the
- * recorded Dune fixtures — never live Open Library and never the database.
+ * recorded Dune fixtures — never a live source and never the database.
  * `?state=` switches the harness between the page's states.
  */
 const INK = "rgb(22, 19, 15)";
@@ -127,6 +127,50 @@ test.describe("book page", () => {
     await expect(line).toContainText("Undated");
     await expect(line).toContainText("Unrated");
     await expect(line.locator("time")).toHaveCount(0);
+  });
+
+  /*
+   * A book from the primary source (MRG-063). The same page, the same rules —
+   * the only difference a reader can see is which record it points at, and
+   * Google's jacket is addressed by URL rather than by CoverID.
+   */
+  test.describe("a book from Google Books", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto("/dev/book?state=google", { waitUntil: "networkidle" });
+    });
+
+    test("wears its Google jacket, with no srcset to choose from", async ({ page }) => {
+      const jacket = page.getByRole("img", { name: /^Dune by Frank Herbert$/ });
+      await expect(jacket).toHaveAttribute("src", /^https:\/\/books\.google\.com\//);
+      // Google offers one size per volume, so a srcset would be a lie and
+      // `sizes` without one is meaningless. Both are absent, not empty.
+      await expect(jacket).not.toHaveAttribute("srcset", /./);
+      await expect(jacket).not.toHaveAttribute("sizes", /./);
+    });
+
+    test("carries no page curl and no plain http, which would be mixed content", async ({ page }) => {
+      const src = await page
+        .getByRole("img", { name: /^Dune by Frank Herbert$/ })
+        .getAttribute("src");
+      expect(src).not.toContain("edge=curl");
+      expect(src).not.toContain("http://");
+    });
+
+    test("names Google Books in the imprint and links to that volume", async ({ page }) => {
+      await expect(page.getByRole("link", { name: "Google Books" })).toHaveAttribute(
+        "href",
+        /^https:\/\/books\.google\.com\/books\?id=[A-Za-z0-9_-]+$/,
+      );
+      // One record row, not two: the book came from one source.
+      await expect(page.getByRole("link", { name: "Open Library" })).toHaveCount(0);
+    });
+
+    test("the jacket actually loads rather than rendering broken", async ({ page }) => {
+      const loaded = await page
+        .getByRole("img", { name: /^Dune by Frank Herbert$/ })
+        .evaluate((img) => (img as HTMLImageElement).naturalWidth > 0);
+      expect(loaded).toBe(true);
+    });
   });
 
   test("gives a coverless book a type-only jacket, not a broken image", async ({ page }) => {
