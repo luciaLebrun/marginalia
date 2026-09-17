@@ -13,9 +13,10 @@ Audience and job: the reader, on phone or laptop, moments after closing a book.
 Success is type, Enter, recognise the jacket, tap. Every second here counts
 against "capture must be faster than the impulse to skip it".
 
-Constraints that bind: results come through `searchBooks()` from Google Books
-first and Open Library behind it (MRG-063), and the surface may not say which —
-it is not known until the answer arrives. Covers come by CoverID from Open
+Constraints that bind: results come through `searchBooks()` from **both**
+Google Books and Open Library, merged (MRG-063, MRG-067) — Google leads the
+grid, Open Library holds the slots below it. A single result set can therefore
+mix the two sources, and the surface may not say which is which. Covers come by CoverID from Open
 Library and by URL from Google, which offers one size rather than a ladder; a
 coverless result is the common case (3 of 5 in the Dune fixture), not the edge.
 A source is slow (1–3s) and periodically down, and an outage must read as

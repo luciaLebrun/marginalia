@@ -5,11 +5,12 @@ import openLibrarySearch from "../../../tests/fixtures/openlibrary-search-dune.j
 import { fetchBook, searchBooks } from "./index";
 
 /**
- * The order the two sources are asked in, which is the whole of MRG-063:
- * Google Books first for relevance, Open Library when Google cannot answer.
+ * How the two sources combine, which is the whole of MRG-063 and MRG-067:
+ * both are asked every time, and Google holds the top of the grid while Open
+ * Library is guaranteed room below it.
  *
- * These drive `fetch` rather than injected functions on purpose — the ordering
- * only means anything if it is the real clients being ordered.
+ * These drive `fetch` rather than injected functions on purpose — the merge
+ * only means anything if it is the real clients being merged.
  */
 
 function res(body: unknown, ok = true, status = 200) {
@@ -40,13 +41,26 @@ describe("searchBooks", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("asks Google first and stops there when it has answers", async () => {
-    fetchMock.mockResolvedValue(res(googleSearch));
+  /*
+   * The fallback this replaced fired on absence and never on wrongness, so a
+   * query Google ranked badly never reached Open Library at all. Asking both
+   * every time is the only thing that fixes it — nothing here can tell a
+   * confident wrong answer from a right one.
+   */
+  it("asks both sources, in parallel, and leads with Google", async () => {
+    fetchMock.mockImplementation((url: string) =>
+      Promise.resolve(
+        url.includes("googleapis.com") ? res(googleSearch) : res(openLibrarySearch),
+      ),
+    );
 
-    const books = await searchBooks("dune herbert", 5);
+    const books = await searchBooks("dune herbert", 20);
 
-    expect(hosts()).toEqual(["www.googleapis.com"]);
+    expect(hosts().sort()).toEqual(["openlibrary.org", "www.googleapis.com"]);
     expect(books[0].sourceKey).toBe("gb:B1hSG45JCX4C");
+    // Open Library's works are on the page too, not merely appended into space
+    // that a full page of Google results would have left empty.
+    expect(books.some((b) => /^OL\d+W$/.test(b.sourceKey))).toBe(true);
   });
 
   it("asks for books rather than magazine scans", async () => {
@@ -90,32 +104,46 @@ describe("searchBooks", () => {
     quiet.mockRestore();
   });
 
-  /*
-   * An obscure or non-English title is exactly where Google is weakest, and it
-   * answers "nothing" rather than failing. A second query costs one request;
-   * an empty page costs the reader their search.
-   */
-  it("falls through to Open Library when Google finds nothing", async () => {
-    fetchMock
-      .mockResolvedValueOnce(res({ kind: "books#volumes", totalItems: 0 }))
-      .mockResolvedValueOnce(res(openLibrarySearch));
+  it("gives the whole page to Open Library when Google finds nothing", async () => {
+    fetchMock.mockImplementation((url: string) =>
+      Promise.resolve(
+        url.includes("googleapis.com")
+          ? res({ kind: "books#volumes", totalItems: 0 })
+          : res(openLibrarySearch),
+      ),
+    );
 
-    const books = await searchBooks("dune herbert", 5);
+    const books = await searchBooks("dune herbert", 20);
 
-    expect(hosts()).toEqual(["www.googleapis.com", "openlibrary.org"]);
-    expect(books[0].sourceKey).toMatch(/^OL\d+W$/);
+    expect(books.length).toBeGreaterThan(0);
+    expect(books.every((b) => /^OL\d+W$/.test(b.sourceKey))).toBe(true);
   });
 
-  it("falls through to Open Library when Google errors", async () => {
+  it("stands on Open Library alone when Google errors", async () => {
     const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
-    fetchMock
-      .mockResolvedValueOnce(res({}, false, 429))
-      .mockResolvedValueOnce(res(openLibrarySearch));
+    fetchMock.mockImplementation((url: string) =>
+      Promise.resolve(url.includes("googleapis.com") ? res({}, false, 429) : res(openLibrarySearch)),
+    );
 
-    const books = await searchBooks("dune herbert", 5);
+    const books = await searchBooks("dune herbert", 20);
 
-    expect(hosts()).toEqual(["www.googleapis.com", "openlibrary.org"]);
     expect(books.length).toBeGreaterThan(0);
+    expect(books.every((b) => /^OL\d+W$/.test(b.sourceKey))).toBe(true);
+    quiet.mockRestore();
+  });
+
+  /* The mirror case: Open Library is the flakier of the two, and its outage
+     must not take the reader's search down when Google answered fine. */
+  it("stands on Google alone when Open Library errors", async () => {
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
+    fetchMock.mockImplementation((url: string) =>
+      Promise.resolve(url.includes("googleapis.com") ? res(googleSearch) : res({}, false, 503)),
+    );
+
+    const books = await searchBooks("dune herbert", 20);
+
+    expect(books.length).toBeGreaterThan(0);
+    expect(books.every((b) => b.sourceKey.startsWith("gb:"))).toBe(true);
     quiet.mockRestore();
   });
 
@@ -127,7 +155,7 @@ describe("searchBooks", () => {
     delete process.env.GOOGLE_BOOKS_API_KEY;
     fetchMock.mockResolvedValue(res(openLibrarySearch));
 
-    await searchBooks("dune herbert", 5);
+    await searchBooks("dune herbert", 20);
 
     expect(hosts()).toEqual(["openlibrary.org"]);
   });
@@ -136,11 +164,11 @@ describe("searchBooks", () => {
    * By the time Open Library fails there is nothing left to fall back to, and
    * `runSearch` needs the throw to show "unavailable" rather than "no matches".
    */
-  it("lets an Open Library failure through, so an outage is not shown as no matches", async () => {
+  it("throws only when BOTH sources fail, so an outage is not shown as no matches", async () => {
     const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
     fetchMock.mockResolvedValue(res({}, false, 503));
 
-    await expect(searchBooks("dune herbert", 5)).rejects.toThrow(/503/);
+    await expect(searchBooks("dune herbert", 20)).rejects.toThrow(/503/);
     quiet.mockRestore();
   });
 });

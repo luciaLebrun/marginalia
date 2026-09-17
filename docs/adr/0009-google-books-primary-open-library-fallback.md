@@ -30,8 +30,21 @@ from our side.
 
 ## Decision
 
-`searchBooks()` asks Google Books first and falls back to Open Library when
-Google is unconfigured, errors, or returns nothing. Both sources are kept.
+`searchBooks()` asks **both sources on every search, in parallel**, and merges:
+Google holds the top of the grid (capped at 12 of 20 slots) and Open Library
+fills the rest, de-duplicated. Either source failing leaves the other's results
+standing; only both failing is an outage.
+
+The plain fallback this started as did not work, and the reason is worth
+keeping: it fired on *absence* and never on *wrongness*, so a query Google
+ranked badly never reached Open Library at all. Nothing in the code can tell a
+confident wrong answer from a right one, so asking both every time is the only
+remedy. The reserved quota is the mechanism — Google reliably returns a full
+page, so appending Open Library after it would append into no space.
+
+De-duplication is on folded title + first author, with ISBN-13 as an exact key
+where it lines up. ISBN alone does not work: Google returns *editions* and Open
+Library *works*, so the two hand back different ISBNs for the same book.
 
 **This was chosen for latency stability, with the relevance regression accepted
 as a known cost** — the owner's call, made with the measurements above in hand.
@@ -56,13 +69,22 @@ size ladder; Google gives one URL per volume and no ladder, stored in the new
 
 ## Consequences
 
-**Accepted: common books can become unfindable.** A reader searching for Dune
-or The Dispossessed by title and author is shown twenty volumes, none of them
-the book, and the Open Library fallback does not fire — it triggers on an
-*empty* result, not a *wrong* one, and nothing in the code can tell those
-apart. Tracked as MRG-067. If this bites in use, the cheapest remedy is the
-merged-list option considered and declined at the outset: show Google's hits
-first, then Open Library's, de-duplicated on ISBN-13.
+**Relevance is recovered by the merge, at the cost of a second request.**
+Before it, `dune herbert` and `the dispossessed` returned no edition of the
+book across all twenty results. After it, measured live:
+
+| query | before | after |
+|---|---|---|
+| `dune herbert` | missing from 20 | #13 (Open Library) |
+| `the dispossessed` | missing from 20 | #7 |
+| `freakonomics` | #2 | #2 |
+| `piranesi susanna clarke` | #1 | #1 |
+
+The cost is latency: every search now waits for the slower of the two rather
+than for Google alone, around 1.3s cold against Google's 0.8s. They run in
+parallel, so it is the max and not the sum, and both are cached for 24h.
+`GOOGLE_SLOTS` is the tuning knob — lower it to bring Open Library's works
+further up the grid, raise it to give Google more of the page.
 
 **Accepted, and permanent:** two readers can open two different volumes of the
 same book and get two `book` rows, splitting its page and its reviews. The

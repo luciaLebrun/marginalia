@@ -29,15 +29,18 @@ pass through our server.
 ## The two sources
 
 **Google Books is primary, Open Library is the fallback** (MRG-063, ADR 0009).
-Chosen for latency stability, not relevance: Open Library is the faster of the
-two when idle but triples under concurrency where Google stays flat, and it has
-recurring 30-45 minute outages. `searchBooks()` asks Google first and reaches
-Open Library only when Google is unconfigured, erroring, or has nothing.
+Google leads for latency stability, not relevance: Open Library is the faster of
+the two when idle but triples under concurrency where Google stays flat, and it
+has recurring 30-45 minute outages.
 
-The accepted cost is ranking. Google's Books API ranks very differently from the
-books.google.com website, and common queries can miss entirely — `dune herbert`
-returns no edition of *Dune* in the 20 results a reader sees. The fallback does
-not save it: it fires on an empty result, not a wrong one. Tracked as MRG-067.
+Google's ranking is the worse of the two — `dune herbert` returned no edition of
+*Dune* in twenty results — so `searchBooks()` asks **both sources every time,
+in parallel, and merges them** (MRG-067). Google holds the top of the grid,
+capped at `GOOGLE_SLOTS`; Open Library is guaranteed the rest and is what puts
+the actual book on the page. De-duplication is on folded title + first author,
+since Google returns editions and Open Library works and their ISBNs disagree.
+Either source failing leaves the other's results standing; only both failing is
+an outage.
 
 Google is asked only with an API key. Keyless requests carry a daily quota of
 zero, and Vercel shares egress IPs between projects, so keyless in production

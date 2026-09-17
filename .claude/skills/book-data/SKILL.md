@@ -8,9 +8,12 @@ description: Rules and contracts for fetching book metadata from Open Library an
 All book metadata enters the app through `src/lib/books/`. Nothing else may call
 `openlibrary.org` or `googleapis.com`.
 
-**Google Books is the primary source; Open Library is the fallback** (MRG-063,
-ADR 0009). `searchBooks()` asks Google and reaches Open Library only when Google
-is unconfigured, errors, or finds nothing.
+**Both sources are searched every time and merged** (MRG-063 + MRG-067, ADR
+0009). Google leads the results, capped at `GOOGLE_SLOTS`; Open Library is
+guaranteed the remaining slots. Do NOT "simplify" this back into a fallback:
+a fallback fires on an empty result and never on a wrong one, and Google
+returns twenty confident wrong results for queries as ordinary as
+`dune herbert`.
 
 **Why Google is first: latency stability, NOT relevance.** Open Library is
 faster idle (403ms vs 771ms median) but triples under eight concurrent searches

@@ -53,19 +53,88 @@ export function parseBookKey(raw: string): string | null {
 }
 
 /**
- * Search, Google first.
+ * How many of the result slots Google may claim (MRG-067).
  *
- * Open Library runs when Google is unconfigured, throws, or finds nothing.
+ * Without a cap this merge would do nothing: Google reliably returns a full
+ * page, so appending Open Library after it would append into no space at all.
+ * Reserving slots is the whole mechanism — Google keeps the top of the grid,
+ * and Open Library is guaranteed room to put the actual book on the page.
+ */
+const GOOGLE_SLOTS = 12;
+
+/** Strip case, accents and punctuation, so "Piranèse" and "piranese" meet. */
+function fold(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replaceAll(/[̀-ͯ]/g, "")
+    .replaceAll(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+/**
+ * Pure. The identities a book answers to, for de-duplication.
  *
- * Note what that does NOT cover: Google returning twenty confident results,
- * none of them the book. The fallback fires on *absence*, not on *wrongness*,
- * and nothing here can tell the difference — so a query Google ranks badly
- * never reaches Open Library at all. That is the known cost of the order
- * (MRG-067), not an oversight in this function.
+ * ISBN-13 alone is not enough and using it alone was the flaw in the original
+ * sketch: Google returns *editions* and Open Library *works*, so the two hand
+ * back different ISBNs for the same book and an ISBN match almost never fires.
+ * Folded title + first author is what actually catches a duplicate; the ISBN
+ * stays as the exact key for the cases where it does line up.
+ */
+export function identityKeys(book: BookSummary): string[] {
+  const keys: string[] = [];
+  if (book.isbn13) keys.push(`i:${book.isbn13}`);
+  const title = fold(book.title);
+  if (title) keys.push(`t:${title}|${fold(book.authors[0] ?? "")}`);
+  return keys;
+}
+
+/**
+ * Pure. Merge two sources' results into one page, Google's block first.
  *
- * A Google failure is swallowed and logged, but an Open Library failure is
- * allowed to throw: by then there is nothing left to fall back to, and
- * `runSearch` needs the throw to say "unavailable" rather than "no matches".
+ * Google holds the top of the grid, capped at `GOOGLE_SLOTS`; Open Library
+ * fills the rest and then, if it has not used its share, Google is allowed
+ * back in to finish the page. So a query only one source answers still fills
+ * the grid, and a query both answer shows both.
+ */
+export function mergeResults(
+  google: BookSummary[],
+  openLibrary: BookSummary[],
+  limit: number,
+): BookSummary[] {
+  const seen = new Set<string>();
+  const out: BookSummary[] = [];
+
+  const take = (books: BookSummary[], room: number) => {
+    for (const book of books) {
+      if (room <= 0 || out.length >= limit) return;
+      const keys = identityKeys(book);
+      if (keys.some((k) => seen.has(k))) continue;
+      for (const k of keys) seen.add(k);
+      out.push(book);
+      room--;
+    }
+  };
+
+  take(google, Math.min(GOOGLE_SLOTS, limit));
+  take(openLibrary, limit - out.length);
+  take(google, limit - out.length); // Google finishes the page if room is left.
+  return out;
+}
+
+/**
+ * Search both sources and merge, Google's hits first (MRG-067).
+ *
+ * The plain fallback this replaced fired on *absence* and never on
+ * *wrongness*, so a query Google ranked badly — `dune herbert` returns no
+ * edition of Dune in twenty results — never reached Open Library at all.
+ * Asking both every time is the only thing that fixes it, because nothing in
+ * this process can tell a confident wrong answer from a right one.
+ *
+ * The two run in parallel, so the cost is the slower of them rather than the
+ * sum. Either source failing leaves the other's results standing; only both
+ * failing throws, which is what `runSearch` needs to say "unavailable" rather
+ * than "no matches".
  */
 export async function searchBooks(
   query: string,
@@ -74,16 +143,26 @@ export async function searchBooks(
   const q = query.trim();
   if (!q) return [];
 
-  if (apiKey()) {
-    try {
-      const hits = await searchVolumes(q, limit);
-      if (hits.length > 0) return hits;
-    } catch (error) {
-      console.error("Google Books search failed, falling back to Open Library", error);
-    }
+  const [google, openLibrary] = await Promise.allSettled([
+    apiKey() ? searchVolumes(q, limit) : Promise.resolve<BookSummary[]>([]),
+    searchWorks(q, limit),
+  ]);
+
+  if (google.status === "rejected") {
+    console.error("Google Books search failed", google.reason);
+  }
+  if (openLibrary.status === "rejected") {
+    console.error("Open Library search failed", openLibrary.reason);
+  }
+  if (google.status === "rejected" && openLibrary.status === "rejected") {
+    throw openLibrary.reason;
   }
 
-  return searchWorks(q, limit);
+  return mergeResults(
+    google.status === "fulfilled" ? google.value : [],
+    openLibrary.status === "fulfilled" ? openLibrary.value : [],
+    limit,
+  );
 }
 
 /**

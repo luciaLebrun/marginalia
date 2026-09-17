@@ -164,9 +164,13 @@ the same reason `getDb()` is.
   under concurrency while Google stays flat, and it has recurring 30-45 min
   outages. The accepted cost is that Google's ranking is worse — "dune herbert"
   does not return *Dune* in any of the 20 results a reader sees (MRG-067), and
-  the fallback does not rescue it because it fires on an *empty* result, never
-  a *wrong* one. `searchBooks()` in `src/lib/books/index.ts` asks Google, and
-  asks Open Library only when Google is unconfigured, erroring, or has nothing. Keys
+  a plain fallback could not rescue it, because it fires on an *empty* result
+  and never on a *wrong* one. So `searchBooks()` in `src/lib/books/index.ts`
+  asks **both sources every time, in parallel, and merges** (MRG-067): Google
+  holds the top of the grid, capped at `GOOGLE_SLOTS` of the 20, and Open
+  Library is guaranteed the rest. De-duplication is on folded title + first
+  author — ISBN-13 alone does not work, since Google returns editions and Open
+  Library works. Either source failing leaves the other standing. Keys
   carry their source: a Google volume is tagged `gb:B1hSG45JCX4C`, an Open
   Library work stays bare `OL893415W`, never `/works/OL893415W` — use
   `stripWorkPrefix()` at every boundary. `parseBookKey()` is the guard for both,
