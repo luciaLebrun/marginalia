@@ -49,7 +49,7 @@ describe("searchBooks", () => {
     expect(books[0].sourceKey).toBe("gb:B1hSG45JCX4C");
   });
 
-  it("sends the key, and asks for books rather than magazine scans", async () => {
+  it("asks for books rather than magazine scans", async () => {
     fetchMock.mockResolvedValue(res(googleSearch));
     await searchBooks("dune", 5);
 
@@ -57,7 +57,35 @@ describe("searchBooks", () => {
     expect(url).toContain("q=dune");
     expect(url).toContain("maxResults=5");
     expect(url).toContain("printType=books");
-    expect(url).toContain("key=test-key");
+  });
+
+  /*
+   * A URL reaches error messages, server logs and Next's cache key. The key
+   * therefore travels in a header and must never appear in the query string —
+   * `searchBooks()` logs its error on the fallback path, so a `?key=` there
+   * would put the credential in Vercel's runtime logs on every Google outage.
+   */
+  it("sends the key as a header and never in the URL", async () => {
+    fetchMock.mockResolvedValue(res(googleSearch));
+    await searchBooks("dune", 5);
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).not.toContain("test-key");
+    expect(url).not.toContain("key=");
+    expect(init.headers["X-Goog-Api-Key"]).toBe("test-key");
+  });
+
+  it("keeps the key out of the error a failure logs", async () => {
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
+    fetchMock
+      .mockResolvedValueOnce(res({}, false, 403))
+      .mockResolvedValueOnce(res(openLibrarySearch));
+
+    await searchBooks("dune", 5);
+
+    const logged = quiet.mock.calls.flat().map(String).join(" ");
+    expect(logged).not.toContain("test-key");
+    quiet.mockRestore();
   });
 
   /*

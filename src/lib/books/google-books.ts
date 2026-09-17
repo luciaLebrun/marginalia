@@ -45,10 +45,22 @@ export class GoogleBooksError extends Error {
   status: number;
 
   constructor(status: number, url: string) {
-    super(`Google Books ${status} for ${url}`);
+    super(`Google Books ${status} for ${redactKey(url)}`);
     this.name = "GoogleBooksError";
     this.status = status;
   }
+}
+
+/**
+ * Pure. Strip anything that looks like a credential out of a URL before it
+ * reaches a log line.
+ *
+ * The key travels in a header now, so nothing should reach this carrying one —
+ * this is the second lock, not the first. An API key is one of the few things
+ * that must not be one refactor away from being logged.
+ */
+export function redactKey(url: string): string {
+  return url.replaceAll(/([?&]key=)[^&]*/gi, "$1<redacted>");
 }
 
 /**
@@ -228,9 +240,21 @@ export function normalizeSearchResponse(body: unknown): BookSummary[] {
   return out;
 }
 
+/**
+ * The key travels in a header, never in the query string.
+ *
+ * A URL ends up in error messages, in server logs, and in Next's cache key. A
+ * `?key=` in one is a credential in all three — `searchBooks()` logs its error
+ * on the fallback path, which would have put the key in Vercel's runtime logs
+ * on every Google outage. Google accepts `X-Goog-Api-Key` for exactly this.
+ */
 async function fetchJson(url: string, revalidate: number): Promise<unknown> {
+  const key = apiKey();
   const res = await fetch(url, {
-    headers: { Accept: "application/json" },
+    headers: {
+      Accept: "application/json",
+      ...(key ? { "X-Goog-Api-Key": key } : {}),
+    },
     next: { revalidate },
   });
   if (!res.ok) throw new GoogleBooksError(res.status, url);
@@ -254,8 +278,7 @@ export async function searchVolumes(
   const url =
     `${ORIGIN}/volumes?q=${encodeURIComponent(q)}` +
     `&maxResults=${Math.min(limit, 40)}&printType=books&orderBy=relevance` +
-    `&fields=${encodeURIComponent(`items(${VOLUME_FIELDS})`)}` +
-    `&key=${apiKey() ?? ""}`;
+    `&fields=${encodeURIComponent(`items(${VOLUME_FIELDS})`)}`;
 
   return normalizeSearchResponse(await fetchJson(url, ONE_DAY));
 }
@@ -269,9 +292,7 @@ export async function searchVolumes(
  * "unavailable" rather than "not found".
  */
 export async function fetchVolume(id: string): Promise<BookDetail | null> {
-  const url =
-    `${ORIGIN}/volumes/${id}?fields=${encodeURIComponent(VOLUME_FIELDS)}` +
-    `&key=${apiKey() ?? ""}`;
+  const url = `${ORIGIN}/volumes/${id}?fields=${encodeURIComponent(VOLUME_FIELDS)}`;
 
   let body: unknown;
   try {
@@ -353,8 +374,8 @@ export async function enrich(detail: BookDetail): Promise<BookDetail> {
 
   try {
     const res = await fetch(
-      `${ORIGIN}/volumes?q=${encodeURIComponent(q)}&maxResults=1&key=${key}`,
-      { next: { revalidate: ONE_WEEK } },
+      `${ORIGIN}/volumes?q=${encodeURIComponent(q)}&maxResults=1`,
+      { headers: { "X-Goog-Api-Key": key }, next: { revalidate: ONE_WEEK } },
     );
     if (!res.ok) return detail;
     return mergeGoogleVolume(detail, await res.json());
