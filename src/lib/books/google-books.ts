@@ -262,8 +262,13 @@ async function fetchJson(url: string, revalidate: number): Promise<unknown> {
 }
 
 /**
- * Search volumes. `printType=books` keeps magazine scans out of a reading
- * diary, and Google's own cap on `maxResults` is 40.
+ * Search volumes. `printType=books` asks Google to keep magazines out of a
+ * reading diary, and its documented cap on `maxResults` is 40.
+ *
+ * `orderBy` is deliberately absent: `relevance` is the documented default, and
+ * the alternative (`newest`) is wrong for a diary. `langRestrict` is absent
+ * too — it measurably changed nothing on the queries that rank badly, and
+ * pinning a language would fight the French the product is heading toward.
  *
  * **Throws** on any error status so the caller can fall back to Open Library
  * rather than show an outage as "no such book".
@@ -277,7 +282,7 @@ export async function searchVolumes(
 
   const url =
     `${ORIGIN}/volumes?q=${encodeURIComponent(q)}` +
-    `&maxResults=${Math.min(limit, 40)}&printType=books&orderBy=relevance` +
+    `&maxResults=${Math.min(limit, 40)}&printType=books` +
     `&fields=${encodeURIComponent(`items(${VOLUME_FIELDS})`)}`;
 
   return normalizeSearchResponse(await fetchJson(url, ONE_DAY));

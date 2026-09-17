@@ -57,6 +57,8 @@ describe("searchBooks", () => {
     expect(url).toContain("q=dune");
     expect(url).toContain("maxResults=5");
     expect(url).toContain("printType=books");
+    // relevance is the documented default; passing it is noise.
+    expect(url).not.toContain("orderBy");
   });
 
   /*
