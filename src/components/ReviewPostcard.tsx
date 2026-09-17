@@ -5,7 +5,7 @@ import { Rating } from "./Rating";
 import { authorLine, bookBand } from "@/lib/book-view";
 import { PAPER } from "@/lib/color";
 import { reviewParagraphs, type LogEntry } from "@/lib/entry";
-import { bookPath } from "@/lib/client-safe";
+import { bookPath, publishedLabel } from "@/lib/client-safe";
 import { slipDate } from "@/lib/slip-date";
 import { handlePath } from "@/lib/username";
 
@@ -80,7 +80,7 @@ export function ReviewPostcard({
           </h1>
           {book.firstPublishYear && (
             <p className="mt-3 text-[0.6875rem] font-medium text-ink-soft">
-              First published {book.firstPublishYear}
+              {publishedLabel(book.sourceKey)} {book.firstPublishYear}
             </p>
           )}
 

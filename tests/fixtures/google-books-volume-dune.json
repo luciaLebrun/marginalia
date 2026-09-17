@@ -1,0 +1,26 @@
+{
+  "id": "B1hSG45JCX4C",
+  "volumeInfo": {
+    "title": "Dune",
+    "authors": [
+      "Frank Herbert"
+    ],
+    "publishedDate": "2005-08-02",
+    "description": "<b><b>Frank Herbert’s classic masterpiece—a triumph of the imagination and one of the bestselling science fiction novels of all time.</b></b><br><br>Set on the desert planet Arrakis, <i>Dune</i> is the story of Paul Atreides—who would become known as Muad'Dib—and of a great family's ambition to bring to fruition humankind's most ancient and unattainable dream.<br><br>A stunning blend of adventure and mysticism, environmentalism and politics, <i>Dune</i> won the first Nebula Award, shared the Hugo Award, and formed the basis of what is undoubtedly the grandest epic in science fiction.",
+    "industryIdentifiers": [
+      {
+        "type": "ISBN_10",
+        "identifier": "0441013597"
+      },
+      {
+        "type": "ISBN_13",
+        "identifier": "9780441013593"
+      }
+    ],
+    "pageCount": 704,
+    "imageLinks": {
+      "smallThumbnail": "http://books.google.com/books/content?id=B1hSG45JCX4C&printsec=frontcover&img=1&zoom=5&imgtk=AFLRE73wt8CqtlPYjDwerB53e6IKvG2lzE9G7ZsVfWFedcLApsvKQ1L257R-fYWo-Sb5FwpX5Z9wpM-DEZogTfsPtL8I4J6G56m7Kad-r9Ox7sG0a03xMWIinbmJHfbuU9TDYDxj9sbY&source=gbs_api",
+      "thumbnail": "http://books.google.com/books/content?id=B1hSG45JCX4C&printsec=frontcover&img=1&zoom=1&imgtk=AFLRE72UzLv198WNKB8n1Te-v7BGyTgYPZzzyCRFOh1WIH-YKy0Z5-nJWLIunnGAPvp-hmKVp0z7WJG6eyPJ_4iDQSF5LXhtHm-qQy57guyc8pRCU2cuC9CjLPBTy-3wEKvRhbHeAiIp&source=gbs_api"
+    }
+  }
+}

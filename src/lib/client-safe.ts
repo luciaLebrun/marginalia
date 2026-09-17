@@ -24,3 +24,15 @@ export const BIO_MAX = 240;
 export function bookPath(sourceKey: string): string {
   return `/book/${sourceKey}`;
 }
+
+/**
+ * What a book's year means, which depends on where its record came from.
+ *
+ * Open Library dates the *work*: its Dune is 1965. Google dates the *volume*,
+ * and a volume is an edition — its Dune is the 2005 fortieth-anniversary
+ * printing. The same number under the same label would assert a different
+ * fact, so the label moves rather than the number.
+ */
+export function publishedLabel(sourceKey: string): string {
+  return sourceKey.startsWith("gb:") ? "Published" : "First published";
+}

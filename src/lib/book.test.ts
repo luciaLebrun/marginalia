@@ -18,6 +18,33 @@ describe("parseBookKey", () => {
     expect(parseBookKey("gb:aZ-_09XyZabc")).toBe("gb:aZ-_09XyZabc");
   });
 
+  /*
+   * The bug this exists for: Next hands a page's dynamic segment
+   * percent-encoded and a route handler the same segment decoded. A Google key
+   * carries a colon, so every Google book arrived as `gb%3A…`, failed this
+   * guard and opened as "not found" — while Open Library's bare keys, which
+   * encode to themselves, worked throughout.
+   */
+  it("accepts a segment as a page receives it, percent-encoded", () => {
+    expect(parseBookKey("gb%3AB1hSG45JCX4C")).toBe("gb:B1hSG45JCX4C");
+    expect(parseBookKey("gb%3aB1hSG45JCX4C")).toBe("gb:B1hSG45JCX4C");
+    expect(parseBookKey("%2Fworks%2FOL893414W")).toBe("OL893414W");
+  });
+
+  /* Decoding happens before validation, so it must not open a way past it. */
+  it("refuses an encoded path once it is decoded", () => {
+    expect(parseBookKey("gb%3A..%2F..%2Fsearch")).toBeNull();
+    expect(parseBookKey("gb:..%2F..%2Fsearch")).toBeNull();
+    expect(parseBookKey("OL893414W%2Feditions")).toBeNull();
+    expect(parseBookKey("%2E%2E%2Fsearch")).toBeNull();
+  });
+
+  /* A malformed escape is refused, not thrown out of the guard. */
+  it("refuses a malformed escape rather than throwing", () => {
+    expect(parseBookKey("gb:%E0%A4%A")).toBeNull();
+    expect(parseBookKey("%")).toBeNull();
+  });
+
   it("refuses keys for things that are not works", () => {
     expect(parseBookKey("OL7353617M")).toBeNull(); // an edition
     expect(parseBookKey("OL23919A")).toBeNull(); // an author

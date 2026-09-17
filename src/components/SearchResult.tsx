@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Cover } from "./Cover";
 import type { BookSummary } from "@/lib/books";
-import { bookPath } from "@/lib/client-safe";
+import { bookPath, publishedLabel } from "@/lib/client-safe";
 
 /**
  * One search result: the entry's tri-band frame with the colour withheld.
@@ -26,7 +26,7 @@ export function SearchResult({ book }: Readonly<{ book: BookSummary }>) {
   const label = [
     book.title,
     author && `by ${author}`,
-    year && `first published ${year}`,
+    year && `${publishedLabel(book.sourceKey).toLowerCase()} ${year}`,
   ]
     .filter(Boolean)
     .join(", ");

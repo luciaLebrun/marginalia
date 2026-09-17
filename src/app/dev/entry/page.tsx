@@ -1,13 +1,14 @@
 import { notFound } from "next/navigation";
 
 import google from "../../../../tests/fixtures/google-books-dune.json";
+import googleVolume from "../../../../tests/fixtures/google-books-volume-dune.json";
 import search from "../../../../tests/fixtures/openlibrary-search-dune.json";
 import work from "../../../../tests/fixtures/openlibrary-work-dune.json";
 import { ReviewPostcard } from "@/components/ReviewPostcard";
 import { WordmarkBand } from "@/components/WordmarkBand";
 import { REVIEW_MAX } from "@/lib/read-schema";
 import type { LogEntry } from "@/lib/entry";
-import { mergeGoogleVolume } from "@/lib/books/google-books";
+import { mergeGoogleVolume, normalizeVolume } from "@/lib/books/google-books";
 import { normalizeSearchResponse, normalizeWorkResponse } from "@/lib/books/openlibrary";
 
 /**
@@ -21,6 +22,9 @@ import { normalizeSearchResponse, normalizeWorkResponse } from "@/lib/books/open
  * - `bare` — no review, no rating, no date
  * - `nocover` — a real coverless book: the type-only jacket
  * - `long` — a review at the account sheet's limit, to prove the card grows
+ * - `google` — the same read of a book opened at Google Books, whose key
+ *   names an edition. The card carries a year, so it has to say which year
+ *   it is: this is the one state where the postcard reads "Published".
  *
  * `?signedin=1` renders the title as a link, as it is for a signed-in reader.
  *
@@ -35,6 +39,13 @@ const DUNE = {
   sourceKey: "OL893414W",
   coverId: 11481354,
 };
+
+/*
+ * The same book as a Google volume, which dates the 2005 printing rather than
+ * the 1965 novel. The postcard is the surface built to be sent to someone, so
+ * it is the one that must not call an edition's year a first publication.
+ */
+const DUNE_GOOGLE = normalizeVolume(googleVolume)!;
 
 const coverless = summaries.find((summary) => summary.coverId === undefined);
 
@@ -80,6 +91,20 @@ export default async function DevEntryPage({ searchParams }: PageProps<"/dev/ent
   if (state === "long") {
     shown = entry({
       review: `${WRITTEN}\n\n`.repeat(Math.ceil(REVIEW_MAX / WRITTEN.length)).slice(0, REVIEW_MAX),
+    });
+  }
+  if (state === "google") {
+    shown = entry({
+      book: {
+        id: "dev-dune-google",
+        sourceKey: DUNE_GOOGLE.sourceKey,
+        title: DUNE_GOOGLE.title,
+        authors: DUNE_GOOGLE.authors,
+        coverId: null,
+        coverUrl: DUNE_GOOGLE.coverUrl ?? null,
+        coverColor: "#DEC65E",
+        firstPublishYear: DUNE_GOOGLE.firstPublishYear ?? null,
+      },
     });
   }
   if (state === "nocover" && coverless) {
