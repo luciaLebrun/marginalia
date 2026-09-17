@@ -56,6 +56,7 @@ export function ReviewPostcard({
             <div className="aspect-[2/3] overflow-hidden border border-rule bg-paper-sunk">
               <Cover
                 coverId={book.coverId}
+                coverUrl={book.coverUrl}
                 title={book.title}
                 authors={book.authors}
                 sizes="(min-width: 40rem) min(20rem, 32vw), 60vw"
@@ -68,7 +69,7 @@ export function ReviewPostcard({
           <h1 className="mt-4 text-[1.75rem] leading-none font-semibold tracking-[-0.02em] text-balance break-words">
             {signedIn ? (
               <Link
-                href={bookPath(book.olWorkKey)}
+                href={bookPath(book.sourceKey)}
                 className="underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink"
               >
                 {book.title}

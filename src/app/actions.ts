@@ -440,7 +440,7 @@ export async function removeReadAction(
  * page — which a correction changes and a removal ends.
  */
 function revalidateReads(username: string | null | undefined, logId: string | null) {
-  revalidatePath("/book/[workKey]", "page");
+  revalidatePath("/book/[bookKey]", "page");
   revalidatePath("/");
   if (username) {
     revalidatePath(handlePath(username));
@@ -504,7 +504,7 @@ export async function toggleToReadAction(
     await removeToRead(reader.id, bookId);
   }
 
-  revalidatePath("/book/[workKey]", "page");
+  revalidatePath("/book/[bookKey]", "page");
   revalidatePath("/to-read");
   return { saved: save, bookId, error: null, signedOut: false };
 }

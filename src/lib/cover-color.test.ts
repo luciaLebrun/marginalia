@@ -125,24 +125,25 @@ describe("bandColorFromCover", () => {
 
   afterEach(() => vi.unstubAllGlobals());
 
-  it("does not touch the network without a cover id", async () => {
-    for (const id of [null, undefined, 0, -1]) {
-      await expect(bandColorFromCover(id)).resolves.toBeNull();
+  it("does not touch the network without a jacket", async () => {
+    for (const url of [null, undefined, ""]) {
+      await expect(bandColorFromCover(url)).resolves.toBeNull();
     }
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("requests the medium cover by CoverID, never by ISBN", async () => {
+  it("fetches the jacket it is handed, following redirects", async () => {
     fetchMock.mockResolvedValue({
       ok: true,
       arrayBuffer: async () => jpegOf(200, 40, 40),
     });
 
-    await bandColorFromCover(11481354);
+    // sampleUrl() is what picks this; the CoverID-never-ISBN rule is tested
+    // where that choice is made, in covers.test.ts.
+    await bandColorFromCover("https://covers.openlibrary.org/b/id/11481354-M.jpg");
 
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe("https://covers.openlibrary.org/b/id/11481354-M.jpg");
-    expect(url).not.toContain("/b/isbn/");
     expect(init.redirect).toBe("follow");
   });
 
@@ -152,7 +153,7 @@ describe("bandColorFromCover", () => {
       arrayBuffer: async () => jpegOf(30, 90, 200),
     });
 
-    const hex = await bandColorFromCover(1);
+    const hex = await bandColorFromCover("https://covers.openlibrary.org/b/id/1-M.jpg");
     expect(hex).toMatch(/^#[0-9A-F]{6}$/);
     expect(hueOf(hex!)).toBeCloseTo(hueOf("#1E5AC8"), 1);
   });
@@ -162,15 +163,15 @@ describe("bandColorFromCover", () => {
       ok: true,
       arrayBuffer: async () => new ArrayBuffer(120),
     });
-    await expect(bandColorFromCover(1)).resolves.toBeNull();
+    await expect(bandColorFromCover("https://covers.openlibrary.org/b/id/1-M.jpg")).resolves.toBeNull();
   });
 
   it("returns null rather than throwing when the cover cannot be had", async () => {
     fetchMock.mockResolvedValue({ ok: false, status: 404 });
-    await expect(bandColorFromCover(1)).resolves.toBeNull();
+    await expect(bandColorFromCover("https://covers.openlibrary.org/b/id/1-M.jpg")).resolves.toBeNull();
 
     fetchMock.mockRejectedValue(new TypeError("fetch failed"));
-    await expect(bandColorFromCover(1)).resolves.toBeNull();
+    await expect(bandColorFromCover("https://covers.openlibrary.org/b/id/1-M.jpg")).resolves.toBeNull();
   });
 
   it("returns null rather than throwing when the bytes are not a JPEG", async () => {
@@ -179,6 +180,6 @@ describe("bandColorFromCover", () => {
       ok: true,
       arrayBuffer: async () => new Uint8Array(4096).fill(0x41).buffer,
     });
-    await expect(bandColorFromCover(1)).resolves.toBeNull();
+    await expect(bandColorFromCover("https://covers.openlibrary.org/b/id/1-M.jpg")).resolves.toBeNull();
   });
 });

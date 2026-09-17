@@ -75,10 +75,10 @@ export function meetsAA(background: string, foreground: string, large = false): 
  * renders — a shelf that reshuffles its own colours on every visit reads as
  * broken rather than lively.
  */
-export function fallbackBand(olWorkKey: string): string {
+export function fallbackBand(sourceKey: string): string {
   let hash = 0;
-  for (let i = 0; i < olWorkKey.length; i++) {
-    hash = (hash * 31 + (olWorkKey.codePointAt(i) ?? 0)) >>> 0;
+  for (let i = 0; i < sourceKey.length; i++) {
+    hash = (hash * 31 + (sourceKey.codePointAt(i) ?? 0)) >>> 0;
   }
   return CATEGORY_BANDS[hash % CATEGORY_BANDS.length];
 }
@@ -90,8 +90,8 @@ export function fallbackBand(olWorkKey: string): string {
  * before a conditioning rule existed still carry the old result. It is
  * idempotent on a colour already in range, so this costs nothing else.
  */
-export function bandColor(coverColor: string | null, olWorkKey: string): string {
-  return coverColor ? conditionBand(coverColor) : fallbackBand(olWorkKey);
+export function bandColor(coverColor: string | null, sourceKey: string): string {
+  return coverColor ? conditionBand(coverColor) : fallbackBand(sourceKey);
 }
 
 const ALARM_HSL = rgbToHsl(hexToRgb(ALARM)!);

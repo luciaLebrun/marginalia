@@ -13,11 +13,15 @@ Audience and job: the reader, on phone or laptop, moments after closing a book.
 Success is type, Enter, recognise the jacket, tap. Every second here counts
 against "capture must be faster than the impulse to skip it".
 
-Constraints that bind: results come only from Open Library through
-`searchBooks()`; covers by CoverID only, and a coverless result is the common
-case (3 of 5 in the Dune fixture), not the edge. Open Library is slow (1–3s)
-and periodically down, and an outage must read as "unavailable", never as a 500
-and never as "no results". Tests run from fixtures, never the live API.
+Constraints that bind: results come through `searchBooks()` from **both**
+Google Books and Open Library, merged (MRG-063, MRG-067) — Google leads the
+grid, Open Library holds the slots below it. A single result set can therefore
+mix the two sources, and the surface may not say which is which. Covers come by CoverID from Open
+Library and by URL from Google, which offers one size rather than a ladder; a
+coverless result is the common case (3 of 5 in the Dune fixture), not the edge.
+A source is slow (1–3s) and periodically down, and an outage must read as
+"unavailable", never as a 500 and never as "no results" — and only both sources
+failing is an outage. Tests run from fixtures, never the live API.
 
 ## Direction contract
 
@@ -62,7 +66,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 ## States
 
-Blank · searching (field stays, band says "Searching Open Library…" over the
+Blank · searching (field stays, band says "Searching…" over the
 ruled empty grid, no skeleton cards) · results 1–20 · exactly 20 (narrowing
 hint) · no results · unavailable (soft ink on sunk paper, not alarm — nothing
 was refused) · signed out → `/` · no handle → `/claim`.

@@ -2,11 +2,13 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import dune from "../../../../tests/fixtures/openlibrary-search-dune.json";
+import googleDune from "../../../../tests/fixtures/google-books-search-dune.json";
 import { SearchField } from "@/components/SearchField";
 import { SearchPending, SearchResults } from "@/components/SearchResults";
 import { WordmarkBand } from "@/components/WordmarkBand";
 import { OpenLibraryError, searchBooks } from "@/lib/books";
 import { normalizeSearchResponse } from "@/lib/books/openlibrary";
+import { normalizeSearchResponse as normalizeVolumes } from "@/lib/books/google-books";
 import { parseQuery, type Search } from "@/lib/search";
 
 /**
@@ -15,11 +17,14 @@ import { parseQuery, type Search } from "@/lib/search";
  * `/search` is behind Google OAuth, which cannot be driven headlessly, so this
  * renders the same components with the search function swapped by `?source=`:
  *
- * - `fixture` (default) — the recorded Dune response; what e2e runs against,
- *   so a third-party outage cannot turn a test red.
- * - `live` — real Open Library, for looking at a full page of real covers.
+ * - `fixture` (default) — the recorded Open Library response; what e2e runs
+ *   against, so a third-party outage cannot turn a test red.
+ * - `google` — the recorded Google Books response, the primary source since
+ *   MRG-063: jackets addressed by URL, a grid of one-size covers.
+ * - `live` — the real thing, Google first and Open Library behind it, for
+ *   looking at a full page of real covers.
  * - `empty` — no matches.
- * - `down` — Open Library erroring.
+ * - `down` — both sources erroring.
  * - `slow` — the fixture after four seconds, to see the pending state.
  *
  * It 404s outside development, and it grants nothing: no session, no database,
@@ -27,6 +32,7 @@ import { parseQuery, type Search } from "@/lib/search";
  */
 const SOURCES: Record<string, Search> = {
   fixture: async () => normalizeSearchResponse(dune),
+  google: async () => normalizeVolumes(googleDune),
   live: searchBooks,
   empty: async () => [],
   down: async () => {

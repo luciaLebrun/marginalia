@@ -33,7 +33,7 @@ describe.skipIf(!hasRealDb)("an entry's permalink (integration)", () => {
       .insert(schema.book)
       .values({
         id: BOOK_ID,
-        olWorkKey: "OL990000030W",
+        sourceKey: "OL990000030W",
         title: "An Entry Test",
         authors: ["A. Tester"],
         coverId: 240727,
@@ -71,7 +71,7 @@ describe.skipIf(!hasRealDb)("an entry's permalink (integration)", () => {
       reader: { id: READER, name: "Entry Reader", username: "itentryreader" },
       book: {
         id: BOOK_ID,
-        olWorkKey: "OL990000030W",
+        sourceKey: "OL990000030W",
         title: "An Entry Test",
         authors: ["A. Tester"],
         coverId: 240727,

@@ -87,15 +87,35 @@ export interface ImprintRow {
 }
 
 /**
- * The title page's imprint. A value Open Library did not have is omitted
- * rather than printed as a dash: an imprint lists what is known.
+ * Pure. Where a book's record lives, named for a reader.
+ *
+ * The tag on the key decides, not what is primary today: a book opened when
+ * Open Library was the only source is still an Open Library record, and
+ * sending a reader to Google for it would show them a different book.
+ */
+export function sourceRecord(sourceKey: string): { name: string; href: string } {
+  if (sourceKey.startsWith("gb:")) {
+    return {
+      name: "Google Books",
+      href: `https://books.google.com/books?id=${sourceKey.slice(3)}`,
+    };
+  }
+  return {
+    name: "Open Library",
+    href: `https://openlibrary.org/works/${sourceKey}`,
+  };
+}
+
+/**
+ * The title page's imprint. A value the source did not have is omitted rather
+ * than printed as a dash: an imprint lists what is known.
  *
  * The source row is always there and links out to the record — a hyperlink,
  * not an API call, and the attribution the data is owed. It is named for a
- * reader ("Open Library"), with the work key kept in the address, not the text.
+ * reader ("Google Books"), with the key kept in the address, not the text.
  */
 export function imprintRows(
-  book: Pick<Book, "firstPublishYear" | "pageCount" | "olWorkKey">,
+  book: Pick<Book, "firstPublishYear" | "pageCount" | "sourceKey">,
 ): ImprintRow[] {
   const rows: ImprintRow[] = [];
   if (book.firstPublishYear) {
@@ -104,11 +124,8 @@ export function imprintRows(
   if (book.pageCount) {
     rows.push({ label: "Pages", value: String(book.pageCount) });
   }
-  rows.push({
-    label: "Source",
-    value: "Open Library",
-    href: `https://openlibrary.org/works/${book.olWorkKey}`,
-  });
+  const source = sourceRecord(book.sourceKey);
+  rows.push({ label: "Source", value: source.name, href: source.href });
   return rows;
 }
 
@@ -149,9 +166,9 @@ export { slipDate } from "./slip-date";
  * so it cannot be worn by a book this reader has not read.
  */
 export function bookBand(
-  book: Pick<Book, "coverColor" | "olWorkKey">,
+  book: Pick<Book, "coverColor" | "sourceKey">,
   onShelf: boolean,
 ): { background: string; color: string } {
-  const background = onShelf ? bandColor(book.coverColor, book.olWorkKey) : INK;
+  const background = onShelf ? bandColor(book.coverColor, book.sourceKey) : INK;
   return { background, color: readableOn(background) };
 }

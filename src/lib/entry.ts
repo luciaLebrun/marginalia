@@ -15,10 +15,11 @@ export interface LogEntry {
   reader: { id: string; name: string; username: string };
   book: {
     id: string;
-    olWorkKey: string;
+    sourceKey: string;
     title: string;
     authors: string[];
     coverId: number | null;
+    coverUrl: string | null;
     coverColor: string | null;
     firstPublishYear: number | null;
   };
@@ -120,10 +121,11 @@ export async function getEntry(username: string, logId: string): Promise<LogEntr
       readerName: schema.user.name,
       readerUsername: schema.user.username,
       bookId: schema.book.id,
-      olWorkKey: schema.book.olWorkKey,
+      sourceKey: schema.book.sourceKey,
       title: schema.book.title,
       authors: schema.book.authors,
       coverId: schema.book.coverId,
+      coverUrl: schema.book.coverUrl,
       coverColor: schema.book.coverColor,
       firstPublishYear: schema.book.firstPublishYear,
     })
@@ -140,10 +142,11 @@ export async function getEntry(username: string, logId: string): Promise<LogEntr
     reader: { id: row.readerId, name: row.readerName, username: row.readerUsername },
     book: {
       id: row.bookId,
-      olWorkKey: row.olWorkKey,
+      sourceKey: row.sourceKey,
       title: row.title,
       authors: row.authors,
       coverId: row.coverId,
+      coverUrl: row.coverUrl,
       coverColor: row.coverColor,
       firstPublishYear: row.firstPublishYear,
     },

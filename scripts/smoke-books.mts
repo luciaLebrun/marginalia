@@ -1,22 +1,26 @@
 /**
- * Live smoke test against the real Open Library API. NOT part of CI — CI runs
- * against fixtures so a third-party outage can never turn a PR red.
+ * Live smoke test against the real book APIs. NOT part of CI — CI runs against
+ * fixtures so a third-party outage can never turn a PR red.
  *
  * Run with: pnpm smoke:books
  *
- * Verifies the three things fixtures cannot:
- *   1. the search endpoint still returns the fields we ask for
- *   2. results carry a cover_i (the CoverID we depend on)
- *   3. a CoverID-addressed cover URL actually resolves to an image
- *   4. redirect stubs still resolve to the surviving work
+ * Verifies what fixtures cannot:
+ *   1. Google Books, the primary source, still answers with the fields we ask
+ *      for and with a jacket URL on the host we allow
+ *   2. the Open Library search endpoint still returns the fields we ask for
+ *   3. its results carry a cover_i (the CoverID we depend on)
+ *   4. a CoverID-addressed cover URL actually resolves to an image
+ *   5. redirect stubs still resolve to the surviving work
  *
  * Open Library connections fail intermittently (connect timeouts and resets
  * alternating with 200s), so every step retries. The app itself does NOT
  * retry — in a serverless request path that just burns the user's time; there
  * it degrades to a "search unavailable" state instead.
  */
-import { fetchWork, searchBooks } from "../src/lib/books/openlibrary.ts";
-import { coverUrl } from "../src/lib/books/covers.ts";
+import { fetchWork, searchWorks } from "../src/lib/books/openlibrary.ts";
+import { searchVolumes, fetchVolume, apiKey } from "../src/lib/books/google-books.ts";
+import { coverUrl, sampleUrl } from "../src/lib/books/covers.ts";
+import type { BookSummary } from "../src/lib/books/types.ts";
 import { bandColorFromCover } from "../src/lib/cover-color.ts";
 import { fallbackBand, meetsAA, readableOn } from "../src/lib/color.ts";
 
@@ -53,7 +57,49 @@ async function retry<T>(label: string, fn: () => Promise<T>): Promise<T> {
   throw last;
 }
 
-const results = await retry("search", () => searchBooks(QUERY, 5)).catch(
+// ---------------------------------------------------------------- Google Books
+// The primary source. Skipped rather than failed without a key: no key is a
+// supported state, and it is the state a contributor's checkout is in.
+if (!apiKey()) {
+  console.log("– GOOGLE_BOOKS_API_KEY unset, skipping the Google Books checks");
+} else {
+  const volumes: BookSummary[] = await retry("google search", () =>
+    searchVolumes(QUERY, 5),
+  ).catch((error: unknown) => fail(`Google Books search failed: ${(error as Error).message}`));
+
+  if (volumes.length === 0) fail(`Google Books returned nothing for "${QUERY}"`);
+  console.log(`✓ Google Books returned ${volumes.length} volumes for "${QUERY}"`);
+
+  const jacketed = volumes.find((v) => v.coverUrl);
+  if (!jacketed?.coverUrl) {
+    fail("no Google volume carried a jacket — imageLinks may have changed shape");
+  }
+  // jacketFromImageLinks forces https, drops the page curl and raises the zoom.
+  // If Google moves these images, this is where we find out.
+  if (!jacketed.coverUrl.startsWith("https://")) {
+    fail(`Google jacket was not https: ${jacketed.coverUrl}`);
+  }
+  const jres = await retry("google jacket", () =>
+    fetch(jacketed.coverUrl as string, { redirect: "follow" }),
+  ).catch((error: unknown) => fail(`Google jacket fetch failed: ${(error as Error).message}`));
+  const jtype = jres.headers.get("content-type") ?? "";
+  if (!jres.ok || !jtype.startsWith("image/")) {
+    fail(`Google jacket returned ${jres.status} ${jtype} for ${jacketed.coverUrl}`);
+  }
+  console.log(`✓ "${jacketed.title}" jacket → ${jres.status} ${jtype}`);
+
+  // A volume id from search must still open on its own endpoint: that is the
+  // whole path from a search result to a book page.
+  const id = jacketed.sourceKey.slice("gb:".length);
+  const volume = await retry("google volume", () => fetchVolume(id)).catch(
+    (error: unknown) => fail(`Google volume lookup failed: ${(error as Error).message}`),
+  );
+  if (!volume) fail(`volume ${id} came back from search but not from /volumes/${id}`);
+  console.log(`✓ volume ${id} reopens as "${volume.title}"`);
+}
+
+// ------------------------------------------------------------- Open Library
+const results = await retry("search", () => searchWorks(QUERY, 5)).catch(
   (error: unknown) =>
     fail(
       `search failed after ${ATTEMPTS} attempts: ${
@@ -95,25 +141,25 @@ const redirected = await retry("redirect", () => fetchWork(REDIRECT_KEY)).catch(
 );
 
 if (!redirected) fail(`${REDIRECT_KEY} resolved to nothing`);
-if (redirected.olWorkKey !== REDIRECT_TARGET) {
+if (redirected.sourceKey !== REDIRECT_TARGET) {
   fail(
-    `${REDIRECT_KEY} resolved to ${redirected.olWorkKey}, expected ${REDIRECT_TARGET}`,
+    `${REDIRECT_KEY} resolved to ${redirected.sourceKey}, expected ${REDIRECT_TARGET}`,
   );
 }
 if (!redirected.title || redirected.title === REDIRECT_KEY) {
   fail(`${REDIRECT_KEY} resolved without a real title — redirects are not being followed`);
 }
 console.log(
-  `✓ redirect ${REDIRECT_KEY} → ${redirected.olWorkKey} "${redirected.title}"`,
+  `✓ redirect ${REDIRECT_KEY} → ${redirected.sourceKey} "${redirected.title}"`,
 );
 
 // The band colour is derived from real cover art, so synthetic pixel tests
 // cannot prove it works on the jackets Open Library actually serves.
 const band = await retry("band colour", () =>
-  bandColorFromCover(withCover.coverId),
+  bandColorFromCover(sampleUrl(withCover)),
 ).catch(() => null);
 
-const resolved = band ?? fallbackBand(withCover.olWorkKey);
+const resolved = band ?? fallbackBand(withCover.sourceKey);
 const foreground = readableOn(resolved);
 
 if (!/^#[0-9A-F]{6}$/.test(resolved)) fail(`band colour "${resolved}" is not a hex colour`);

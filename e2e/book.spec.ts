@@ -4,7 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
  * The book page, in a real browser at both device classes.
  *
  * Runs against `/dev/book`, which renders the real components from the
- * recorded Dune fixtures — never live Open Library and never the database.
+ * recorded Dune fixtures — never a live source and never the database.
  * `?state=` switches the harness between the page's states.
  */
 const INK = "rgb(22, 19, 15)";
@@ -127,6 +127,76 @@ test.describe("book page", () => {
     await expect(line).toContainText("Undated");
     await expect(line).toContainText("Unrated");
     await expect(line.locator("time")).toHaveCount(0);
+  });
+
+  /*
+   * A book from the primary source (MRG-063). The same page, the same rules —
+   * the only difference a reader can see is which record it points at, and
+   * Google's jacket is addressed by URL rather than by CoverID.
+   */
+  test.describe("a book from Google Books", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto("/dev/book?state=google", { waitUntil: "networkidle" });
+    });
+
+    /*
+     * The frontispiece well is 384 CSS px — 768 device px at DSF 2 — so the
+     * shipping rendition has to be 800 wide. Asking by `zoom` cannot get
+     * there: measured live, its whole ladder tops out at 300px.
+     */
+    test("ships an 800px jacket and a width ladder to choose from", async ({ page }) => {
+      const jacket = page.getByRole("img", { name: /^Dune by Frank Herbert$/ });
+      await expect(jacket).toHaveAttribute("src", /^https:\/\/books\.google\.com\/.*[?&]w=800/);
+      await expect(jacket).toHaveAttribute("srcset", /w=256 256w/);
+      await expect(jacket).toHaveAttribute("srcset", /w=512 512w/);
+      await expect(jacket).toHaveAttribute("srcset", /w=800 800w/);
+      await expect(jacket).toHaveAttribute("sizes", /./);
+      await expect(jacket).not.toHaveAttribute("srcset", /zoom/);
+    });
+
+    /*
+     * The rule is "never upscaled", which is what `zoom` could not satisfy: its
+     * whole ladder tops out at 300px, so a 384 CSS px frontispiece was being
+     * fed a thumbnail. Asserted against the element's own rendered width rather
+     * than a fixed number, because the right answer differs by viewport — the
+     * browser correctly picks the 256w candidate for a narrow well and the
+     * 800w one for the desktop frontispiece.
+     */
+    test("decodes at or above its rendered width, never upscaled", async ({ page }) => {
+      const { natural, rendered } = await page
+        .getByRole("img", { name: /^Dune by Frank Herbert$/ })
+        .evaluate((img) => ({
+          natural: (img as HTMLImageElement).naturalWidth,
+          rendered: img.getBoundingClientRect().width,
+        }));
+
+      expect(natural).toBeGreaterThan(0);
+      expect(natural).toBeGreaterThanOrEqual(Math.floor(rendered));
+    });
+
+    test("carries no page curl and no plain http, which would be mixed content", async ({ page }) => {
+      const src = await page
+        .getByRole("img", { name: /^Dune by Frank Herbert$/ })
+        .getAttribute("src");
+      expect(src).not.toContain("edge=curl");
+      expect(src).not.toContain("http://");
+    });
+
+    test("names Google Books in the imprint and links to that volume", async ({ page }) => {
+      await expect(page.getByRole("link", { name: "Google Books" })).toHaveAttribute(
+        "href",
+        /^https:\/\/books\.google\.com\/books\?id=[A-Za-z0-9_-]+$/,
+      );
+      // One record row, not two: the book came from one source.
+      await expect(page.getByRole("link", { name: "Open Library" })).toHaveCount(0);
+    });
+
+    test("the jacket actually loads rather than rendering broken", async ({ page }) => {
+      const loaded = await page
+        .getByRole("img", { name: /^Dune by Frank Herbert$/ })
+        .evaluate((img) => (img as HTMLImageElement).naturalWidth > 0);
+      expect(loaded).toBe(true);
+    });
   });
 
   test("gives a coverless book a type-only jacket, not a broken image", async ({ page }) => {

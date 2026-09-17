@@ -21,9 +21,9 @@ const SURVIVOR = "OL990000003W";
 const MISSING = "OL990000004W";
 const KEYS = [FRESH, STUB, SURVIVOR, MISSING];
 
-function detail(olWorkKey: string, extra: Partial<BookDetail> = {}): BookDetail {
+function detail(sourceKey: string, extra: Partial<BookDetail> = {}): BookDetail {
   return {
-    olWorkKey,
+    sourceKey,
     title: "An Integration Test",
     authors: ["A. Tester"],
     firstPublishYear: 1965,
@@ -36,7 +36,7 @@ function detail(olWorkKey: string, extra: Partial<BookDetail> = {}): BookDetail 
 /** Sources that hand back `found` and succeed at everything else. */
 function sources(found: BookDetail | null): BookSources {
   return {
-    fetchWork: vi.fn(async () => found),
+    fetchBook: vi.fn(async () => found),
     enrich: vi.fn(async (d: BookDetail) => ({
       ...d,
       pageCount: 604,
@@ -51,18 +51,18 @@ function down(): BookSources {
   const fail = async () => {
     throw new TypeError("fetch failed");
   };
-  return { fetchWork: vi.fn(fail), enrich: vi.fn(fail), bandColor: vi.fn(fail) };
+  return { fetchBook: vi.fn(fail), enrich: vi.fn(fail), bandColor: vi.fn(fail) };
 }
 
 async function rowsFor(...keys: string[]) {
   return getDb()
     .select()
     .from(schema.book)
-    .where(inArray(schema.book.olWorkKey, keys));
+    .where(inArray(schema.book.sourceKey, keys));
 }
 
 async function reset() {
-  await getDb().delete(schema.book).where(inArray(schema.book.olWorkKey, KEYS));
+  await getDb().delete(schema.book).where(inArray(schema.book.sourceKey, KEYS));
 }
 
 describe.skipIf(!hasRealDb)("opening a book (integration)", () => {
@@ -75,7 +75,7 @@ describe.skipIf(!hasRealDb)("opening a book (integration)", () => {
     expect(outcome.kind).toBe("found");
     if (outcome.kind !== "found") return;
     expect(outcome.book).toMatchObject({
-      olWorkKey: FRESH,
+      sourceKey: FRESH,
       title: "An Integration Test",
       authors: ["A. Tester"],
       coverId: 240727,
@@ -100,7 +100,7 @@ describe.skipIf(!hasRealDb)("opening a book (integration)", () => {
     const again = await openBook(FRESH, outage);
 
     expect(again).toEqual(first);
-    expect(outage.fetchWork).not.toHaveBeenCalled();
+    expect(outage.fetchBook).not.toHaveBeenCalled();
     expect(outage.bandColor).not.toHaveBeenCalled();
   });
 
@@ -127,7 +127,7 @@ describe.skipIf(!hasRealDb)("opening a book (integration)", () => {
   it("stores a redirect stub's book under the surviving key, never the stub's", async () => {
     const outcome = await openBook(STUB, sources(detail(SURVIVOR)));
 
-    expect(outcome.kind === "found" && outcome.book.olWorkKey).toBe(SURVIVOR);
+    expect(outcome.kind === "found" && outcome.book.sourceKey).toBe(SURVIVOR);
     expect(await rowsFor(STUB)).toHaveLength(0);
     expect(await rowsFor(SURVIVOR)).toHaveLength(1);
   });
@@ -161,6 +161,6 @@ describe.skipIf(!hasRealDb)("opening a book (integration)", () => {
 
   it("opens a key given in its /works/ form under the bare key", async () => {
     const outcome = await openBook(`/works/${FRESH}`, sources(detail(FRESH)));
-    expect(outcome.kind === "found" && outcome.book.olWorkKey).toBe(FRESH);
+    expect(outcome.kind === "found" && outcome.book.sourceKey).toBe(FRESH);
   });
 });

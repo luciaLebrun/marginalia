@@ -70,7 +70,7 @@ describe("runSearch", () => {
   it("marks a full page as limited, so the reader knows to narrow it", async () => {
     const full = Array.from({ length: SEARCH_LIMIT }, (_, i) => ({
       ...dune[0],
-      olWorkKey: `OL${i}W`,
+      sourceKey: `OL${i}W`,
     }));
     const outcome = await runSearch("dune", vi.fn<Search>().mockResolvedValue(full));
     expect(outcome).toMatchObject({ kind: "results", limited: true });
