@@ -290,10 +290,11 @@ export async function searchVolumes(
   const q = query.trim();
   if (!q) return [];
 
+  const fields = encodeURIComponent(`items(${VOLUME_FIELDS})`);
   const url =
     `${ORIGIN}/volumes?q=${encodeURIComponent(q)}` +
     `&maxResults=${Math.min(limit, 40)}&printType=books` +
-    `&fields=${encodeURIComponent(`items(${VOLUME_FIELDS})`)}`;
+    `&fields=${fields}`;
 
   return normalizeSearchResponse(await fetchJson(url, ONE_DAY));
 }
