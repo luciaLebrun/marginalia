@@ -10,7 +10,13 @@ All book metadata enters the app through `src/lib/books/`. Nothing else may call
 
 **Google Books is the primary source; Open Library is the fallback** (MRG-063,
 ADR 0009). `searchBooks()` asks Google and reaches Open Library only when Google
-is unconfigured, errors, or finds nothing. Keys carry their source:
+is unconfigured, errors, or finds nothing.
+
+**Why Google is first: latency stability, NOT relevance.** Open Library is
+faster idle (403ms vs 771ms median) but triples under eight concurrent searches
+(1238ms / 2635ms p95) where Google stays flat (797ms / 1718ms), and it has
+recurring 30-45 minute outages. Google's *ranking* is the worse of the two and
+is not tunable — see MRG-067 before "fixing" search relevance. Keys carry their source:
 `gb:B1hSG45JCX4C` for a Google volume, bare `OL45804W` for an Open Library work.
 A key is never offered to the other source — it would answer with a different
 book. `parseBookKey()` guards both forms.

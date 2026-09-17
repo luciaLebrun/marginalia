@@ -28,10 +28,16 @@ pass through our server.
 
 ## The two sources
 
-**Google Books is primary, Open Library is the fallback** (MRG-063). Google's
-relevance on the query a reader actually types is markedly better, so
-`searchBooks()` asks it first and reaches Open Library only when Google is
-unconfigured, erroring, or has nothing.
+**Google Books is primary, Open Library is the fallback** (MRG-063, ADR 0009).
+Chosen for latency stability, not relevance: Open Library is the faster of the
+two when idle but triples under concurrency where Google stays flat, and it has
+recurring 30-45 minute outages. `searchBooks()` asks Google first and reaches
+Open Library only when Google is unconfigured, erroring, or has nothing.
+
+The accepted cost is ranking. Google's Books API ranks very differently from the
+books.google.com website, and common queries can miss entirely — `dune herbert`
+returns no edition of *Dune* in the 20 results a reader sees. The fallback does
+not save it: it fires on an empty result, not a wrong one. Tracked as MRG-067.
 
 Google is asked only with an API key. Keyless requests carry a daily quota of
 zero, and Vercel shares egress IPs between projects, so keyless in production

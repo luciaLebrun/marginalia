@@ -159,8 +159,14 @@ the same reason `getDb()` is.
 ## Conventions
 
 - **Google Books is the primary source; Open Library is the fallback**
-  (MRG-063). `searchBooks()` in `src/lib/books/index.ts` asks Google, and asks
-  Open Library only when Google is unconfigured, erroring, or has nothing. Keys
+  (MRG-063, ADR 0009). Chosen for **latency stability under load**, not
+  relevance: Open Library is faster idle (403ms vs 771ms median) but triples
+  under concurrency while Google stays flat, and it has recurring 30-45 min
+  outages. The accepted cost is that Google's ranking is worse — "dune herbert"
+  does not return *Dune* in any of the 20 results a reader sees (MRG-067), and
+  the fallback does not rescue it because it fires on an *empty* result, never
+  a *wrong* one. `searchBooks()` in `src/lib/books/index.ts` asks Google, and
+  asks Open Library only when Google is unconfigured, erroring, or has nothing. Keys
   carry their source: a Google volume is tagged `gb:B1hSG45JCX4C`, an Open
   Library work stays bare `OL893415W`, never `/works/OL893415W` — use
   `stripWorkPrefix()` at every boundary. `parseBookKey()` is the guard for both,

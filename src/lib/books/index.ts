@@ -6,9 +6,10 @@
  * the caching, User-Agent, normalization and the CoverID rule stay in one place.
  *
  * Two sources since MRG-063, in a fixed order: **Google Books first, Open
- * Library as the fallback.** Google is asked first for relevance; Open Library
- * answers when Google is unconfigured, erroring, or has nothing, and it stays
- * the source of every book opened before the swap.
+ * Library as the fallback.** Google is asked first for latency stability under
+ * load, not for relevance — see the measurements in `google-books.ts`. Open
+ * Library answers when Google is unconfigured, erroring, or has nothing, and
+ * it stays the source of every book opened before the swap.
  */
 import {
   GOOGLE_KEY_PREFIX,
@@ -54,10 +55,13 @@ export function parseBookKey(raw: string): string | null {
 /**
  * Search, Google first.
  *
- * Open Library runs when Google is unconfigured, throws, or finds nothing —
- * the last of those because a reader searching an obscure or non-English title
- * is exactly the case Google is weakest on, and a second query costs one
- * request rather than an empty page.
+ * Open Library runs when Google is unconfigured, throws, or finds nothing.
+ *
+ * Note what that does NOT cover: Google returning twenty confident results,
+ * none of them the book. The fallback fires on *absence*, not on *wrongness*,
+ * and nothing here can tell the difference — so a query Google ranks badly
+ * never reaches Open Library at all. That is the known cost of the order
+ * (MRG-067), not an oversight in this function.
  *
  * A Google failure is swallowed and logged, but an Open Library failure is
  * allowed to throw: by then there is nothing left to fall back to, and

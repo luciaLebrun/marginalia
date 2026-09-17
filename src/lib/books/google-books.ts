@@ -7,16 +7,26 @@ const ONE_DAY = 60 * 60 * 24;
 /**
  * Google Books, the primary source (MRG-063).
  *
- * Google is asked first because its relevance on the query a reader actually
- * types — a title, half a title, a title and an author — is markedly better
- * than Open Library's. Open Library is the fallback, and stays the source of
- * every book opened before this change.
+ * Asked first for **latency stability**, not for relevance. Measured against
+ * both live APIs from one machine: idle, Open Library is the faster of the two
+ * (403ms median against 771ms), but under eight concurrent searches it triples
+ * to 1238ms median / 2635ms p95 while Google barely moves, 797ms / 1718ms.
+ * Google also does not have Open Library's recurring 30-45 minute outages.
  *
- * The cost of the swap, recorded here because it is easy to forget: a Google
- * key identifies an *edition* (a volume), where an Open Library work key
- * identifies a *work*. Two readers can therefore log two volumes of the same
- * book and get two rows. There is no cheap fix — the ISBN-13 we store is the
- * only bridge — and the relevance was judged worth it.
+ * Two costs were accepted knowingly, and neither is a bug to be fixed here:
+ *
+ * 1. **Relevance is worse, sometimes badly.** Across all 20 results a reader
+ *    sees, "dune herbert" does not return Dune, and "the dispossessed" does
+ *    not return Le Guin's. Not fixable from our side: measured with and
+ *    without `langRestrict`, `printType`, `orderBy`, and with `intitle:` /
+ *    `inauthor:` shaping. The Books API ranks quite differently from the
+ *    books.google.com website. Tracked as MRG-067.
+ * 2. **A Google key identifies an *edition*** (a volume), where an Open
+ *    Library work key identifies a *work*, so two readers can log two volumes
+ *    of one book and get two rows. The ISBN-13 we store is the only bridge.
+ *
+ * Open Library is the fallback, and stays the source of every book opened
+ * before this change.
  */
 
 /**
