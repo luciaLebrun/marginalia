@@ -1,3 +1,5 @@
+import { JACKET_WIDTH, withJacketWidth } from "./google-books.ts";
+
 export type CoverSize = "S" | "M" | "L";
 
 const COVERS_ORIGIN = "https://covers.openlibrary.org";
@@ -34,17 +36,35 @@ export interface Jacket {
 }
 
 /**
- * The jacket a book renders, and a srcset when its source offers sizes.
+ * Widths a Google jacket is offered at.
  *
- * Open Library addresses covers by CoverID and serves several widths, so it
- * gets a real srcset. Google hands out one URL per volume and no size ladder,
- * so a Google jacket is a single src — the browser has nothing to choose from.
+ * 800 is the shipping asset: the frontispiece well is 384 CSS px, so 768
+ * device px at DSF 2. 512 covers a shelf cell on the same display (~231 CSS
+ * px, 462 device px). 256 is there for a 1x phone, where a cell is ~187 CSS
+ * px — the same job Open Library's "-M.jpg" does in its own srcset.
+ */
+const GOOGLE_WIDTHS = [256, 512, 800];
+
+/**
+ * The jacket a book renders, and the srcset its source can offer.
+ *
+ * Both sources serve a size ladder, reached differently: Open Library by
+ * CoverID and a size letter, Google by a `w` on the same URL. Neither is
+ * allowed to ship one fixed rendition — a 256px scan upscaled into the 768
+ * device px frontispiece is exactly the softness the "-L.jpg" step was added
+ * to fix on a *smaller* element.
  *
  * Returns null when there is no cover at all, so callers keep handling the
  * placeholder case explicitly rather than rendering a broken image.
  */
-export function jacket(book: Jacket): { src: string; srcSet?: string } | null {
-  if (book.coverUrl) return { src: book.coverUrl };
+export function jacket(book: Jacket): { src: string; srcSet: string } | null {
+  if (book.coverUrl) {
+    const url = book.coverUrl;
+    return {
+      src: withJacketWidth(url, JACKET_WIDTH),
+      srcSet: GOOGLE_WIDTHS.map((w) => `${withJacketWidth(url, w)} ${w}w`).join(", "),
+    };
+  }
 
   // "M" is 180px wide. A cell is ~231 CSS px on desktop, which is 462 device
   // px at DSF 2 — every jacket was being upscaled 2.6x and going visibly soft.
@@ -52,15 +72,16 @@ export function jacket(book: Jacket): { src: string; srcSet?: string } | null {
   // still pay a small bill. Both are CoverID URLs; see ADR 0004.
   const src = coverUrl(book.coverId, "L");
   const small = coverUrl(book.coverId, "M");
-  if (!src) return null;
-  return { src, srcSet: small ? `${small} 180w, ${src} 500w` : undefined };
+  if (!src || !small) return null;
+  return { src, srcSet: `${small} 180w, ${src} 500w` };
 }
 
 /**
  * The smallest jacket we can get, which is what the band colour is sampled
- * from — a 180px scan decodes in a fraction of the time a 500px one does and
- * gives the same dominant hue.
+ * from — a small scan decodes in a fraction of the time a shipping-size one
+ * does and gives the same dominant hue.
  */
 export function sampleUrl(book: Jacket): string | null {
-  return book.coverUrl ?? coverUrl(book.coverId, "M");
+  if (book.coverUrl) return withJacketWidth(book.coverUrl, GOOGLE_WIDTHS[0]);
+  return coverUrl(book.coverId, "M");
 }

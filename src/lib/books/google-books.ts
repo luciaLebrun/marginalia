@@ -86,15 +86,51 @@ interface RawVolumeInfo {
 }
 
 /**
+ * The width a stored Google jacket is canonicalised to: the shipping asset,
+ * the same role Open Library's "-L.jpg" (~500px) plays. The frontispiece well
+ * is 384 CSS px, so 768 device px at DSF 2, and 800 covers it without upscale.
+ */
+export const JACKET_WIDTH = 800;
+
+/**
+ * Pure. Rewrite a Google jacket URL to a given pixel width.
+ *
+ * The content endpoint takes `w` and honours it against the full scan — `w=800`
+ * really is 800x1232, `w=1280` really is 1280x1972 — so this is the only lever
+ * worth pulling. It is also why `zoom` is deleted rather than tuned: measured
+ * against a live volume, zoom=1 and zoom=5 both return 128x192 and zoom=2
+ * returns 300x462. `zoom` is a fixed ladder of small renditions, and the
+ * highest number is not the largest image.
+ *
+ * Returns the URL untouched if it is not one of Google's, so a caller cannot
+ * accidentally rewrite an Open Library address.
+ */
+export function withJacketWidth(raw: string, width: number): string {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return raw;
+  }
+  if (!/(^|\.)google\.com$/.test(url.hostname)) return raw;
+
+  url.searchParams.delete("zoom");
+  url.searchParams.set("w", String(width));
+  return url.toString();
+}
+
+/**
  * Pure. The jacket URL for a volume, or undefined when Google has no scan.
  *
  * Google hands these out over plain http and with a page-curl graphic burnt
  * into the right edge, neither of which we want: the first is mixed content on
- * an https page, the second is a picture of a book rather than a jacket. Both
- * are fixed in the URL. `zoom` is raised to 2 (~256px wide) because a shelf
- * cell is ~231 CSS px, and a zoom=1 thumbnail at 128px is visibly soft on it.
+ * an https page, the second is a picture of a book rather than a jacket.
  *
- * Only the named sizes are trusted as-is; they are already the large scans.
+ * Every `imageLinks` entry addresses the same scan and differs only in the
+ * rendition asked for, so which key we pick does not matter — the width we ask
+ * for does. `smallThumbnail` in particular is 128px wide however "large" its
+ * `zoom` number looks. So the URL is taken for its volume id and rewritten to
+ * the width we actually want.
  */
 export function jacketFromImageLinks(
   links: RawImageLinks | undefined,
@@ -119,8 +155,7 @@ export function jacketFromImageLinks(
 
   url.protocol = "https:";
   url.searchParams.delete("edge");
-  if (url.searchParams.get("zoom") === "1") url.searchParams.set("zoom", "2");
-  return url.toString();
+  return withJacketWidth(url.toString(), JACKET_WIDTH);
 }
 
 /** Pick the ISBN-13 out of Google's mixed identifier list. */

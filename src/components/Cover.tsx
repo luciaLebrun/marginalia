@@ -61,7 +61,7 @@ export function Cover({
     <img
       src={art.src}
       srcSet={art.srcSet}
-      sizes={art.srcSet ? sizes : undefined}
+      sizes={sizes}
       alt={authors.length ? `${title} by ${authors[0]}` : title}
       // A page-scale jacket is the page's lead image and sits above the fold,
       // so it is the LCP: fetch it at once. Grid covers wait for the scroll.

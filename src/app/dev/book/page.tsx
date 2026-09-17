@@ -78,13 +78,18 @@ const DUNE_WITHOUT_COLOUR: Book = { ...DUNE, coverColor: null };
  * The same book from the primary source (MRG-063), so the two jackets can be
  * compared side by side: a Google volume addresses its cover by URL and offers
  * no size ladder, and its record row links to Google Books rather than Open
- * Library. The colour is what `bandColorFromCover()` extracts from that
- * jacket — a different scan of the same book, so a different band.
+ * Library. The colour is what `bandColorFromCover()` really extracts from that
+ * jacket, run against the live image (2026-09-17) — the yellow DUNE panel on
+ * the 40th Anniversary scan, where Open Library's copy gives olive. It earns
+ * its place as a harness state twice over: a different scan of the same book
+ * legitimately gives a different band, and this is the only state in which the
+ * band is light enough that `readableOn()` sets the author in ink rather than
+ * paper (10.88:1, against 5.32:1 for the Open Library band).
  */
 const DUNE_GOOGLE = stored(
   normalizeVolume((googleSearch as { items: unknown[] }).items[0])!,
   "dev-dune-google",
-  "#6B5B3E",
+  "#DEC65E",
 );
 
 const coverless = summaries.find((summary) => summary.coverId === undefined);

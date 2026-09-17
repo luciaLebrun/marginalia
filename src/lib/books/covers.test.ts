@@ -49,14 +49,26 @@ describe("jacket", () => {
     });
   });
 
-  it("gives a Google jacket one src and no srcset", () => {
-    const url = "https://books.google.com/books/content?id=X&zoom=2";
-    expect(jacket({ coverUrl: url })).toEqual({ src: url, srcSet: undefined });
+  /*
+   * Google serves a ladder too, reached by `w` rather than a size letter. It
+   * must not ship one fixed rendition: a 256px scan upscaled into the 768
+   * device px frontispiece is the softness "-L.jpg" was added to fix on a
+   * smaller element.
+   */
+  it("gives a Google jacket a real srcset, asked for by width", () => {
+    const art = jacket({ coverUrl: "https://books.google.com/books/content?id=X&zoom=2" });
+
+    expect(art?.src).toContain("w=800");
+    expect(art?.srcSet).toContain("w=256 256w");
+    expect(art?.srcSet).toContain("w=512 512w");
+    expect(art?.srcSet).toContain("w=800 800w");
+    // The zoom ladder tops out at 300px wide; it is dropped, never tuned.
+    expect(art?.srcSet).not.toContain("zoom");
   });
 
   it("prefers the stored URL, so a row keeps rendering from its own source", () => {
     const url = "https://books.google.com/books/content?id=X&zoom=2";
-    expect(jacket({ coverId: 11481354, coverUrl: url })?.src).toBe(url);
+    expect(jacket({ coverId: 11481354, coverUrl: url })?.src).toContain("id=X");
   });
 
   it("returns null for a book with no jacket at all", () => {
@@ -77,9 +89,10 @@ describe("sampleUrl", () => {
     expect(url).not.toContain("/b/isbn/");
   });
 
-  it("samples a Google book from the one jacket it has", () => {
-    const url = "https://books.google.com/books/content?id=X&zoom=2";
-    expect(sampleUrl({ coverUrl: url })).toBe(url);
+  it("samples a Google book at the narrowest width, not the shipping one", () => {
+    const url = sampleUrl({ coverUrl: "https://books.google.com/books/content?id=X&zoom=2" });
+    expect(url).toContain("w=256");
+    expect(url).not.toContain("w=800");
   });
 
   it("is null for a book with no jacket, so no colour is attempted", () => {

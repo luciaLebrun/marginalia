@@ -139,13 +139,28 @@ test.describe("book page", () => {
       await page.goto("/dev/book?state=google", { waitUntil: "networkidle" });
     });
 
-    test("wears its Google jacket, with no srcset to choose from", async ({ page }) => {
+    /*
+     * The frontispiece well is 384 CSS px — 768 device px at DSF 2 — so the
+     * shipping rendition has to be 800 wide. Asking by `zoom` cannot get
+     * there: measured live, its whole ladder tops out at 300px.
+     */
+    test("ships an 800px jacket and a width ladder to choose from", async ({ page }) => {
       const jacket = page.getByRole("img", { name: /^Dune by Frank Herbert$/ });
-      await expect(jacket).toHaveAttribute("src", /^https:\/\/books\.google\.com\//);
-      // Google offers one size per volume, so a srcset would be a lie and
-      // `sizes` without one is meaningless. Both are absent, not empty.
-      await expect(jacket).not.toHaveAttribute("srcset", /./);
-      await expect(jacket).not.toHaveAttribute("sizes", /./);
+      await expect(jacket).toHaveAttribute("src", /^https:\/\/books\.google\.com\/.*[?&]w=800/);
+      await expect(jacket).toHaveAttribute("srcset", /w=256 256w/);
+      await expect(jacket).toHaveAttribute("srcset", /w=512 512w/);
+      await expect(jacket).toHaveAttribute("srcset", /w=800 800w/);
+      await expect(jacket).toHaveAttribute("sizes", /./);
+      await expect(jacket).not.toHaveAttribute("srcset", /zoom/);
+    });
+
+    test("actually decodes at the width it asked for, not an upscale", async ({ page }) => {
+      const natural = await page
+        .getByRole("img", { name: /^Dune by Frank Herbert$/ })
+        .evaluate((img) => (img as HTMLImageElement).naturalWidth);
+      // 300 is the ceiling of Google's zoom ladder; anything at or below it
+      // means we are back to upscaling a thumbnail into the frontispiece.
+      expect(natural).toBeGreaterThan(300);
     });
 
     test("carries no page curl and no plain http, which would be mixed content", async ({ page }) => {

@@ -6,6 +6,7 @@ import {
   buildQuery,
   jacketFromImageLinks,
   mergeGoogleVolume,
+  withJacketWidth,
   normalizeSearchResponse,
   normalizeVolume,
   parseVolumeId,
@@ -93,13 +94,73 @@ describe("parseVolumeId", () => {
   });
 });
 
+describe("withJacketWidth", () => {
+  /*
+   * Measured against a live volume: zoom=1 and zoom=5 BOTH return 128x192, and
+   * zoom=2 returns 300x462, while w=800 returns 800x1232 and w=1280 returns
+   * 1280x1972. `zoom` is a short ladder of small renditions whose highest
+   * number is not the largest image, so it is dropped rather than tuned.
+   */
+  it("asks by width and drops the zoom ladder entirely", () => {
+    const url = withJacketWidth(
+      "https://books.google.com/books/content?id=X&zoom=5",
+      800,
+    );
+    expect(url).toContain("w=800");
+    expect(url).not.toContain("zoom");
+  });
+
+  it("replaces a width already on the URL rather than adding a second", () => {
+    const url = withJacketWidth("https://books.google.com/books/content?id=X&w=256", 800);
+    expect(url).toContain("w=800");
+    expect(url).not.toContain("w=256");
+  });
+
+  it("keeps the volume id and the rest of the query", () => {
+    const url = withJacketWidth(
+      "https://books.google.com/books/content?id=X&printsec=frontcover&img=1",
+      512,
+    );
+    expect(url).toContain("id=X");
+    expect(url).toContain("printsec=frontcover");
+    expect(url).toContain("img=1");
+  });
+
+  /* A caller must not be able to rewrite an Open Library address by accident. */
+  it("leaves a URL that is not Google's untouched", () => {
+    const ol = "https://covers.openlibrary.org/b/id/1-M.jpg";
+    expect(withJacketWidth(ol, 800)).toBe(ol);
+    expect(withJacketWidth("not a url", 800)).toBe("not a url");
+  });
+});
+
 describe("jacketFromImageLinks", () => {
-  it("prefers the largest named size Google offers", () => {
-    const url = jacketFromImageLinks({
+  /*
+   * Every imageLinks entry addresses the same scan and differs only in the
+   * rendition asked for, so the key picked does not matter — the width does.
+   */
+  it("canonicalises any entry to the shipping width", () => {
+    const fromThumb = jacketFromImageLinks({
       thumbnail: "https://books.google.com/books/content?id=X&zoom=1",
+    });
+    const fromLarge = jacketFromImageLinks({
       large: "https://books.google.com/books/content?id=X&zoom=4",
     });
-    expect(url).toContain("zoom=4");
+    expect(fromThumb).toContain("w=800");
+    expect(fromLarge).toContain("w=800");
+  });
+
+  /*
+   * smallThumbnail is 128px wide however "large" its zoom number looks, which
+   * is the trap: taking it as-is shipped an ~80-128px image into a 768 device
+   * px well.
+   */
+  it("rescues a volume that offers only smallThumbnail", () => {
+    const url = jacketFromImageLinks({
+      smallThumbnail: "http://books.google.com/books/content?id=X&zoom=5",
+    });
+    expect(url).toContain("w=800");
+    expect(url).not.toContain("zoom");
   });
 
   /*
@@ -107,21 +168,13 @@ describe("jacketFromImageLinks", () => {
    * into the edge. The first is mixed content on an https page; the second is
    * a picture of a book rather than a jacket.
    */
-  it("forces https, drops the page curl and raises a zoom=1 thumbnail", () => {
+  it("forces https and drops the page curl", () => {
     const url = jacketFromImageLinks({
       thumbnail:
         "http://books.google.com/books/content?id=X&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
     });
     expect(url).toContain("https://books.google.com/");
     expect(url).not.toContain("edge=curl");
-    expect(url).toContain("zoom=2");
-  });
-
-  it("leaves a zoom Google already set higher alone", () => {
-    const url = jacketFromImageLinks({
-      smallThumbnail: "http://books.google.com/books/content?id=X&zoom=5",
-    });
-    expect(url).toContain("zoom=5");
   });
 
   /*
@@ -183,7 +236,7 @@ describe("normalizeVolume", () => {
       subtitle: undefined,
       authors: ["Frank Herbert"],
       firstPublishYear: 1965,
-      coverUrl: expect.stringContaining("https://books.google.com/"),
+      coverUrl: expect.stringContaining("w=800"),
       isbn13: "9780441013593",
       pageCount: 604,
       description: "Set on the desert planet Arrakis.",
