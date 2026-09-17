@@ -16,6 +16,7 @@ import {
 } from "@/lib/invite";
 import { isOwner } from "@/lib/owner";
 import { claimUsername, updateAccount } from "@/lib/profile";
+import { requestOrigin } from "@/lib/trusted-origins";
 import { entryPath, parseLogId } from "@/lib/entry";
 import { createRead, removeRead, updateRead } from "@/lib/read";
 import { removeToRead, saveToRead } from "@/lib/to-read";
@@ -145,8 +146,15 @@ export async function beginSignInAction(
     });
   }
 
+  // The request is what tells the OAuth proxy which host the reader is on, and
+  // so where to bring them back to. A server action is handed none by default,
+  // and a guess would strand the round trip on a sibling alias of this
+  // deployment, where none of the cookies set here exist.
+  const origin = requestOrigin(await headers());
+
   const { url } = await getAuth().api.signInSocial({
     body: { provider: "google", callbackURL: "/" },
+    ...(origin && { request: new Request(`${origin}/api/auth/sign-in/social`) }),
   });
 
   if (!url) return { error: "Could not reach Google just now. Try again." };
