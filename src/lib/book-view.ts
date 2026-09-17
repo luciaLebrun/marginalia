@@ -203,16 +203,21 @@ function decodeEntities(text: string): string {
  * pipeline, exactly as a markdown line break does. Every other tag is emphasis
  * this page does not set.
  *
- * Linear on hostile input, like everything else here: `<[^>]*>` stops at the
- * first `>` and cannot rescan.
+ * Linear on hostile input, like everything else here — and the excluded `<` is
+ * what makes it so, not the excluded `>`. `<[^>]*>` is linear only when it
+ * matches: on `"<".repeat(50_000)` every `<` starts an attempt that runs to the
+ * end of the string looking for a `>` and then backtracks over all of it, which
+ * is quadratic (Sonar S8786). A tag cannot contain a `<`, so barring it too
+ * makes each failure immediate, and stops a malformed tag swallowing the text
+ * after it as a bonus.
  */
 function stripTags(text: string): string {
   if (!text.includes("<")) return text;
 
   return text
-    .replaceAll(/<[ \t]*br[^>]*>/gi, "\n")
-    .replaceAll(/<[ \t]*\/[ \t]*(?:p|div|li|h[1-6])[^>]*>/gi, "\n\n")
-    .replaceAll(/<[^>]*>/g, "");
+    .replaceAll(/<[ \t]*br[^<>]*>/gi, "\n")
+    .replaceAll(/<[ \t]*\/[ \t]*(?:p|div|li|h[1-6])[^<>]*>/gi, "\n\n")
+    .replaceAll(/<[^<>]*>/g, "");
 }
 
 /**

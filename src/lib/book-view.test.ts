@@ -88,6 +88,23 @@ describe("descriptionParagraphs", () => {
     expect(all).not.toMatch(/<[a-z/]/i);
   });
 
+  /*
+   * The same rule the bracket patterns keep, for the tag ones: a description
+   * is untrusted from either source. `<[^>]*>` was quadratic on a run of
+   * unmatched `<`, because each one scanned to the end for a `>` that is not
+   * there and then backtracked over the whole string.
+   */
+  it("stays fast on a long run of unmatched angle brackets", () => {
+    const hostile = "<".repeat(50_000);
+
+    const started = performance.now();
+    const paragraphs = descriptionParagraphs(hostile);
+    const elapsed = performance.now() - started;
+
+    expect(paragraphs).toEqual([hostile]);
+    expect(elapsed).toBeLessThan(500);
+  });
+
   it("keeps a dash that is only punctuation", () => {
     expect(descriptionParagraphs("Spice --- and water.")).toEqual(["Spice --- and water."]);
   });
