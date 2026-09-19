@@ -210,9 +210,8 @@ export async function searchWorks(
  * `q` field rather than the scoped title/author parameters.
  */
 async function searchByKey(key: string): Promise<BookSummary[]> {
-  const url =
-    `${ORIGIN}/search.json?q=${encodeURIComponent(`key:/works/${key}`)}` +
-    `&limit=1&fields=${SEARCH_FIELDS}`;
+  const q = encodeURIComponent(`key:/works/${key}`);
+  const url = `${ORIGIN}/search.json?q=${q}&limit=1&fields=${SEARCH_FIELDS}`;
   return normalizeSearchResponse(await fetchJson(url, ONE_DAY));
 }
 
