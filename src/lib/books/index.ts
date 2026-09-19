@@ -19,19 +19,20 @@ import {
   searchVolumes,
 } from "./google-books.ts";
 import { fetchWork, searchWorks, stripWorkPrefix } from "./openlibrary.ts";
-import type { BookDetail, BookSummary } from "./types.ts";
+import type { BookDetail, BookQuery, BookSummary } from "./types.ts";
 
 export { coverUrl, jacket, sampleUrl, type CoverSize, type Jacket } from "./covers.ts";
 export { fetchWork, searchWorks, stripWorkPrefix, OpenLibraryError } from "./openlibrary.ts";
 export {
   GOOGLE_KEY_PREFIX,
   GoogleBooksError,
+  buildSearchQuery,
   enrich,
   fetchVolume,
   parseVolumeId,
   searchVolumes,
 } from "./google-books.ts";
-export type { BookSummary, BookDetail } from "./types.ts";
+export type { BookQuery, BookSummary, BookDetail } from "./types.ts";
 
 /**
  * A URL segment as text.
@@ -146,7 +147,8 @@ export function mergeResults(
 }
 
 /**
- * Search both sources and merge, Google's hits first (MRG-067).
+ * Search both sources and merge, Google's hits first (MRG-067), with the
+ * title and the author scoped separately at each source (MRG-068).
  *
  * The plain fallback this replaced fired on *absence* and never on
  * *wrongness*, so a query Google ranked badly — `dune herbert` returns no
@@ -160,15 +162,18 @@ export function mergeResults(
  * than "no matches".
  */
 export async function searchBooks(
-  query: string,
+  query: BookQuery,
   limit = 20,
 ): Promise<BookSummary[]> {
-  const q = query.trim();
-  if (!q) return [];
+  const scoped: BookQuery = {
+    title: query.title.trim(),
+    author: query.author.trim(),
+  };
+  if (!scoped.title && !scoped.author) return [];
 
   const [google, openLibrary] = await Promise.allSettled([
-    apiKey() ? searchVolumes(q, limit) : Promise.resolve<BookSummary[]>([]),
-    searchWorks(q, limit),
+    apiKey() ? searchVolumes(scoped, limit) : Promise.resolve<BookSummary[]>([]),
+    searchWorks(scoped, limit),
   ]);
 
   if (google.status === "rejected") {

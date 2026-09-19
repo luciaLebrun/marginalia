@@ -4,6 +4,7 @@ import googleFixture from "../../../tests/fixtures/google-books-dune.json";
 import searchFixture from "../../../tests/fixtures/google-books-search-dune.json";
 import {
   buildQuery,
+  buildSearchQuery,
   jacketFromImageLinks,
   mergeGoogleVolume,
   withJacketWidth,
@@ -273,5 +274,44 @@ describe("normalizeSearchResponse", () => {
   it("returns [] for the body Google sends when nothing matched", () => {
     expect(normalizeSearchResponse({ kind: "books#volumes", totalItems: 0 })).toEqual([]);
     expect(normalizeSearchResponse(null)).toEqual([]);
+  });
+});
+
+describe("buildSearchQuery", () => {
+  /*
+   * Measured live 2026-09-19: the free-text `the dispossessed` returns no Le
+   * Guin in twenty results, while the scoped form returns her novel first.
+   * That gap is the whole of MRG-068.
+   */
+  it("scopes each field to its own operator", () => {
+    expect(buildSearchQuery({ title: "dune", author: "herbert" })).toBe(
+      'intitle:"dune" inauthor:"herbert"',
+    );
+  });
+
+  it("quotes a multi-word term so it stays one phrase", () => {
+    // Unquoted this means "the" in the title AND "dispossessed" anywhere.
+    expect(buildSearchQuery({ title: "the dispossessed", author: "" })).toBe(
+      'intitle:"the dispossessed"',
+    );
+  });
+
+  it("sends only the field the reader filled", () => {
+    expect(buildSearchQuery({ title: "", author: "le guin" })).toBe('inauthor:"le guin"');
+  });
+
+  it("is empty for an empty query, so no request is made", () => {
+    expect(buildSearchQuery({ title: "", author: "" })).toBe("");
+    expect(buildSearchQuery({ title: "  ", author: "\t" })).toBe("");
+  });
+
+  /*
+   * Google has no escape inside a phrase, so an interior quote would end the
+   * phrase early and leak the rest of the title into the free-text part.
+   */
+  it("drops interior quotes rather than letting them close the phrase", () => {
+    const q = buildSearchQuery({ title: 'a "good" book', author: "" });
+    expect(q).toBe('intitle:"a good book"');
+    expect(q.match(/"/g)).toHaveLength(2);
   });
 });
