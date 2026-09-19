@@ -30,18 +30,18 @@ const NEWCOMER_ID = "dev-newcomer";
 const NEWCOMER_EMAIL = "newcomer@marginalia.local";
 
 /** Real books, spread across years so the year rules have something to rule. */
-const SHELF: [query: string, readAt: string, rating: number | null][] = [
-  ["Piranesi Susanna Clarke", "2026-08-14", 5],
-  ["Dune Frank Herbert", "2026-07-02", 4.5],
-  ["The Overstory Richard Powers", "2026-06-21", 4],
-  ["Klara and the Sun Ishiguro", "2026-05-09", 3.5],
-  ["A Wizard of Earthsea Le Guin", "2026-03-30", 5],
-  ["The Left Hand of Darkness Le Guin", "2026-02-11", 4.5],
-  ["Station Eleven Mandel", "2025-12-28", 4],
-  ["The Remains of the Day Ishiguro", "2025-11-15", 5],
-  ["Jonathan Strange and Mr Norrell", "2025-09-03", 4.5],
-  ["Never Let Me Go Ishiguro", "2025-06-19", null],
-  ["The Dispossessed Le Guin", "2025-04-07", 4],
+const SHELF: [title: string, author: string, readAt: string, rating: number | null][] = [
+  ["Piranesi", "Susanna Clarke", "2026-08-14", 5],
+  ["Dune", "Frank Herbert", "2026-07-02", 4.5],
+  ["The Overstory", "Richard Powers", "2026-06-21", 4],
+  ["Klara and the Sun", "Ishiguro", "2026-05-09", 3.5],
+  ["A Wizard of Earthsea", "Le Guin", "2026-03-30", 5],
+  ["The Left Hand of Darkness", "Le Guin", "2026-02-11", 4.5],
+  ["Station Eleven", "Mandel", "2025-12-28", 4],
+  ["The Remains of the Day", "Ishiguro", "2025-11-15", 5],
+  ["Jonathan Strange and Mr Norrell", "Susanna Clarke", "2025-09-03", 4.5],
+  ["Never Let Me Go", "Ishiguro", "2025-06-19", null],
+  ["The Dispossessed", "Le Guin", "2025-04-07", 4],
 ];
 
 async function retry<T>(label: string, fn: () => Promise<T>): Promise<T | null> {
@@ -96,8 +96,10 @@ await db
 await db.delete(schema.log).where(eq(schema.log.userId, USER_ID));
 
 let logged = 0;
-for (const [query, readAt, rating] of SHELF) {
-  const results: BookSummary[] | null = await retry(query, () => searchBooks(query, 1));
+for (const [title, author, readAt, rating] of SHELF) {
+  const results: BookSummary[] | null = await retry(title, () =>
+    searchBooks({ title, author }, 1),
+  );
   const summary = results?.[0];
   if (!summary) continue;
 

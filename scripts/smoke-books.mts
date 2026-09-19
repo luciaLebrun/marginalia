@@ -20,11 +20,16 @@
 import { fetchWork, searchWorks } from "../src/lib/books/openlibrary.ts";
 import { searchVolumes, fetchVolume, apiKey } from "../src/lib/books/google-books.ts";
 import { coverUrl, sampleUrl } from "../src/lib/books/covers.ts";
-import type { BookSummary } from "../src/lib/books/types.ts";
+import type { BookQuery, BookSummary } from "../src/lib/books/types.ts";
 import { bandColorFromCover } from "../src/lib/cover-color.ts";
 import { fallbackBand, meetsAA, readableOn } from "../src/lib/color.ts";
 
-const QUERY = process.argv[2] ?? "dune herbert";
+// Title and author travel apart since MRG-068, at both sources.
+const QUERY: BookQuery = {
+  title: process.argv[2] ?? "dune",
+  author: process.argv[3] ?? "herbert",
+};
+const LABEL = `${QUERY.title} / ${QUERY.author}`;
 
 // Open Library resets connections often enough that a small budget is not
 // enough — especially for the redirect check, which makes two requests per
@@ -67,8 +72,8 @@ if (!apiKey()) {
     searchVolumes(QUERY, 5),
   ).catch((error: unknown) => fail(`Google Books search failed: ${(error as Error).message}`));
 
-  if (volumes.length === 0) fail(`Google Books returned nothing for "${QUERY}"`);
-  console.log(`✓ Google Books returned ${volumes.length} volumes for "${QUERY}"`);
+  if (volumes.length === 0) fail(`Google Books returned nothing for "${LABEL}"`);
+  console.log(`✓ Google Books returned ${volumes.length} volumes for "${LABEL}"`);
 
   const jacketed = volumes.find((v) => v.coverUrl);
   if (!jacketed?.coverUrl) {
@@ -110,8 +115,8 @@ const results = await retry("search", () => searchWorks(QUERY, 5)).catch(
     ),
 );
 
-if (results.length === 0) fail(`no results for "${QUERY}"`);
-console.log(`✓ search returned ${results.length} works for "${QUERY}"`);
+if (results.length === 0) fail(`no results for "${LABEL}"`);
+console.log(`✓ search returned ${results.length} works for "${LABEL}"`);
 
 const withCover = results.find((r) => r.coverId != null);
 if (!withCover) fail("no result carried a cover_i — the cover strategy is broken");
