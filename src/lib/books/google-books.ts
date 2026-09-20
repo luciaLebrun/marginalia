@@ -1,4 +1,4 @@
-import type { BookDetail, BookSummary } from "./types.ts";
+import type { BookDetail, BookQuery, BookSummary } from "./types.ts";
 
 const ORIGIN = "https://www.googleapis.com/books/v1";
 const ONE_WEEK = 60 * 60 * 24 * 7;
@@ -272,22 +272,54 @@ async function fetchJson(url: string, revalidate: number): Promise<unknown> {
 }
 
 /**
- * Search volumes. `printType=books` asks Google to keep magazines out of a
- * reading diary, and its documented cap on `maxResults` is 40.
+ * Pure. A term as a Google phrase: quoted, so a multi-word title stays one
+ * scoped phrase.
+ *
+ * Unquoted, `intitle:the dispossessed` means "the" in the title AND
+ * "dispossessed" anywhere — which is how a search for Le Guin's novel returned
+ * no Le Guin. Interior quotes are dropped rather than escaped: Google has no
+ * escape inside a phrase, so a stray one would end the phrase early and leak
+ * the rest of the title into the free-text part of the query.
+ */
+function phrase(term: string): string {
+  return `"${term.replaceAll('"', " ").replaceAll(/\s+/g, " ").trim()}"`;
+}
+
+/**
+ * Pure. The `q` for a scoped search, or "" when the reader typed nothing.
+ *
+ * Measured live against both APIs on 2026-09-19, which is the whole reason
+ * MRG-068 exists: `intitle:"the dispossessed" inauthor:"le guin"` returns Le
+ * Guin's novel first, where the free-text `the dispossessed` returned no Le
+ * Guin at all in twenty results, and `intitle:"dune" inauthor:"herbert"`
+ * returns Dune novels where `dune herbert` returned a book about soil, Forbes
+ * 1984 and a Soul Catcher study guide.
+ */
+export function buildSearchQuery({ title, author }: BookQuery): string {
+  const terms: string[] = [];
+  if (title.trim()) terms.push(`intitle:${phrase(title)}`);
+  if (author.trim()) terms.push(`inauthor:${phrase(author)}`);
+  return terms.join(" ");
+}
+
+/**
+ * Search volumes, title and author scoped separately (MRG-068). `printType=books`
+ * asks Google to keep magazines out of a reading diary, and its documented cap
+ * on `maxResults` is 40.
  *
  * `orderBy` is deliberately absent: `relevance` is the documented default, and
  * the alternative (`newest`) is wrong for a diary. `langRestrict` is absent
- * too — it measurably changed nothing on the queries that rank badly, and
- * pinning a language would fight the French the product is heading toward.
+ * too — measured twice now, it changes nothing: `langRestrict=en` and
+ * `langRestrict=fr` return byte-identical lists for the same query.
  *
  * **Throws** on any error status so the caller can fall back to Open Library
  * rather than show an outage as "no such book".
  */
 export async function searchVolumes(
-  query: string,
+  query: BookQuery,
   limit = 20,
 ): Promise<BookSummary[]> {
-  const q = query.trim();
+  const q = buildSearchQuery(query);
   if (!q) return [];
 
   const fields = encodeURIComponent(`items(${VOLUME_FIELDS})`);

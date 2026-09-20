@@ -1,22 +1,28 @@
 import Link from "next/link";
 
 import { SearchResult } from "./SearchResult";
-import { bandText, runSearch, type Search } from "@/lib/search";
+import { bandText, noMatch, runSearch, type BookQuery, type Search } from "@/lib/search";
 
 /**
- * Everything under the search field: the record band, then whichever state
+ * Everything under the search fields: the record band, then whichever state
  * the search landed in. Rendered inside a Suspense boundary keyed on the query,
- * so the field stays put while Open Library answers.
+ * so the fields stay put while the sources answer.
  */
 export async function SearchResults({
   query,
   search,
   diaryHref = "/",
+  searchAction = "/search",
+  searchParams,
 }: Readonly<{
-  query: string;
-  /** Defaults to Open Library; the dev harness substitutes a fixture. */
+  query: BookQuery;
+  /** Defaults to both live sources; the dev harness substitutes a fixture. */
   search?: Search;
   diaryHref?: string;
+  /** Where a widening search submits; only the dev harness changes it. */
+  searchAction?: string;
+  /** Parameters a widening search must carry through; the harness's `source`. */
+  searchParams?: Record<string, string>;
 }>) {
   const outcome = await runSearch(query, search);
 
@@ -35,10 +41,11 @@ export async function SearchResults({
       )}
 
       {outcome.kind === "none" && (
-        <p className="max-w-[38rem] px-4 py-6 text-[0.9375rem] leading-relaxed text-ink-soft sm:px-6">
-          Nothing on Open Library matches “{outcome.query}”. Check the
-          spelling, or try just the author’s surname.
-        </p>
+        <NoMatch
+          query={outcome.query}
+          action={searchAction}
+          params={searchParams}
+        />
       )}
 
       {/* Not alarm red: nothing was refused, and nothing the reader did is
@@ -47,7 +54,7 @@ export async function SearchResults({
       {outcome.kind === "unavailable" && (
         <div className="border-b border-rule bg-paper-sunk px-4 py-6 sm:px-6">
           <p className="max-w-[38rem] text-[0.9375rem] leading-relaxed text-ink-soft">
-            Open Library isn’t answering, so search can’t run right now. Your
+            Neither source is answering, so search can’t run right now. Your
             diary is unaffected — try again in a few minutes.
           </p>
         </div>
@@ -57,14 +64,52 @@ export async function SearchResults({
 }
 
 /**
+ * Nothing matched. The way out is a control where one can exist, not only an
+ * instruction: with both lines filled, dropping the title is the one thing
+ * that can rescue a scoped search, and asking the reader to clear a field by
+ * hand is the most expensive thing this surface can ask at the moment capture
+ * is already going badly.
+ */
+function NoMatch({
+  query,
+  action,
+  params,
+}: Readonly<{
+  query: BookQuery;
+  action: string;
+  params?: Record<string, string>;
+}>) {
+  const { lead, widen } = noMatch(query);
+  const href = widen
+    ? `${action}?${new URLSearchParams({ ...params, author: widen })}`
+    : undefined;
+
+  return (
+    <p className="max-w-[38rem] px-4 py-6 text-[0.9375rem] leading-relaxed text-ink-soft sm:px-6">
+      {lead}
+      {href && (
+        <>
+          {" "}
+          Check the spelling, or{" "}
+          <Link href={href} className="underline underline-offset-4 hover:text-ink">
+            search “{widen}” alone
+          </Link>
+          .
+        </>
+      )}
+    </p>
+  );
+}
+
+/**
  * While a source answers: the band says so, and the grid it will fill is drawn
  * as ruled empty positions — a sheet waiting for print, not skeleton cards
  * pretending to be books.
  *
- * It cannot name the source it is waiting on. Since MRG-063 a search may be
- * answered by Google Books or, if that finds nothing, by Open Library, and
- * which one is not known until the answer arrives — so naming either here
- * would be wrong about half the time.
+ * It cannot name the source it is waiting on. Since MRG-067 both sources are
+ * asked every time and their results are merged, so the grid it is about to
+ * fill will usually hold books from both — naming either one here would be
+ * wrong about whatever else lands beside it.
  */
 export function SearchPending({ diaryHref = "/" }: Readonly<{ diaryHref?: string }>) {
   return (

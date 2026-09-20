@@ -170,7 +170,14 @@ the same reason `getDb()` is.
   holds the top of the grid, capped at `GOOGLE_SLOTS` of the 20, and Open
   Library is guaranteed the rest. De-duplication is on folded title + first
   author — ISBN-13 alone does not work, since Google returns editions and Open
-  Library works. Either source failing leaves the other standing. Keys
+  Library works. Either source failing leaves the other standing.
+  **A query is a title and an author, kept apart all the way down** (MRG-068):
+  `searchBooks()` takes a `BookQuery`, and each source scopes the two itself —
+  Google as `intitle:"…" inauthor:"…"`, Open Library as its `title` / `author`
+  parameters. Never join them back into one free-text string: measured live,
+  that is what made "the dispossessed" return no Le Guin and "dune herbert"
+  return a book about soil. Either field alone is a valid search; both empty is
+  not a search at all. Keys
   carry their source: a Google volume is tagged `gb:B1hSG45JCX4C`, an Open
   Library work stays bare `OL893415W`, never `/works/OL893415W` — use
   `stripWorkPrefix()` at every boundary. `parseBookKey()` is the guard for both,

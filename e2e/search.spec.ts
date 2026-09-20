@@ -14,27 +14,47 @@ test.describe("search", () => {
   test("a blank search waits in the field", async ({ page }) => {
     await page.goto("/dev/search", { waitUntil: "networkidle" });
 
-    await expect(page.getByRole("searchbox", { name: "Search" })).toHaveValue("");
-    await expect(page.getByText("A title, an author, or both")).toBeVisible();
+    await expect(page.getByRole("searchbox", { name: "Title" })).toHaveValue("");
+    await expect(page.getByRole("searchbox", { name: "Author" })).toHaveValue("");
+    // The rule governing both lines is on the form, above the submit — not in
+    // the record band below it, where it arrived after the control it governs.
+    await expect(page.getByText("A title, an author, or both.")).toBeVisible();
+    await expect(page.getByRole("status")).toHaveText("No search yet");
     await expect(page.locator("ol.shelf-grid")).toHaveCount(0);
   });
 
-  test("submitting puts the query in the address and keeps it in the field", async ({ page }) => {
+  /* Both fields land in the address, so Back and a shared link both work. */
+  test("submitting puts both fields in the address and keeps them filled", async ({ page }) => {
     await page.goto("/dev/search", { waitUntil: "networkidle" });
 
-    await page.getByRole("searchbox", { name: "Search" }).fill("dune");
+    await page.getByRole("searchbox", { name: "Title" }).fill("dune");
+    await page.getByRole("searchbox", { name: "Author" }).fill("herbert");
     await page.keyboard.press("Enter");
 
-    await expect(page).toHaveURL(/[?&]q=dune(&|$)/);
+    await expect(page).toHaveURL(/[?&]title=dune(&|$)/);
+    await expect(page).toHaveURL(/[?&]author=herbert(&|$)/);
     // The harness's own parameter survives the submit.
     await expect(page).toHaveURL(/[?&]source=fixture(&|$)/);
     await expect(page.locator("ol.shelf-grid > li").first()).toBeVisible();
-    await expect(page.getByRole("searchbox", { name: "Search" })).toHaveValue("dune");
+    await expect(page.getByRole("searchbox", { name: "Title" })).toHaveValue("dune");
+    await expect(page.getByRole("searchbox", { name: "Author" })).toHaveValue("herbert");
+  });
+
+  /* Either line alone is a search: a reader who only knows the author still
+     gets a shelf back. */
+  test("an author alone is a search", async ({ page }) => {
+    await page.goto("/dev/search", { waitUntil: "networkidle" });
+
+    await page.getByRole("searchbox", { name: "Author" }).fill("herbert");
+    await page.keyboard.press("Enter");
+
+    await expect(page).toHaveURL(/[?&]author=herbert(&|$)/);
+    await expect(page.locator("ol.shelf-grid > li").first()).toBeVisible();
   });
 
   test.describe("with results", () => {
     test.beforeEach(async ({ page }) => {
-      await page.goto("/dev/search?q=dune", { waitUntil: "networkidle" });
+      await page.goto("/dev/search?title=dune&author=herbert", { waitUntil: "networkidle" });
     });
 
     test("counts them in the record band", async ({ page }) => {
@@ -105,13 +125,34 @@ test.describe("search", () => {
     test("offers the way back to the diary", async ({ page }) => {
       await expect(page.getByRole("link", { name: "Your diary" })).toBeVisible();
     });
+
+    /* Guidance, not a caption: the reader has demonstrably followed it, and
+       repeating it spends first-viewport height that results want. */
+    test("drops the guidance once a line is filled", async ({ page }) => {
+      await expect(page.getByText("A title, an author, or both.")).toHaveCount(0);
+    });
   });
 
   test("no matches says so and says how to recover", async ({ page }) => {
-    await page.goto("/dev/search?q=zzqx&source=empty", { waitUntil: "networkidle" });
+    await page.goto("/dev/search?title=zzqx&author=nobody&source=empty", {
+      waitUntil: "networkidle",
+    });
 
     await expect(page.getByRole("status")).toHaveText("No matches");
-    await expect(page.getByText(/nothing on open library matches “zzqx”/i)).toBeVisible();
+    await expect(page.getByText(/nothing matches “zzqx” by “nobody”/i)).toBeVisible();
+
+    /*
+     * The one exit that can rescue a scoped miss is dropping the title, and it
+     * is a control rather than an instruction — clearing a field by hand on a
+     * phone is the most expensive thing to ask at the worst moment to ask it.
+     * It keeps the harness's own source, so it lands somewhere real.
+     */
+    const widen = page.getByRole("link", { name: /search “nobody” alone/i });
+    await expect(widen).toBeVisible();
+    await widen.click();
+    await expect(page).toHaveURL(/[?&]author=nobody(&|$)/);
+    await expect(page).toHaveURL(/[?&]source=empty(&|$)/);
+    await expect(page.getByRole("searchbox", { name: "Title" })).toHaveValue("");
   });
 
   /*
@@ -119,16 +160,29 @@ test.describe("search", () => {
    * book", or a reader goes looking for a typo that is not there.
    */
   test("an outage reads as unavailable, never as no matches", async ({ page }) => {
-    await page.goto("/dev/search?q=dune&source=down", { waitUntil: "networkidle" });
+    await page.goto("/dev/search?title=dune&source=down", { waitUntil: "networkidle" });
 
     await expect(page.getByRole("status")).toHaveText("Search unavailable");
-    await expect(page.getByText(/open library isn’t answering/i)).toBeVisible();
+    await expect(page.getByText(/neither source is answering/i)).toBeVisible();
     await expect(page.getByText("No matches")).toHaveCount(0);
-    await expect(page.getByRole("searchbox", { name: "Search" })).toHaveValue("dune");
+    await expect(page.getByRole("searchbox", { name: "Title" })).toHaveValue("dune");
   });
 });
 
 test("the real route sends a signed-out visitor to the door", async ({ page }) => {
-  await page.goto("/search?q=dune");
+  await page.goto("/search?title=dune");
   await expect(page).toHaveURL(/localhost:3000\/$/);
+});
+
+/*
+ * Both sources AND the title and the author together, so an exit that adds a
+ * term to an already-empty search is no exit at all — it lands the reader back
+ * on this same page.
+ */
+test("a one-line miss is never told to add the other line", async ({ page }) => {
+  await page.goto("/dev/search?title=zzqx&source=empty", { waitUntil: "networkidle" });
+
+  await expect(page.getByText(/nothing matches “zzqx”/i)).toBeVisible();
+  await expect(page.getByText(/add the author/i)).toHaveCount(0);
+  await expect(page.getByText(/try fewer words/i)).toBeVisible();
 });

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import googleSearch from "../../../tests/fixtures/google-books-search-dune.json";
 import openLibrarySearch from "../../../tests/fixtures/openlibrary-search-dune.json";
 import { fetchBook, searchBooks } from "./index";
+import type { BookQuery } from "./types";
 
 /**
  * How the two sources combine, which is the whole of MRG-063 and MRG-067:
@@ -18,6 +19,8 @@ function res(body: unknown, ok = true, status = 200) {
 }
 
 const fetchMock = vi.fn();
+
+const DUNE: BookQuery = { title: "dune", author: "herbert" };
 
 /** Which host each call went to, in order. */
 function hosts(): string[] {
@@ -37,7 +40,7 @@ afterEach(() => {
 
 describe("searchBooks", () => {
   it("short-circuits a blank query without touching either source", async () => {
-    await expect(searchBooks("   ")).resolves.toEqual([]);
+    await expect(searchBooks({ title: "  ", author: " " })).resolves.toEqual([]);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -54,7 +57,7 @@ describe("searchBooks", () => {
       ),
     );
 
-    const books = await searchBooks("dune herbert", 20);
+    const books = await searchBooks(DUNE, 20);
 
     expect(hosts().sort()).toEqual(["openlibrary.org", "www.googleapis.com"]);
     expect(books[0].sourceKey).toBe("gb:B1hSG45JCX4C");
@@ -65,10 +68,11 @@ describe("searchBooks", () => {
 
   it("asks for books rather than magazine scans", async () => {
     fetchMock.mockResolvedValue(res(googleSearch));
-    await searchBooks("dune", 5);
+    await searchBooks(DUNE, 5);
 
     const [url] = fetchMock.mock.calls[0];
-    expect(url).toContain("q=dune");
+    // Scoped since MRG-068: intitle:"dune" inauthor:"herbert", URL-encoded.
+    expect(decodeURIComponent(url)).toContain('q=intitle:"dune" inauthor:"herbert"');
     expect(url).toContain("maxResults=5");
     expect(url).toContain("printType=books");
     // relevance is the documented default; passing it is noise.
@@ -83,7 +87,7 @@ describe("searchBooks", () => {
    */
   it("sends the key as a header and never in the URL", async () => {
     fetchMock.mockResolvedValue(res(googleSearch));
-    await searchBooks("dune", 5);
+    await searchBooks(DUNE, 5);
 
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).not.toContain("test-key");
@@ -97,7 +101,7 @@ describe("searchBooks", () => {
       .mockResolvedValueOnce(res({}, false, 403))
       .mockResolvedValueOnce(res(openLibrarySearch));
 
-    await searchBooks("dune", 5);
+    await searchBooks(DUNE, 5);
 
     const logged = quiet.mock.calls.flat().map(String).join(" ");
     expect(logged).not.toContain("test-key");
@@ -113,7 +117,7 @@ describe("searchBooks", () => {
       ),
     );
 
-    const books = await searchBooks("dune herbert", 20);
+    const books = await searchBooks(DUNE, 20);
 
     expect(books.length).toBeGreaterThan(0);
     expect(books.every((b) => /^OL\d+W$/.test(b.sourceKey))).toBe(true);
@@ -125,7 +129,7 @@ describe("searchBooks", () => {
       Promise.resolve(url.includes("googleapis.com") ? res({}, false, 429) : res(openLibrarySearch)),
     );
 
-    const books = await searchBooks("dune herbert", 20);
+    const books = await searchBooks(DUNE, 20);
 
     expect(books.length).toBeGreaterThan(0);
     expect(books.every((b) => /^OL\d+W$/.test(b.sourceKey))).toBe(true);
@@ -140,7 +144,7 @@ describe("searchBooks", () => {
       Promise.resolve(url.includes("googleapis.com") ? res(googleSearch) : res({}, false, 503)),
     );
 
-    const books = await searchBooks("dune herbert", 20);
+    const books = await searchBooks(DUNE, 20);
 
     expect(books.length).toBeGreaterThan(0);
     expect(books.every((b) => b.sourceKey.startsWith("gb:"))).toBe(true);
@@ -155,7 +159,7 @@ describe("searchBooks", () => {
     delete process.env.GOOGLE_BOOKS_API_KEY;
     fetchMock.mockResolvedValue(res(openLibrarySearch));
 
-    await searchBooks("dune herbert", 20);
+    await searchBooks(DUNE, 20);
 
     expect(hosts()).toEqual(["openlibrary.org"]);
   });
@@ -168,7 +172,7 @@ describe("searchBooks", () => {
     const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
     fetchMock.mockResolvedValue(res({}, false, 503));
 
-    await expect(searchBooks("dune herbert", 20)).rejects.toThrow(/503/);
+    await expect(searchBooks(DUNE, 20)).rejects.toThrow(/503/);
     quiet.mockRestore();
   });
 });
