@@ -1,3 +1,17 @@
+/**
+ * A search as the reader typed it: a title, an author, or both (MRG-068).
+ *
+ * The two travel apart all the way down to each source's API, because both
+ * take them apart: Google as `intitle:` / `inauthor:`, Open Library as its
+ * `title` and `author` parameters. Joining them into one string and hoping the
+ * ranker guesses which word is which is what made "dune herbert" return a book
+ * about soil.
+ */
+export interface BookQuery {
+  title: string;
+  author: string;
+}
+
 /** A book as it appears in a search result grid. */
 export interface BookSummary {
   /**

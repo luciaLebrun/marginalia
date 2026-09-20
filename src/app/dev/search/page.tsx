@@ -50,7 +50,7 @@ export default async function DevSearchPage({
   if (process.env.NODE_ENV === "production") notFound();
 
   const params = await searchParams;
-  const query = parseQuery(params.q);
+  const query = parseQuery(params);
   const source =
     typeof params.source === "string" && Object.hasOwn(SOURCES, params.source)
       ? params.source
@@ -61,8 +61,14 @@ export default async function DevSearchPage({
       <WordmarkBand />
       <h1 className="sr-only">Search for a book</h1>
       <SearchField query={query} action="/dev/search" hidden={{ source }} />
-      <Suspense key={`${source}:${query}`} fallback={<SearchPending diaryHref="/dev/shelf" />}>
-        <SearchResults query={query} search={SOURCES[source]} diaryHref="/dev/shelf" />
+      <Suspense key={`${source}:${query.title}|${query.author}`} fallback={<SearchPending diaryHref="/dev/shelf" />}>
+        <SearchResults
+          query={query}
+          search={SOURCES[source]}
+          diaryHref="/dev/shelf"
+          searchAction="/dev/search"
+          searchParams={{ source }}
+        />
       </Suspense>
     </main>
   );

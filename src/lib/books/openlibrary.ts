@@ -1,4 +1,4 @@
-import type { BookDetail, BookSummary } from "./types.ts";
+import type { BookDetail, BookQuery, BookSummary } from "./types.ts";
 
 const ORIGIN = "https://openlibrary.org";
 
@@ -167,15 +167,51 @@ async function fetchJson(url: string, revalidate: number): Promise<unknown> {
 
 const ONE_DAY = 60 * 60 * 24;
 
-/** Search works. Returns [] for a blank query rather than hitting the API. */
+/**
+ * Pure. The query string for a scoped search, or null when the reader typed
+ * nothing at all.
+ *
+ * Open Library takes `title` and `author` as first-class parameters, so the
+ * two never have to be guessed apart out of one free-text box (MRG-068).
+ * Measured live 2026-09-19: `title=dune&author=herbert` returns Dune, Dune
+ * Messiah and Children of Dune in that order.
+ */
+function buildSearchParams(query: BookQuery, limit: number): URLSearchParams | null {
+  const params = new URLSearchParams();
+  const title = query.title.trim();
+  const author = query.author.trim();
+  if (title) params.set("title", title);
+  if (author) params.set("author", author);
+  if (params.size === 0) return null;
+
+  params.set("limit", String(limit));
+  params.set("fields", SEARCH_FIELDS);
+  return params;
+}
+
+/** Search works by title and/or author. Returns [] for a blank query. */
 export async function searchWorks(
-  query: string,
+  query: BookQuery,
   limit = 20,
 ): Promise<BookSummary[]> {
-  const q = query.trim();
-  if (!q) return [];
+  const params = buildSearchParams(query, limit);
+  if (!params) return [];
 
-  const url = `${ORIGIN}/search.json?q=${encodeURIComponent(q)}&limit=${limit}&fields=${SEARCH_FIELDS}`;
+  return normalizeSearchResponse(
+    await fetchJson(`${ORIGIN}/search.json?${params}`, ONE_DAY),
+  );
+}
+
+/**
+ * Search by work key, which is how `fetchWork` gets the author names and
+ * publish year the /works endpoint does not carry.
+ *
+ * Separate from `searchWorks` because it is the one caller that needs the raw
+ * `q` field rather than the scoped title/author parameters.
+ */
+async function searchByKey(key: string): Promise<BookSummary[]> {
+  const q = encodeURIComponent(`key:/works/${key}`);
+  const url = `${ORIGIN}/search.json?q=${q}&limit=1&fields=${SEARCH_FIELDS}`;
   return normalizeSearchResponse(await fetchJson(url, ONE_DAY));
 }
 
@@ -212,9 +248,7 @@ export async function fetchWork(sourceKey: string): Promise<BookDetail | null> {
     if (!target) {
       // A real work. Its endpoint carries the description and covers but no
       // author names or publish year, so pair it with a search on the same key.
-      const summaries = await searchWorks(`key:/works/${key}`, 1).catch(
-        () => [] as BookSummary[],
-      );
+      const summaries = await searchByKey(key).catch(() => [] as BookSummary[]);
       const title = (body as { title?: unknown }).title;
       const summary: BookSummary = summaries[0] ?? {
         sourceKey: key,

@@ -27,40 +27,54 @@ afterEach(() => {
 
 describe("searchWorks", () => {
   it("short-circuits a blank query without touching the network", async () => {
-    await expect(searchWorks("   ")).resolves.toEqual([]);
+    await expect(searchWorks({ title: "  ", author: "" })).resolves.toEqual([]);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("sends an explicit field list, a limit, and a User-Agent", async () => {
+  /*
+   * Open Library takes `title` and `author` as first-class parameters, so
+   * since MRG-068 neither has to be guessed out of one free-text box.
+   */
+  it("scopes the title and the author to their own parameters", async () => {
     fetchMock.mockResolvedValue(res(searchFixture));
-    await searchWorks("dune herbert", 5);
+    await searchWorks({ title: "dune", author: "frank herbert" }, 5);
 
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toContain("https://openlibrary.org/search.json");
-    expect(url).toContain("q=dune%20herbert");
+    expect(url).toContain("title=dune");
+    expect(url).toContain("author=frank+herbert");
+    expect(url).not.toContain("q=");
     expect(url).toContain("limit=5");
     // Without an explicit field list the response is enormous.
-    expect(url).toContain("fields=key,title");
+    expect(url).toContain("key%2Ctitle");
     expect(url).toContain("cover_i");
     expect(init.headers["User-Agent"]).toContain("Marginalia");
   });
 
+  it("sends only the field the reader filled", async () => {
+    fetchMock.mockResolvedValue(res(searchFixture));
+    await searchWorks({ title: "", author: "le guin" });
+    const [url] = fetchMock.mock.calls[0];
+    expect(url).toContain("author=le+guin");
+    expect(url).not.toContain("title=");
+  });
+
   it("asks Next to cache for 24h, as Open Library requests", async () => {
     fetchMock.mockResolvedValue(res(searchFixture));
-    await searchWorks("dune");
+    await searchWorks({ title: "dune", author: "" });
     expect(fetchMock.mock.calls[0][1].next.revalidate).toBe(86400);
   });
 
   it("returns normalized summaries", async () => {
     fetchMock.mockResolvedValue(res(searchFixture));
-    const results = await searchWorks("dune");
+    const results = await searchWorks({ title: "dune", author: "" });
     expect(results).toHaveLength(3);
     expect(results[0].sourceKey).toBe("OL893415W");
   });
 
   it("throws with the status code when Open Library errors", async () => {
     fetchMock.mockResolvedValue(res(null, false, 503));
-    await expect(searchWorks("dune")).rejects.toThrow(/503/);
+    await expect(searchWorks({ title: "dune", author: "" })).rejects.toThrow(/503/);
   });
 });
 
