@@ -152,9 +152,13 @@ export async function beginSignInAction(
   // deployment, where none of the cookies set here exist.
   const origin = requestOrigin(await headers());
 
+  // `asResponse: false` is not a default being restated. Handing Better Auth a
+  // request flips it to returning a Response, whose `url` is undefined — which
+  // is how every sign-in on a deployment answered "Could not reach Google".
   const { url } = await getAuth().api.signInSocial({
     body: { provider: "google", callbackURL: "/" },
     ...(origin && { request: new Request(`${origin}/api/auth/sign-in/social`) }),
+    asResponse: false,
   });
 
   if (!url) return { error: "Could not reach Google just now. Try again." };
