@@ -100,7 +100,7 @@ test.describe("profile masthead by viewer (harness)", () => {
       await page.goto(`/dev/profile?viewer=${viewer}`, { waitUntil: "networkidle" });
       const cells = page.locator("article > a");
       expect(await cells.count()).toBe(await page.locator("article").count());
-      await expect(cells.first()).toHaveAttribute("href", /^\/book\/OL\d+W$/);
+      await expect(cells.first()).toHaveAttribute("href", /^\/book\/(OL\d+W|gb:[\w-]+)$/);
     }
   });
 

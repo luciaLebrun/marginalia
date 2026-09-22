@@ -46,7 +46,8 @@ test.describe("reading diary", () => {
     const cells = page.locator("article > a");
     expect(await cells.count()).toBe(await page.locator("article").count());
     for (const href of await cells.evaluateAll((as) => as.map((a) => a.getAttribute("href")))) {
-      expect(href).toMatch(/^\/book\/OL\d+W$/);
+      // Either source's key: since MRG-063 a diary holds Google books too.
+      expect(href).toMatch(/^\/book\/(OL\d+W|gb:[\w-]+)$/);
     }
 
     const first = cells.first();
@@ -67,11 +68,17 @@ test.describe("reading diary", () => {
     const sources = await page.locator("img").evaluateAll((imgs) =>
       imgs.map((i) => (i as HTMLImageElement).getAttribute("src") ?? ""),
     );
-    const covers = sources.filter((s) => s.includes("covers.openlibrary.org"));
+    // Since MRG-063 a diary can hold Google books, whose jackets come from
+    // books.google.com by volume, so the rule is checked on every cover there
+    // is rather than assuming Open Library's.
+    const covers = sources.filter(
+      (s) => s.includes("covers.openlibrary.org") || s.includes("books.google.com"),
+    );
     expect(covers.length).toBeGreaterThan(0);
     for (const src of covers) {
-      expect(src).toContain("/b/id/");
       expect(src).not.toContain("/b/isbn/");
+      expect(src).not.toMatch(/isbn/i);
+      if (src.includes("covers.openlibrary.org")) expect(src).toContain("/b/id/");
     }
   });
 
