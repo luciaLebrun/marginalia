@@ -74,4 +74,33 @@ describe("mergeResults", () => {
   it("never exceeds the limit it is given", () => {
     expect(mergeResults(many(20, google), many(20, ol), 5)).toHaveLength(5);
   });
+
+  /*
+   * "Show more" (MRG-073) adds rows under the ones the reader was looking at.
+   * Merged as one block, a longer ask handed Google more slots at the top and
+   * reshuffled the first page.
+   */
+  describe("asked for more than one page", () => {
+    const g = Array.from({ length: 40 }, (_, i) => google(`G ${i}`));
+    const o = Array.from({ length: 60 }, (_, i) => ol(`O ${i}`));
+    const keys = (books: BookSummary[]) => books.map((b) => b.sourceKey);
+
+    it("keeps each earlier page exactly as it was", () => {
+      const twenty = keys(mergeResults(g, o, 20));
+      const forty = keys(mergeResults(g, o, 40));
+      const sixty = keys(mergeResults(g, o, 60));
+      expect(forty.slice(0, 20)).toEqual(twenty);
+      expect(sixty.slice(0, 40)).toEqual(forty);
+    });
+
+    it("leads every page with Google's block", () => {
+      const page2 = mergeResults(g, o, 40).slice(20);
+      expect(keys(page2.slice(0, 12)).every((k) => k.startsWith("gb:"))).toBe(true);
+      expect(keys(page2.slice(12)).every((k) => k.startsWith("OL"))).toBe(true);
+    });
+
+    it("stops short, without looping, when both sources run out", () => {
+      expect(mergeResults(g.slice(0, 15), o.slice(0, 10), 60)).toHaveLength(25);
+    });
+  });
 });

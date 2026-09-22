@@ -80,6 +80,37 @@ describe("searchBooks", () => {
   });
 
   /*
+   * Google serves at most 20 per request whatever `maxResults` says (measured
+   * 2026-09-22), so "show more" (MRG-073) pages it by startIndex.
+   */
+  it("pages Google by startIndex in twenties when asked for more", async () => {
+    fetchMock.mockResolvedValue(res(googleSearch));
+    await searchBooks(DUNE, 60);
+
+    const google = fetchMock.mock.calls
+      .map(([url]) => url as string)
+      .filter((url) => url.includes("googleapis.com"));
+    expect(google.map((url) => new URL(url).searchParams.get("startIndex"))).toEqual([
+      "0",
+      "20",
+      "40",
+    ]);
+    expect(google.every((url) => url.includes("maxResults=20"))).toBe(true);
+  });
+
+  it("keeps Google's first page when a later one fails", async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (!url.includes("googleapis.com")) return Promise.resolve(res({ docs: [] }));
+      return Promise.resolve(
+        url.includes("startIndex=0") ? res(googleSearch) : res({}, false, 503),
+      );
+    });
+
+    const books = await searchBooks(DUNE, 40);
+    expect(books[0].sourceKey).toBe("gb:B1hSG45JCX4C");
+  });
+
+  /*
    * A URL reaches error messages, server logs and Next's cache key. The key
    * therefore travels in a header and must never appear in the query string —
    * `searchBooks()` logs its error on the fallback path, so a `?key=` there

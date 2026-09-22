@@ -379,8 +379,8 @@ populated shelf is nearly always derived from the jacket and conditioned before 
   labels and hints, a closed
   code's characters, supporting copy (a book's description among it), the author at
   the foot of a type-only jacket, a review permalink's "First published" line, its
-  no-review sentence, and the `@handle` and read date under its signature, and the
-  scrollbar thumb. It is the only tonal step below ink; there is no third text grey.
+  no-review sentence, and the `@handle` and read date under its signature, the line
+  beside an unavailable "Show 20 more" saying why, and the scrollbar thumb. It is the only tonal step below ink; there is no third text grey.
 - **Hairline Rule** (`{colors.rule}`): ink at 15% alpha. Every hairline in the shelf
   — cell borders, record-band separator, and the ruled column lines that show a
   partial row's unfilled positions — plus the resting stroke under a field value,
@@ -779,6 +779,8 @@ moment it was taken.
   sentence of soft-ink body copy on a full-width sunk-paper band. Not alarm, because
   nothing was refused. It is kept visibly apart from "no matches", which is plain
   soft-ink body copy on paper.
+- **Showing more:** books added by "Show 20 more" fill the partial row's ruled slots
+  and then the rows below; the books already shown never move.
 
 ### Log Cell (primary action)
 
@@ -1177,17 +1179,23 @@ log sheet. Character: a band, not a toolbar.
 
 The standing control outside the form — "Mint a code", "Sign out", "Delete this
 account", "Search for a book" on a book page that was not found and on an empty to-read
-list, where it is a link, "Want to read" on a book page, and "Remove" in an edit sheet's
-armed removal. Character: a label with a border drawn around it.
+list, where it is a link, "Want to read" on a book page, "Remove" in an edit sheet's
+armed removal, and "Show 20 more", a link 24px under a full grid of search results,
+its left edge on the page padding. Character: a label with a border drawn around it.
 
 - **Shape:** square, 1px border, 12px/10px padding, band-voice label, paper ground.
 - **Border:** solid ink when the control is available; hairline while it is not.
   Alarm when the control is armed and irreversible: "Delete this account" once the
-  handle is typed back, and "Remove", which is only ever shown armed. Pending, an armed
-  control's label becomes the live readout ("Removing…").
+  handle is typed back, and "Remove", which is only ever shown armed.
+- **Pending:** any Outline Button whose action waits on a source — an armed one or
+  not — turns its label into the live readout in place ("Removing…", "Finding
+  more…"). Both labels share one grid cell, so the button holds the longer width and
+  nothing beside it moves; the flood stays while it is under the pointer or focused.
 - **Hover / focus-visible:** floods with the fiction band. Colour only; nothing moves.
 - **Disabled:** the label is ruled through at 50% opacity — the printed mark for
-  unavailable — never a grey chrome fill.
+  unavailable — never a grey chrome fill. A control that can no longer act is never
+  removed: "Show 20 more" at the cap or after a short step stays in this mark
+  (`aria-disabled`), with one soft-ink line beside it at 0.8125rem saying why.
 
 ### Text Button
 
