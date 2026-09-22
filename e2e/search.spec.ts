@@ -186,3 +186,78 @@ test("a one-line miss is never told to add the other line", async ({ page }) => 
   await expect(page.getByText(/add the author/i)).toHaveCount(0);
   await expect(page.getByText(/try fewer words/i)).toBeVisible();
 });
+
+/*
+ * MRG-073. `source=full` answers as many as asked for, from the recorded books
+ * repeated under distinct keys, so there is always a next page to show.
+ */
+test.describe("show more", () => {
+  const cells = (page: import("@playwright/test").Page) => page.locator("ol.shelf-grid > li");
+  const more = (page: import("@playwright/test").Page) =>
+    page.getByRole("link", { name: "Show 20 more" });
+
+  test("adds twenty under the grid, up to sixty, without moving what was there", async ({
+    page,
+  }) => {
+    await page.goto("/dev/search?title=dune&source=full", { waitUntil: "networkidle" });
+    await expect(cells(page)).toHaveCount(20);
+    const firstKey = await cells(page).first().locator("a").getAttribute("href");
+
+    await more(page).scrollIntoViewIfNeeded();
+    const before = await page.evaluate(() => window.scrollY);
+    await more(page).click();
+
+    await expect(cells(page)).toHaveCount(40);
+    await expect(page).toHaveURL(/[?&]shown=40(&|$)/);
+    await expect(page).toHaveURL(/[?&]source=full(&|$)/);
+    // The reader stays where they were; the new books are below them.
+    expect(await page.evaluate(() => window.scrollY)).toBe(before);
+    expect(await cells(page).first().locator("a").getAttribute("href")).toBe(firstKey);
+    await expect(page.getByRole("status")).toHaveText(/^First 40/);
+
+    await more(page).click();
+    await expect(cells(page)).toHaveCount(60);
+    await expect(page.getByRole("status")).toHaveText(/^First 60/);
+    // Ruled through and explained, never removed.
+    await expect(more(page)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Show 20 more" })).toBeDisabled();
+    await expect(page.getByText(/^Sixty is the most a search shows/)).toBeVisible();
+  });
+
+  /* A keyboard reader is taken to the first new book, not left behind it. */
+  test("hands keyboard focus to the first new result", async ({ page }) => {
+    await page.goto("/dev/search?title=dune&source=full", { waitUntil: "networkidle" });
+    await more(page).focus();
+    await page.keyboard.press("Enter");
+    await expect(cells(page)).toHaveCount(40);
+    await expect(cells(page).nth(20).locator("a")).toBeFocused();
+
+    await more(page).focus();
+    await page.keyboard.press("Enter");
+    await expect(cells(page)).toHaveCount(60);
+    await expect(cells(page).nth(40).locator("a")).toBeFocused();
+  });
+
+  /* After a step, a short page means the sources are spent. */
+  test("says when the sources ran out", async ({ page }) => {
+    await page.goto("/dev/search?title=dune&author=herbert&shown=40", {
+      waitUntil: "networkidle",
+    });
+    await expect(page.getByRole("button", { name: "Show 20 more" })).toBeDisabled();
+    await expect(page.getByText("That is every book the search found.")).toBeVisible();
+  });
+
+  /* A short page means the sources are spent: nothing to offer. */
+  test("is not offered under a short page", async ({ page }) => {
+    await page.goto("/dev/search?title=dune", { waitUntil: "networkidle" });
+    await expect(cells(page).first()).toBeVisible();
+    await expect(more(page)).toHaveCount(0);
+  });
+
+  test("ignores a hand-edited count it cannot honour", async ({ page }) => {
+    await page.goto("/dev/search?title=dune&source=full&shown=abc", {
+      waitUntil: "networkidle",
+    });
+    await expect(cells(page)).toHaveCount(20);
+  });
+});

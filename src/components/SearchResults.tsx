@@ -1,7 +1,16 @@
 import Link from "next/link";
 
 import { SearchResult } from "./SearchResult";
-import { bandText, noMatch, runSearch, type BookQuery, type Search } from "@/lib/search";
+import { ShowMore } from "./ShowMore";
+import {
+  SEARCH_LIMIT,
+  bandText,
+  endLine,
+  noMatch,
+  runSearch,
+  type BookQuery,
+  type Search,
+} from "@/lib/search";
 
 /**
  * Everything under the search fields: the record band, then whichever state
@@ -10,12 +19,15 @@ import { bandText, noMatch, runSearch, type BookQuery, type Search } from "@/lib
  */
 export async function SearchResults({
   query,
+  shown,
   search,
   diaryHref = "/",
   searchAction = "/search",
   searchParams,
 }: Readonly<{
   query: BookQuery;
+  /** How many results the URL asks for (MRG-073); the first page by default. */
+  shown?: number;
   /** Defaults to both live sources; the dev harness substitutes a fixture. */
   search?: Search;
   diaryHref?: string;
@@ -24,7 +36,7 @@ export async function SearchResults({
   /** Parameters a widening search must carry through; the harness's `source`. */
   searchParams?: Record<string, string>;
 }>) {
-  const outcome = await runSearch(query, search);
+  const outcome = await runSearch(query, search, shown);
 
   return (
     <>
@@ -37,6 +49,27 @@ export async function SearchResults({
               <SearchResult key={book.sourceKey} book={book} />
             ))}
           </ol>
+          {/* One element in both states, so the control stays mounted across
+              the last step and can hand keyboard focus on. */}
+          {(outcome.more || outcome.end) && (
+            <div className="mt-6">
+              <ShowMore
+                href={
+                  outcome.more
+                    ? `${searchAction}?${new URLSearchParams({
+                        ...searchParams,
+                        ...(query.title && { title: query.title }),
+                        ...(query.author && { author: query.author }),
+                        shown: String(outcome.more),
+                      })}`
+                    : undefined
+                }
+                count={outcome.books.length}
+                step={SEARCH_LIMIT}
+                note={outcome.end && endLine(outcome.end, outcome.query)}
+              />
+            </div>
+          )}
         </div>
       )}
 
