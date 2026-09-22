@@ -1,13 +1,12 @@
 "use client";
 
 import {
+  useEffect,
   useLayoutEffect,
   useOptimistic,
   useRef,
   useState,
   useTransition,
-  type KeyboardEvent,
-  type PointerEvent,
   type CSSProperties,
   type ReactNode,
 } from "react";
@@ -114,17 +113,9 @@ export function ArrangeFavourites({
     return null;
   }
 
-  // While a touch drag runs the page must not scroll under it. touch-action
-  // cannot be switched on mid-gesture, so the one tool left is a non-passive
-  // touchmove listener.
-  function holdScroll(on: boolean) {
-    if (on) document.addEventListener("touchmove", preventTouch, { passive: false });
-    else document.removeEventListener("touchmove", preventTouch);
-  }
-
   function begin(state: Press) {
     state.active = true;
-    holdScroll(state.touch);
+    if (state.touch) lockScroll();
     cells.current.get(state.bookId)?.setPointerCapture?.(state.pointerId);
     setDrag({ bookId: state.bookId, dx: 0, dy: 0, over: order.indexOf(state.bookId) });
   }
@@ -132,13 +123,14 @@ export function ArrangeFavourites({
   function end() {
     const state = press.current;
     if (state?.timer) clearTimeout(state.timer);
-    holdScroll(false);
+    unlockScroll();
     press.current = null;
     setDrag(null);
   }
 
-  function onPointerDown(event: PointerEvent<HTMLLIElement>, bookId: string) {
-    if (event.button !== 0 || press.current) return;
+  function onPointerDown(event: PointerEvent) {
+    const bookId = bookAt(event.target);
+    if (!bookId || event.button !== 0 || press.current) return;
     const state: Press = {
       bookId,
       pointerId: event.pointerId,
@@ -151,7 +143,7 @@ export function ArrangeFavourites({
     press.current = state;
   }
 
-  function onPointerMove(event: PointerEvent<HTMLLIElement>) {
+  function onPointerMove(event: PointerEvent) {
     const state = press.current;
     if (!state || event.pointerId !== state.pointerId) return;
     const dx = event.clientX - state.x;
@@ -169,7 +161,7 @@ export function ArrangeFavourites({
     );
   }
 
-  function onPointerUp(event: PointerEvent<HTMLLIElement>) {
+  function onPointerUp(event: PointerEvent) {
     const state = press.current;
     if (!state || event.pointerId !== state.pointerId) return;
     if (state.active) {
@@ -180,8 +172,9 @@ export function ArrangeFavourites({
     end();
   }
 
-  function onKeyDown(event: KeyboardEvent<HTMLLIElement>, bookId: string) {
-    if (!event.altKey) return;
+  function onKeyDown(event: KeyboardEvent) {
+    const bookId = bookAt(event.target);
+    if (!bookId || !event.altKey) return;
     const step = { ArrowLeft: -1, ArrowUp: -1, ArrowRight: 1, ArrowDown: 1 }[event.key];
     if (!step) return;
     event.preventDefault();
@@ -189,9 +182,50 @@ export function ArrangeFavourites({
     commit(bookId, order.indexOf(bookId) + step);
   }
 
+  // One delegated set of listeners on the list, not handlers on each <li>: the
+  // interactive element in every position is its link, which is what keyboard
+  // and screen reader users reach. Pointer dragging is layered over it, and
+  // the handlers are read through a ref so the listeners are added once.
+  const handlers = useRef<Partial<Record<keyof HTMLElementEventMap, (event: Event) => void>>>({});
+  useLayoutEffect(() => {
+    handlers.current = {
+    pointerdown: (event) => onPointerDown(event as PointerEvent),
+    pointermove: (event) => onPointerMove(event as PointerEvent),
+    pointerup: (event) => onPointerUp(event as PointerEvent),
+    pointercancel: () => end(),
+    keydown: (event) => onKeyDown(event as KeyboardEvent),
+    // Links and jackets are natively draggable; this drag is ours.
+    dragstart: (event) => event.preventDefault(),
+    // A held press on a phone would otherwise open the link menu.
+    contextmenu: (event) => {
+      if (press.current) event.preventDefault();
+    },
+    };
+  });
+  const list = useRef<HTMLOListElement>(null);
+  useEffect(() => {
+    const node = list.current;
+    if (!node) return;
+    const names: (keyof HTMLElementEventMap)[] = [
+      "pointerdown",
+      "pointermove",
+      "pointerup",
+      "pointercancel",
+      "keydown",
+      "dragstart",
+      "contextmenu",
+    ];
+    const listeners = names.map((name) => {
+      const listener = (event: Event) => handlers.current[name]?.(event);
+      node.addEventListener(name, listener);
+      return () => node.removeEventListener(name, listener);
+    });
+    return () => listeners.forEach((remove) => remove());
+  }, []);
+
   return (
     <>
-      <ol className="favourites-grid">
+      <ol ref={list} className="favourites-grid">
         {order.map((bookId, index) => {
           const item = byId.get(bookId);
           if (!item) return null;
@@ -204,15 +238,7 @@ export function ArrangeFavourites({
                 if (node) cells.current.set(bookId, node);
                 else cells.current.delete(bookId);
               }}
-              onPointerDown={(event) => onPointerDown(event, bookId)}
-              onPointerMove={onPointerMove}
-              onPointerUp={onPointerUp}
-              onPointerCancel={end}
-              onKeyDown={(event) => onKeyDown(event, bookId)}
-              // Links and jackets are natively draggable; this drag is ours.
-              onDragStart={(event) => event.preventDefault()}
-              // A held press on a phone would otherwise open the link menu.
-              onContextMenu={(event) => press.current && event.preventDefault()}
+              data-book-id={bookId}
               data-over={target || undefined}
               data-carried={carried || undefined}
               className={`favourite-arrangeable flex flex-col select-none ${
@@ -249,6 +275,24 @@ export function ArrangeFavourites({
       <output className="sr-only">{announcement}</output>
     </>
   );
+}
+
+/** The favourite an event happened in, by its position's `data-book-id`. */
+function bookAt(target: EventTarget | null): string | null {
+  return target instanceof Element
+    ? (target.closest<HTMLElement>("li[data-book-id]")?.dataset.bookId ?? null)
+    : null;
+}
+
+// While a touch drag runs the page must not scroll under it. touch-action
+// cannot be switched on mid-gesture, so the one tool left is a non-passive
+// touchmove listener.
+function lockScroll() {
+  document.addEventListener("touchmove", preventTouch, { passive: false });
+}
+
+function unlockScroll() {
+  document.removeEventListener("touchmove", preventTouch);
 }
 
 function preventTouch(event: TouchEvent) {

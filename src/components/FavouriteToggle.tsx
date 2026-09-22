@@ -77,6 +77,10 @@ export function FavouriteToggle({
     moved.current = step;
     startMove(() => moveAction(form));
   };
+  let addState = "border-ink hover:bg-band-fiction focus-visible:bg-band-fiction";
+  if (full) addState = "border-rule line-through opacity-50";
+  else if (pending) addState += " cursor-progress";
+
   const textButton =
     "band-label underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink disabled:cursor-default disabled:line-through disabled:decoration-ink disabled:opacity-50";
 
@@ -170,11 +174,7 @@ export function FavouriteToggle({
             onClick={(event) => {
               if (pending) event.preventDefault();
             }}
-            className={`band-label inline-grid border px-3 py-2.5 transition-colors ${
-              full
-                ? "border-rule line-through opacity-50"
-                : `border-ink hover:bg-band-fiction focus-visible:bg-band-fiction ${pending ? "cursor-progress" : ""}`
-            }`}
+            className={`band-label inline-grid border px-3 py-2.5 transition-colors ${addState}`}
           >
             <span className={`[grid-area:1/1] ${pending ? "invisible" : ""}`}>Add to favourites</span>
             <span aria-hidden={!pending} className={`[grid-area:1/1] ${pending ? "" : "invisible"}`}>

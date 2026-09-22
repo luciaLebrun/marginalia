@@ -51,7 +51,7 @@ export function Favourites({
           Favourites
         </h2>
         <span className="band-label text-ink-soft">
-          {arrange ? `${books.length} of ${MAX}` : `${books.length} ${books.length === 1 ? "book" : "books"}`}
+          {arrange ? `${books.length} of ${MAX}` : publicCount(books.length)}
         </span>
       </div>
 
@@ -134,4 +134,8 @@ function FavouriteCell({
   ) : (
     <div className={FRAME}>{cell}</div>
   );
+}
+
+function publicCount(count: number): string {
+  return `${count} ${count === 1 ? "book" : "books"}`;
 }

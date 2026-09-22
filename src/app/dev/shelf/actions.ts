@@ -17,7 +17,8 @@ import { moveFavourite } from "@/lib/favourites";
 export async function moveDevFavouriteAction(formData: FormData): Promise<void> {
   if (process.env.NODE_ENV === "production") throw new Error("Not available.");
 
-  const bookId = String(formData.get("bookId") ?? "");
+  const sent = formData.get("bookId");
+  const bookId = typeof sent === "string" ? sent : "";
   const to = Number(formData.get("to"));
   if (bookId && Number.isInteger(to) && (await moveFavourite(DEV_READER_ID, bookId, to))) {
     revalidatePath("/dev/shelf");
