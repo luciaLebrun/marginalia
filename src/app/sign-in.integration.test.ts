@@ -9,6 +9,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 let forwarded: Record<string, string> = {};
 
+// CI carries no Google credentials. Nothing here talks to Google — building
+// the authorization URL only needs something in each slot.
+vi.stubEnv("GOOGLE_CLIENT_ID", process.env.GOOGLE_CLIENT_ID || "test-client-id");
+vi.stubEnv("GOOGLE_CLIENT_SECRET", process.env.GOOGLE_CLIENT_SECRET || "test-secret");
+vi.stubEnv("BETTER_AUTH_URL", process.env.BETTER_AUTH_URL || "http://localhost:3000");
+vi.stubEnv("BETTER_AUTH_SECRET", process.env.BETTER_AUTH_SECRET || "a".repeat(32));
+
 vi.mock("next/headers", () => ({
   headers: async () => new Headers(forwarded),
   cookies: async () => ({ set: () => {} }),
