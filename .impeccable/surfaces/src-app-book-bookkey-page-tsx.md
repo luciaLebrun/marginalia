@@ -2,7 +2,7 @@
 version: 1
 slug: "src-app-book-bookkey-page-tsx"
 primary_target: "src/app/book/[bookKey]/page.tsx"
-related_targets: ["src/components/BookTitlePage.tsx","src/components/DateSlip.tsx","src/components/BookStates.tsx","src/components/LogSheet.tsx","src/components/SlipLines.tsx","src/components/ToReadToggle.tsx"]
+related_targets: ["src/components/BookTitlePage.tsx","src/components/DateSlip.tsx","src/components/BookStates.tsx","src/components/LogSheet.tsx","src/components/SlipLines.tsx","src/components/ToReadToggle.tsx","src/components/FavouriteToggle.tsx"]
 ---
 
 Scope: `/book/[bookKey]` — one book, opened through `openBook()`. Reached
@@ -155,6 +155,44 @@ roll, no new tone, type step or motion. The list itself is its own surface,
   (refusal sentence in alarm with Sign in again) · book no longer here.
 - Confirmed answers: saved from the book page only; the list on its own
   private page; logging removes it.
+
+## Favourite (MRG-071) — extension, confirmed with the user
+
+An addition inside this surface, inheriting the direction contract: no concept
+roll, no new tone, type step or motion. The band that shows favourites belongs
+to the diary and profile surface, with its own section in that brief.
+
+- Job: a reader makes a book they have read one of their four favourites, or
+  takes it off, from the book's own page.
+- Placed after the date slip and before the description, on the 34rem measure.
+  It appears only once the slip holds a read, because only a read book may be
+  a favourite.
+- Not a favourite: an Outline Button, "Add to favourites"; pending, it reads
+  "Adding…" in place at a held width and keeps its flood.
+- A favourite: Want to Read's saved line — the drawn tick, "One of your
+  favourites", then "Your favourites" (to the diary) and "Take it off" as Text
+  Buttons, "Taking it off…" while it runs.
+- Changed by the user on 2026-09-23: with two or more favourites the line adds
+  its place in soft ink ("· 2 of 3") and "Earlier" / "Later" Text Buttons, ruled
+  through at an end, focus passing to the other when the pressed one reaches an
+  end. They are the single-pointer way to arrange (WCAG 2.5.7); the diary's band
+  stays drag-only by the user's choice.
+- At four: the button ruled through, with the soft-ink line "You have four
+  already. Take one off from its own page to make room." and a "Your
+  favourites" link.
+- Refusals are one sentence in alarm under the control: "Not added: you’re
+  signed out." / "Not taken off: you’re signed out." with "Sign in again";
+  "Not added: you have four favourites already. Take one off first."; "Not
+  added: only a book you’ve read can be a favourite."; "Not added: this book
+  is no longer here. Find it again from search."; "Not added: something else
+  changed your favourites just then. Try again."
+- Announced: "Added to your favourites." or "Taken off your favourites." After
+  either, focus goes to the replacement's first control ("Your favourites",
+  or the button), unless the reader has already moved elsewhere.
+- Removing a book's last read takes it off the reader's favourites too (in
+  `removeRead`), so the slip's blank line never sits over a favourite.
+- States: no reads (not drawn) · not a favourite · adding · a favourite ·
+  taking it off · at four · refused · signed out.
 
 ## Unresolved
 

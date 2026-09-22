@@ -10,6 +10,7 @@ import { getAuth } from "@/lib/auth";
 import { findStoredBook, openBook, parseBookKey } from "@/lib/book";
 import { getReads } from "@/lib/book-view";
 import { isOnToRead } from "@/lib/to-read";
+import { getFavouriteState } from "@/lib/favourites";
 import { bookPath } from "@/lib/client-safe";
 
 /**
@@ -61,11 +62,20 @@ async function OpenedBook({
   // own key. One address per book.
   if (book.sourceKey !== parseBookKey(bookKey)) redirect(bookPath(book.sourceKey));
 
-  const [reads, onToRead] = await Promise.all([
+  const [reads, onToRead, favourite] = await Promise.all([
     getReads(userId, book.id),
     isOnToRead(userId, book.id),
+    getFavouriteState(userId, book.id),
   ]);
-  return <BookTitlePage book={book} reads={reads} onToRead={onToRead} username={username} />;
+  return (
+    <BookTitlePage
+      book={book}
+      reads={reads}
+      onToRead={onToRead}
+      favourite={favourite}
+      username={username}
+    />
+  );
 }
 
 export async function generateMetadata({

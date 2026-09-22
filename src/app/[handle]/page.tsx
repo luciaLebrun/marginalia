@@ -1,10 +1,12 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
+import { Favourites } from "@/components/Favourites";
 import { Masthead } from "@/components/Masthead";
 import { Shelf } from "@/components/Shelf";
 import { getAuth } from "@/lib/auth";
 import { getDiary, getDiaryCount, readingSpan } from "@/lib/diary";
+import { getFavourites } from "@/lib/favourites";
 import { profileMastheadLink } from "@/lib/masthead-link";
 import { findByUsername } from "@/lib/profile";
 import { parseHandle } from "@/lib/username";
@@ -32,11 +34,12 @@ export default async function ProfilePage({
   const profile = await findByUsername(username);
   if (!profile) notFound();
 
-  const [entries, count, session] = await Promise.all([
+  const [entries, count, favourites, session] = await Promise.all([
     // No lastSeenAt: nothing on someone else's diary is "new to you", so the
     // ink-in never fires here.
     getDiary(profile.id, null),
     getDiaryCount(profile.id),
+    getFavourites(profile.id),
     getAuth().api.getSession({ headers: await headers() }),
   ]);
 
@@ -50,6 +53,9 @@ export default async function ProfilePage({
         bio={profile.bio}
         link={profileMastheadLink(session?.user.id ?? null, profile.id)}
       />
+      {/* Shown as the owner arranged it, with nothing to change it by: the
+          controls live on their own diary. None, and the band is not drawn. */}
+      <Favourites books={favourites} linkBooks={session !== null} />
       <Shelf
         entries={entries}
         canLog={false}

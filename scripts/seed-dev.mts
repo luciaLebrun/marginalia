@@ -93,9 +93,11 @@ await db
   .set({ username: null })
   .where(eq(schema.user.id, NEWCOMER_ID));
 
+await db.delete(schema.favourite).where(eq(schema.favourite.userId, USER_ID));
 await db.delete(schema.log).where(eq(schema.log.userId, USER_ID));
 
 let logged = 0;
+const loggedBooks: string[] = [];
 for (const [title, author, readAt, rating] of SHELF) {
   const results: BookSummary[] | null = await retry(title, () =>
     searchBooks({ title, author }, 1),
@@ -139,12 +141,21 @@ for (const [title, author, readAt, rating] of SHELF) {
   });
 
   logged++;
+  loggedBooks.push(row.id);
   console.log(
     `  ${String(logged).padStart(2)}. ${book.title}  ${coverColor ?? "(fallback)"}`,
   );
 }
 
 console.log(`\nseeded ${logged}/${SHELF.length} entries for @lucia`);
+
+// Three favourites (MRG-071), so the band shows its fourth position ruled and
+// empty — room for another — and every arrange state has a book to stand on.
+const favourites = [...new Set(loggedBooks)].slice(0, 3);
+await db
+  .insert(schema.favourite)
+  .values(favourites.map((bookId, position) => ({ userId: USER_ID, bookId, position })));
+console.log(`seeded ${favourites.length} favourites`);
 
 
 /*

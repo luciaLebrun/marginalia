@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
 
 import { getDevReader, NoDevReader } from "@/app/dev/dev-reader";
+import { Favourites } from "@/components/Favourites";
 import { Masthead } from "@/components/Masthead";
 import { Shelf } from "@/components/Shelf";
 import { BIO_MAX } from "@/lib/account";
 import { getDiary, getDiaryCount, readingSpan } from "@/lib/diary";
+import { getFavourites } from "@/lib/favourites";
 import { profileMastheadLink } from "@/lib/masthead-link";
 import { MAX_LENGTH as USERNAME_MAX } from "@/lib/username";
 
@@ -36,7 +38,11 @@ export default async function DevProfilePage({ searchParams }: PageProps<"/dev/p
   const user = await getDevReader();
   if (!user?.username) return <NoDevReader />;
 
-  const [entries, count] = await Promise.all([getDiary(user.id, null), getDiaryCount(user.id)]);
+  const [entries, count, favourites] = await Promise.all([
+    getDiary(user.id, null),
+    getDiaryCount(user.id),
+    getFavourites(user.id),
+  ]);
 
   const viewerId = { visitor: null, owner: user.id, friend: "dev-newcomer" }[viewer];
 
@@ -61,6 +67,7 @@ export default async function DevProfilePage({ searchParams }: PageProps<"/dev/p
         bio={bio}
         link={profileMastheadLink(viewerId, user.id)}
       />
+      <Favourites books={favourites} linkBooks={viewer !== "visitor"} />
       <Shelf
         entries={entries}
         canLog={false}

@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 
 import { getDb, schema } from "@/db";
+import { removeFavourite } from "./favourites";
 import type { ReadInput } from "./read-schema";
 
 /** Postgres foreign_key_violation. */
@@ -85,12 +86,22 @@ export async function updateRead(
 
 /** Remove one of a reader's own reads for good. Scoped exactly as updateRead. */
 export async function removeRead(userId: string, logId: string): Promise<ChangeReadResult> {
-  const rows = await getDb()
+  const [removed] = await getDb()
     .delete(schema.log)
     .where(and(eq(schema.log.id, logId), eq(schema.log.userId, userId)))
-    .returning({ id: schema.log.id });
+    .returning({ bookId: schema.log.bookId });
+  if (!removed) return { ok: false, reason: "missing" };
 
-  return rows.length > 0 ? { ok: true } : { ok: false, reason: "missing" };
+  // Only a book the reader has read may be a favourite (MRG-071), so taking
+  // off its last read takes it off their favourites too.
+  const [another] = await getDb()
+    .select({ id: schema.log.id })
+    .from(schema.log)
+    .where(and(eq(schema.log.userId, userId), eq(schema.log.bookId, removed.bookId)))
+    .limit(1);
+  if (!another) await removeFavourite(userId, removed.bookId);
+
+  return { ok: true };
 }
 
 /**
