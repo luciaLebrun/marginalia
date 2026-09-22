@@ -145,7 +145,7 @@ export function ArrangeFavourites({
 
   function onPointerMove(event: PointerEvent) {
     const state = press.current;
-    if (!state || event.pointerId !== state.pointerId) return;
+    if (state?.pointerId !== event.pointerId) return;
     const dx = event.clientX - state.x;
     const dy = event.clientY - state.y;
 
@@ -163,7 +163,7 @@ export function ArrangeFavourites({
 
   function onPointerUp(event: PointerEvent) {
     const state = press.current;
-    if (!state || event.pointerId !== state.pointerId) return;
+    if (state?.pointerId !== event.pointerId) return;
     if (state.active) {
       // The press ended on a link; a drag must not also open the book.
       window.addEventListener("click", swallowClick, { capture: true, once: true });

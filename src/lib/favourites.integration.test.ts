@@ -4,6 +4,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { getDb, schema } from "@/db";
 import {
   addFavourite,
+  getFavouriteState,
   getFavourites,
   isFavourite,
   moveFavourite,
@@ -158,5 +159,27 @@ describe.skipIf(!hasRealDb)("favourites (integration)", () => {
 
     expect(await order(READER)).toEqual([BOOKS[0]]);
     expect(await order(OTHER)).toEqual([BOOKS[1]]);
+  });
+
+  it("tells a book page where a favourite stands, and whether there is room", async () => {
+    for (const book of BOOKS.slice(0, 5)) await read(READER, book);
+    await expect(getFavouriteState(READER, BOOKS[0])).resolves.toEqual({
+      isFavourite: false,
+      full: false,
+      position: -1,
+      count: 0,
+    });
+
+    for (const book of BOOKS.slice(0, 4)) await addFavourite(READER, book);
+    await expect(getFavouriteState(READER, BOOKS[2])).resolves.toEqual({
+      isFavourite: true,
+      full: true,
+      position: 2,
+      count: 4,
+    });
+    await expect(getFavouriteState(READER, BOOKS[4])).resolves.toMatchObject({
+      isFavourite: false,
+      full: true,
+    });
   });
 });
