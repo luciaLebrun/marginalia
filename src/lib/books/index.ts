@@ -151,8 +151,9 @@ export function mergeResults(
     }
   };
 
-  for (let end = PAGE_SIZE; out.length < limit; end += PAGE_SIZE) {
-    const pageEnd = Math.min(end, limit);
+  let pageEnd = 0;
+  while (out.length < limit) {
+    pageEnd = Math.min(pageEnd + PAGE_SIZE, limit);
     const before = out.length;
     take(google, Math.min(GOOGLE_SLOTS, pageEnd - out.length));
     take(openLibrary, pageEnd - out.length);

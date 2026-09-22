@@ -1195,7 +1195,7 @@ its left edge on the page padding. Character: a label with a border drawn around
 - **Disabled:** the label is ruled through at 50% opacity — the printed mark for
   unavailable — never a grey chrome fill. A control that can no longer act is never
   removed: "Show 20 more" at the cap or after a short step stays in this mark
-  (`aria-disabled`), with one soft-ink line beside it at 0.8125rem saying why.
+  (a native disabled button), with one soft-ink line beside it at 0.8125rem saying why.
 
 ### Text Button
 

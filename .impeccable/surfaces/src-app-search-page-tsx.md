@@ -120,7 +120,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     pointer click moves nothing.
   - **Never removed** (Printed State Rule): at the cap, or when a step comes
     back short, it stays ruled through (hairline border, struck label at 50%,
-    `aria-disabled`) with one soft-ink line beside it — "Sixty is the most a
+    a native disabled `<button>`) with one soft-ink line beside it — "Sixty is the most a
     search shows — add the author to narrow it" (the band's offer, by which
     line is empty; no offer with both filled), or "That is every book the
     search found." when the sources are spent — never "both sources": one may

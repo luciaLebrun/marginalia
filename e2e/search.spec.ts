@@ -218,10 +218,9 @@ test.describe("show more", () => {
     await more(page).click();
     await expect(cells(page)).toHaveCount(60);
     await expect(page.getByRole("status")).toHaveText(/^First 60/);
-    // Ruled through and explained, never removed: still announced as a link,
-    // now an unavailable one with nothing to follow.
-    await expect(more(page)).toHaveAttribute("aria-disabled", "true");
-    await expect(more(page)).not.toHaveAttribute("href");
+    // Ruled through and explained, never removed.
+    await expect(more(page)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Show 20 more" })).toBeDisabled();
     await expect(page.getByText(/^Sixty is the most a search shows/)).toBeVisible();
   });
 
@@ -244,7 +243,7 @@ test.describe("show more", () => {
     await page.goto("/dev/search?title=dune&author=herbert&shown=40", {
       waitUntil: "networkidle",
     });
-    await expect(page.getByText("Show 20 more")).toHaveAttribute("aria-disabled", "true");
+    await expect(page.getByRole("button", { name: "Show 20 more" })).toBeDisabled();
     await expect(page.getByText("That is every book the search found.")).toBeVisible();
   });
 

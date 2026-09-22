@@ -52,11 +52,12 @@ export function ShowMore({
   if (!href) {
     return (
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        {/* role="link" so aria-disabled is announced: on a generic span it is
-            not exposed. Still no href and no tabindex — nothing to activate. */}
-        <span role="link" aria-disabled="true" className={`${BUTTON} border-rule line-through opacity-50`}>
+        {/* A native disabled button, as the delete fence's is: announced as
+            unavailable and out of the tab order, which neither a bare span
+            nor a span given a link role manages (Sonar S6819). */}
+        <button type="button" disabled className={`${BUTTON} border-rule line-through opacity-50`}>
           Show {step} more
-        </span>
+        </button>
         <p className="text-[0.8125rem] leading-snug text-ink-soft">{note}</p>
       </div>
     );
