@@ -20,6 +20,7 @@ import { requestOrigin } from "@/lib/trusted-origins";
 import { entryPath, parseLogId } from "@/lib/entry";
 import { createRead, removeRead, updateRead } from "@/lib/read";
 import { removeToRead, saveToRead } from "@/lib/to-read";
+import { addFavourite, moveFavourite, removeFavourite } from "@/lib/favourites";
 import { isLogReadField, readSchema, type LogReadField } from "@/lib/read-schema";
 import {
   handlePath,
@@ -520,3 +521,83 @@ export async function toggleToReadAction(
   revalidatePath("/to-read");
   return { saved: save, bookId, error: null, signedOut: false };
 }
+
+/* -------------------------------------------------------------------------- */
+/* Favourites                                                                  */
+/* -------------------------------------------------------------------------- */
+
+export interface FavouriteState {
+  /** Whether the book is a favourite after this action, once one has run. */
+  favourite: boolean | null;
+  error: string | null;
+  signedOut: boolean;
+}
+
+/**
+ * Make a book a favourite, or take it off (MRG-071). The reader comes from the
+ * session; the database decides the rest — four at most, read books only.
+ */
+export async function toggleFavouriteAction(
+  previous: FavouriteState,
+  formData: FormData,
+): Promise<FavouriteState> {
+  const sentBook = formData.get("bookId");
+  const bookId = typeof sentBook === "string" ? sentBook.trim() : "";
+  const add = formData.get("intent") === "add";
+
+  const reader = await requireReader();
+  if (!reader) {
+    return {
+      ...previous,
+      error: add ? "Not added: you’re signed out." : "Not taken off: you’re signed out.",
+      signedOut: true,
+    };
+  }
+  if (!bookId) {
+    return { ...previous, error: "Open the book again and try from there.", signedOut: false };
+  }
+
+  if (add) {
+    const result = await addFavourite(reader.id, bookId);
+    if (!result.ok) {
+      return { ...previous, error: FAVOURITE_REFUSALS[result.reason], signedOut: false };
+    }
+  } else {
+    await removeFavourite(reader.id, bookId);
+  }
+
+  revalidateFavourites(reader.username);
+  return { favourite: add, error: null, signedOut: false };
+}
+
+const FAVOURITE_REFUSALS = {
+  full: "Not added: you have four favourites already. Take one off first.",
+  unread: "Not added: only a book you’ve read can be a favourite.",
+  missing: "Not added: this book is no longer here. Find it again from search.",
+  conflict: "Not added: something else changed your favourites just then. Try again.",
+} as const;
+
+/**
+ * Move a favourite to a position, as a drag and drop or an Alt + arrow key
+ * asks. The database clamps the position and closes up the rest; a stale page
+ * can reorder, but never open a gap or overfill.
+ */
+export async function moveFavouriteAction(formData: FormData): Promise<void> {
+  const reader = await requireReader();
+  if (!reader) return;
+
+  const sentBook = formData.get("bookId");
+  const bookId = typeof sentBook === "string" ? sentBook.trim() : "";
+  const to = Number(formData.get("to"));
+  if (!bookId || !Number.isInteger(to)) return;
+
+  if (await moveFavourite(reader.id, bookId, to)) revalidateFavourites(reader.username);
+}
+
+/** Everywhere favourites show: the book page's control, the diary, the profile. */
+function revalidateFavourites(username: string | null | undefined) {
+  revalidatePath("/book/[bookKey]", "page");
+  revalidatePath("/");
+  if (username) revalidatePath(handlePath(username));
+}
+

@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { Cover } from "./Cover";
 import { DateSlip } from "./DateSlip";
+import { FavouriteToggle } from "./FavouriteToggle";
+import type { FavouriteState } from "@/app/actions";
 import { ToReadToggle } from "./ToReadToggle";
 import type { Book } from "@/db/schema";
 import {
@@ -27,17 +29,26 @@ export function BookTitlePage({
   book,
   reads,
   onToRead = false,
+  favourite = { isFavourite: false, full: false, position: -1, count: 0 },
   username,
   diaryHref = "/",
+  favouriteAction,
+  favouriteMoveAction,
 }: Readonly<{
   book: Book;
   reads: Read[];
   /** Whether this book is on the reader's to-read list. */
   onToRead?: boolean;
+  /** Whether this book is one of the reader's favourites, and whether four already are. */
+  favourite?: { isFavourite: boolean; full: boolean; position: number; count: number };
   /** The reader's handle, so each read on the slip can address its own page. */
   username: string;
   /** The dev harness points this at its own shelf. */
   diaryHref?: string;
+  /** The dev harness's session-free stand-in for the favourite action. */
+  favouriteAction?: (previous: FavouriteState, form: FormData) => Promise<FavouriteState>;
+  /** …and for moving a favourite earlier or later. */
+  favouriteMoveAction?: (form: FormData) => Promise<void>;
 }>) {
   const band = bookBand(book, reads.length > 0);
   const paragraphs = descriptionParagraphs(book.description);
@@ -110,6 +121,23 @@ export function BookTitlePage({
           <ToReadToggle key={String(onToRead)} bookId={book.id} saved={onToRead} />
 
           <DateSlip reads={reads} bookId={book.id} username={username} />
+
+          {/* Only a read book may be a favourite, so the control arrives with
+              the first read on the slip. Keyed on the stored state, so a change
+              made elsewhere re-renders it fresh. */}
+          {reads.length > 0 && (
+            <FavouriteToggle
+              key={`${favourite.isFavourite}-${favourite.full}`}
+              bookId={book.id}
+              favourite={favourite.isFavourite}
+              full={favourite.full}
+              position={favourite.position}
+              count={favourite.count}
+              moveAction={favouriteMoveAction}
+              diaryHref={diaryHref}
+              action={favouriteAction}
+            />
+          )}
 
           {paragraphs.length > 0 && (
             <div className="mt-8 flex max-w-[34rem] flex-col gap-3 text-[0.9375rem] leading-relaxed text-ink-soft">

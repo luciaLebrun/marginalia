@@ -2,7 +2,7 @@
 version: 1
 slug: "src-app-page-tsx"
 primary_target: "src/app/page.tsx"
-related_targets: ["src/app/[handle]/page.tsx","src/components/Masthead.tsx","src/app/dev/profile/page.tsx","src/components/Entry.tsx","src/components/Shelf.tsx"]
+related_targets: ["src/app/[handle]/page.tsx","src/components/Masthead.tsx","src/app/dev/profile/page.tsx","src/components/Entry.tsx","src/components/Shelf.tsx","src/components/Favourites.tsx","src/components/ArrangeFavourites.tsx"]
 ---
 
 Scope: the reading diary grid — `/` for the signed-in reader and `/@[username]`
@@ -110,6 +110,62 @@ no concept roll, no new tone, type step or motion.
   `prefetch={false}` so a long shelf does not fetch every book page in view.
 - Confirmed answers: visitors get no link (not the permalink, not the door);
   the target is the book page, not the entry permalink.
+
+## Favourites (MRG-071) — extension, confirmed with the user
+
+An addition inside this surface, inheriting the direction contract unchanged:
+no concept roll, no new tone, type step or motion.
+
+- Job: a reader keeps up to four books they have read at the head of their
+  diary, in an order they choose, and friends see them there.
+- Decisions confirmed on 2026-09-22: a favourite belongs to the book, not to
+  a read; at most four; only books the reader has read; the reader arranges
+  the order; favourites show in a band on the profile.
+- Confirmed brief: the band sits between the masthead and the first year
+  rule; its cells are the shelf's cell at a larger scale, four across where
+  the shelf runs six; arranging only on the reader's own diary `/`; a hint
+  line when the owner has none; no band for a visitor with none.
+- Changed by the user on 2026-09-23: favourites are arranged by drag and
+  drop, not by Earlier / Later buttons, and the control row is gone.
+  - Mouse: press a favourite and drag it onto another's position; the rest
+    close up behind it. A press under 6px of travel stays a click on the
+    link; a drag never opens the book.
+  - Touch: press and hold 350ms, then drag. A swipe that moves before the
+    hold scrolls the page. No long-press callout, no text selection.
+  - Keyboard: Alt + arrow moves the focused favourite one place (Left / Up
+    earlier, Right / Down later); focus stays on it; at an end nothing
+    moves. Dragging is never the only way.
+  - Printed state: the landing position takes the focus ring's 2px ink mark;
+    the carried cell follows the pointer, raised, with no shadow, tilt or
+    fill; the cursor is grab, then grabbing.
+  - A soft-ink 0.8125rem line under the grid, owner's diary only, which each
+    link is described by: "Drag a book to arrange them, or hold Alt (Option
+    on a Mac) and use the arrow keys." (fine pointer) / "Press and hold a book, then drag it to
+    arrange them." (coarse pointer).
+  - Taps alone (WCAG 2.5.7): the band is drag-only by the user's choice; the
+    single-pointer way to arrange is "Earlier" / "Later" on each favourite's own
+    book page (see that page's brief), chosen by the user on 2026-09-23.
+  - Each move is announced, "{title} moved to N of M."; the order updates at
+    once and settles on the server's, so a refused move falls back.
+  - The grid returns to the shelf's 1px gap in both directions; the 12px
+    row gap existed only for the control row.
+- Page order, amended: masthead, then Favourites when drawn, then year groups.
+- The rule counts "N of 4" for the owner on their own diary, "N books" in
+  public — including the owner on their own `/@handle`, who sees the public
+  band with nothing to change it by.
+- Cells link to the book page for a signed-in viewer and are inert for a
+  visitor, as on the shelf (MRG-051). Every favourite is a logged book, so
+  every cell wears earned colour.
+- States: owner with 0 favourites and ≥1 read — the rule ("0 of 4") over the
+  hint line "Up to four books you’ve read, in the order you choose. Open one
+  from your shelf and add it from its page." · owner with 0 reads — no band ·
+  friend or visitor looking at 0 — no band · 1–4 favourites, the empty
+  positions drawn as hairline frames so the band always holds four ·
+  pressed (mouse, under 6px) · held (touch, before 350ms) · carried, over a
+  landing position · moved by keyboard, including at an end · a refused move
+  falling back.
+- Favourites are added and taken off from the book's own page, not here; see
+  the book page brief.
 
 ## Unresolved
 

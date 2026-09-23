@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { Favourites } from "@/components/Favourites";
 import { MarkSeen } from "@/components/MarkSeen";
 import { Masthead } from "@/components/Masthead";
 import { Shelf } from "@/components/Shelf";
@@ -8,6 +9,7 @@ import { SignInDoor } from "@/components/SignInDoor";
 import { WordmarkBand } from "@/components/WordmarkBand";
 import { getAuth } from "@/lib/auth";
 import { getDiary, getDiaryCount, readingSpan } from "@/lib/diary";
+import { getFavourites } from "@/lib/favourites";
 
 export default async function DiaryPage() {
   const session = await getAuth().api.getSession({
@@ -20,9 +22,10 @@ export default async function DiaryPage() {
   // comes before anything else they can do here.
   if (!session.user.username) redirect("/claim");
 
-  const [entries, count] = await Promise.all([
+  const [entries, count, favourites] = await Promise.all([
     getDiary(session.user.id, session.user.lastSeenAt ?? null),
     getDiaryCount(session.user.id),
+    getFavourites(session.user.id),
   ]);
 
   return (
@@ -32,6 +35,9 @@ export default async function DiaryPage() {
         span={readingSpan(entries)}
         count={count}
       />
+      {/* The hint waits for a first read: before that there is nothing that
+          could be a favourite, and the empty shelf's one action is to log. */}
+      <Favourites books={favourites} arrange hint={count > 0} />
       <Shelf entries={entries} />
       <MarkSeen userId={session.user.id} />
     </main>
