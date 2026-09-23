@@ -167,6 +167,37 @@ no concept roll, no new tone, type step or motion.
 - Favourites are added and taken off from the book's own page, not here; see
   the book page brief.
 
+## Shelf order (MRG-072) — extension, confirmed with the user
+
+An addition inside this surface, inheriting the direction contract unchanged:
+no concept roll, no new tone, type step or motion.
+
+- Job: the reader revisiting months of reading, or a friend on their
+  profile, sees the shelf gathered by author or by category as well as by
+  year.
+- Decisions confirmed on 2026-09-24: category is Google's BISAC second level,
+  with Open Library subjects mapped onto it and "Uncategorised" last; a book
+  appears once (its first category, its first author); authors order by
+  surname; the order rides in the URL as `?by=year|author|category`, on `/`
+  and on `/@handle` alike.
+- The switch: its own line on the page margin between the Favourites band and
+  the first group — "Shelved by" in band voice, soft ink, then "Year",
+  "Author", "Category" as Text Buttons. The current one carries
+  `aria-current` and a 2px ink underline, so it cannot be mistaken for a
+  hovered one (1px ink); the others keep the hairline.
+  Plain links, so it works without script, keeps the scroll position, and a
+  sorted shelf can be shared. Not drawn on an empty shelf. The same line is
+  meant to carry MRG-069's language choice.
+- Group headings are the Year Rule, holding an author name or a category;
+  a long label ("Biography & Autobiography", "Ursula K. Le Guin") wraps
+  balanced at 390, the count staying top right. The leftover group —
+  "Undated", "Unknown author", "Uncategorised" — is set in soft ink.
+- The Log Cell stays in the first year group only; Author and Category show
+  books alone. Year stays the default, so capture is untouched.
+- States: each order on the owner's diary and on a profile · one group ·
+  a leftover group · a long label at 390 · an unknown `?by=` (falls back to
+  Year) · empty shelf (no switch).
+
 ## Unresolved
 
 - None blocking.

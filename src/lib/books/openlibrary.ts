@@ -1,3 +1,4 @@
+import { categoryFromSubjects } from "./category.ts";
 import type { BookDetail, BookQuery, BookSummary } from "./types.ts";
 
 const ORIGIN = "https://openlibrary.org";
@@ -121,7 +122,11 @@ export function normalizeWorkResponse(
   summary: BookSummary,
   body: unknown,
 ): BookDetail {
-  const work = (body ?? {}) as { description?: unknown; covers?: unknown };
+  const work = (body ?? {}) as {
+    description?: unknown;
+    covers?: unknown;
+    subjects?: unknown;
+  };
   const covers = Array.isArray(work.covers) ? work.covers : [];
   const firstCover = covers.find((c): c is number => typeof c === "number" && c > 0);
 
@@ -129,6 +134,7 @@ export function normalizeWorkResponse(
     ...summary,
     coverId: summary.coverId ?? firstCover,
     description: normalizeDescription(work.description),
+    category: categoryFromSubjects(work.subjects),
     source: "openlibrary",
   };
 }
@@ -263,4 +269,32 @@ export async function fetchWork(sourceKey: string): Promise<BookDetail | null> {
   }
 
   return null; // too many hops
+}
+
+/**
+ * Best-effort: give a book Google left uncategorised a category from Open
+ * Library's subjects for the same title and author (MRG-072). About half of
+ * Google's editions carry no category, French ones especially.
+ *
+ * Returns the input unchanged on any failure, so it can never fail a first
+ * open, and when the book already has a category it asks nothing.
+ */
+export async function fillCategory(detail: BookDetail): Promise<BookDetail> {
+  if (detail.category) return detail;
+  const params = buildSearchParams(
+    { title: detail.title, author: detail.authors[0] ?? "" },
+    1,
+  );
+  if (!params) return detail;
+  params.set("fields", "subject");
+
+  try {
+    const body = (await fetchJson(`${ORIGIN}/search.json?${params}`, ONE_DAY)) as {
+      docs?: { subject?: unknown }[];
+    };
+    const category = categoryFromSubjects(body.docs?.[0]?.subject);
+    return category ? { ...detail, category } : detail;
+  } catch {
+    return detail;
+  }
 }

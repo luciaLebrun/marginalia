@@ -8,10 +8,10 @@ import { Shelf } from "@/components/Shelf";
 import { SignInDoor } from "@/components/SignInDoor";
 import { WordmarkBand } from "@/components/WordmarkBand";
 import { getAuth } from "@/lib/auth";
-import { getDiary, getDiaryCount, readingSpan } from "@/lib/diary";
+import { getDiary, getDiaryCount, parseShelfOrder, readingSpan } from "@/lib/diary";
 import { getFavourites } from "@/lib/favourites";
 
-export default async function DiaryPage() {
+export default async function DiaryPage({ searchParams }: PageProps<"/">) {
   const session = await getAuth().api.getSession({
     headers: await headers(),
   });
@@ -38,7 +38,11 @@ export default async function DiaryPage() {
       {/* The hint waits for a first read: before that there is nothing that
           could be a favourite, and the empty shelf's one action is to log. */}
       <Favourites books={favourites} arrange hint={count > 0} />
-      <Shelf entries={entries} />
+      <Shelf
+        entries={entries}
+        by={parseShelfOrder((await searchParams).by)}
+        path="/"
+      />
       <MarkSeen userId={session.user.id} />
     </main>
   );

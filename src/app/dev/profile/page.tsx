@@ -5,7 +5,7 @@ import { Favourites } from "@/components/Favourites";
 import { Masthead } from "@/components/Masthead";
 import { Shelf } from "@/components/Shelf";
 import { BIO_MAX } from "@/lib/account";
-import { getDiary, getDiaryCount, readingSpan } from "@/lib/diary";
+import { getDiary, getDiaryCount, parseShelfOrder, readingSpan } from "@/lib/diary";
 import { getFavourites } from "@/lib/favourites";
 import { profileMastheadLink } from "@/lib/masthead-link";
 import { MAX_LENGTH as USERNAME_MAX } from "@/lib/username";
@@ -70,6 +70,8 @@ export default async function DevProfilePage({ searchParams }: PageProps<"/dev/p
       <Favourites books={favourites} linkBooks={viewer !== "visitor"} />
       <Shelf
         entries={entries}
+        by={parseShelfOrder(params.by)}
+        path="/dev/profile"
         canLog={false}
         linkBooks={viewer !== "visitor"}
         readerName={user.name}
