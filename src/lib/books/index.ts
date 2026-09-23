@@ -86,6 +86,9 @@ export function parseBookKey(raw: string): string | null {
  */
 const GOOGLE_SLOTS = 12;
 
+/** The page `GOOGLE_SLOTS` is a share of, and the step "show more" adds. */
+export const PAGE_SIZE = 20;
+
 /** Strip case, accents and punctuation, so "Piranèse" and "piranese" meet. */
 function fold(text: string): string {
   return text
@@ -114,12 +117,18 @@ export function identityKeys(book: BookSummary): string[] {
 }
 
 /**
- * Pure. Merge two sources' results into one page, Google's block first.
+ * Pure. Merge two sources' results a page at a time, Google's block first on
+ * every page.
  *
- * Google holds the top of the grid, capped at `GOOGLE_SLOTS`; Open Library
- * fills the rest and then, if it has not used its share, Google is allowed
- * back in to finish the page. So a query only one source answers still fills
- * the grid, and a query both answer shows both.
+ * On each page of `PAGE_SIZE`, Google holds the top, capped at `GOOGLE_SLOTS`;
+ * Open Library fills the rest and then, if it has not used its share, Google
+ * is allowed back in to finish the page. So a query only one source answers
+ * still fills the grid, and a query both answer shows both.
+ *
+ * Page by page rather than one block, because "show more" (MRG-073) must only
+ * ever add rows under the ones the reader was looking at. Merged as one block,
+ * a 40-book ask would hand Google 24 slots at the top and reshuffle the first
+ * page out from under them.
  */
 export function mergeResults(
   google: BookSummary[],
@@ -129,9 +138,11 @@ export function mergeResults(
   const seen = new Set<string>();
   const out: BookSummary[] = [];
 
+  // Each pass starts from the top of a source again; `seen` skips what an
+  // earlier page already took, so no cursor is needed.
   const take = (books: BookSummary[], room: number) => {
     for (const book of books) {
-      if (room <= 0 || out.length >= limit) return;
+      if (room <= 0) return;
       const keys = identityKeys(book);
       if (keys.some((k) => seen.has(k))) continue;
       for (const k of keys) seen.add(k);
@@ -140,9 +151,15 @@ export function mergeResults(
     }
   };
 
-  take(google, Math.min(GOOGLE_SLOTS, limit));
-  take(openLibrary, limit - out.length);
-  take(google, limit - out.length); // Google finishes the page if room is left.
+  let pageEnd = 0;
+  while (out.length < limit) {
+    pageEnd = Math.min(pageEnd + PAGE_SIZE, limit);
+    const before = out.length;
+    take(google, Math.min(GOOGLE_SLOTS, pageEnd - out.length));
+    take(openLibrary, pageEnd - out.length);
+    take(google, pageEnd - out.length); // Google finishes the page if room is left.
+    if (out.length === before) break; // Both sources are spent.
+  }
   return out;
 }
 

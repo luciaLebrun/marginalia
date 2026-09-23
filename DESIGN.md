@@ -379,8 +379,12 @@ populated shelf is nearly always derived from the jacket and conditioned before 
   labels and hints, a closed
   code's characters, supporting copy (a book's description among it), the author at
   the foot of a type-only jacket, a review permalink's "First published" line, its
-  no-review sentence, and the `@handle` and read date under its signature, and the
-  scrollbar thumb. It is the only tonal step below ink; there is no third text grey.
+  no-review sentence, and the `@handle` and read date under its signature, the line
+  beside an unavailable "Show 20 more" saying why, the line beside "Add to favourites" at
+  four ("You have four already. Take one off from its own page to make room."), the
+  owner's hint under an empty favourites rule ("Up to four books you’ve read, in the
+  order you choose. Open one from your shelf and add it from its page."), the line under
+  the owner's favourites saying how to arrange them, and the scrollbar thumb. It is the only tonal step below ink; there is no third text grey.
 - **Hairline Rule** (`{colors.rule}`): ink at 15% alpha. Every hairline in the shelf
   — cell borders, record-band separator, and the ruled column lines that show a
   partial row's unfilled positions — plus the resting stroke under a field value,
@@ -425,7 +429,10 @@ with the flag already earned: the entry's own existence is what proves the book 
 the shelf, so that card's colour band is never held back to ink. A book merely
 *waiting* is held back the same way: every spine on the to-read list is ink, because
 colour is earned by reading and not by saving, and no jacket colour is extracted for a
-book that has never been logged.
+book that has never been logged. A favourite always wears earned colour, because only
+a book the reader has logged can be one: removing a book's last read takes it off the
+reader's favourites as well as off the shelf, so no favourite is ever left to fall back
+to ink.
 
 **The Refusal Tone Rule.** Alarm red says one thing — *this was refused, or this is
 about to destroy something* — and it says it as a stroke or as words, never as a
@@ -466,7 +473,7 @@ of the system, and it is what makes a second typeface unnecessary.
   overflowing, and capped at the title column's 34rem edge. The largest type on the
   page. Both steps are recorded tokens.
 - **Headline** (600, 1.75rem → 2.25rem at ≥640px, lh 1, −0.02em): the year on a year
-  rule, the door's one sentence of proposition, and the title at the head of a
+  rule, "Favourites" on the favourites rule, the door's one sentence of proposition, and the title at the head of a
   page-scale type-only jacket (1.75rem, reaching 2.25rem only at ≥64rem, where the
   frontispiece column is wide enough not to break a word). Chronology is the structure the
   shelf is ordered by, so it is drawn at a scale that carries across a viewport
@@ -487,7 +494,9 @@ of the system, and it is what makes a second typeface unnecessary.
   this step in paper, balanced and underlined, because a waiting book's title is the
   value that spine carries.
 - **Title** (600, 0.8125rem, lh tight, balanced): a book title in an entry's record
-  band. Small on purpose — the jacket above it is the identifying object.
+  band. Small on purpose — the jacket above it is the identifying object. A favourite's
+  record band sets its title one step up, at 0.9375rem, because the cell runs four
+  across where the shelf runs six.
 - **Body** (400, 0.9375rem / 0.875rem, lh relaxed, soft ink, capped ~34–38rem):
   the empty-shelf guidance, the door's explanation, the delete fence's
   consequences, a book's description (on the title page's 34rem edge), and the
@@ -557,7 +566,8 @@ no other field joins the exception without the same approval.
 
 ## Layout
 
-The page is a full-bleed vertical stack: masthead, then year-grouped shelf sections.
+The page is a full-bleed vertical stack: masthead, then the Favourites band when it
+is drawn, then year-grouped shelf sections.
 There is no centred max-width container and no side gutters at the page level —
 bands run edge to edge, which is what makes them read as printed bands rather than
 as cards. The account sheet is the same stack: header, one continuous column of
@@ -717,6 +727,10 @@ page, not by chrome:
   the underline under a slip line's "Edit" under the pointer and while open, a ticked reread box (with its tick drawn in), a text
   button's or link's underline under the pointer (the band's full foreground on a
   band; full alarm inside a refusal sentence).
+- **Where a carried book would land** — the focus ring's mark, 2px ink at a 2px
+  offset, on the favourites position under the pointer; the carried cell itself takes the
+  Entry Card's hover mark — border and record rule in solid ink — from the moment it
+  is lifted, so a touch reader sees the hold arm.
 - **Awaiting the next keystroke** — sunk paper as the cell's ground, so the position
   the next character lands in is visible without a blinking cursor.
 - **Refused** — the stroke redrawn in alarm red, on the field that failed and on
@@ -779,6 +793,8 @@ moment it was taken.
   sentence of soft-ink body copy on a full-width sunk-paper band. Not alarm, because
   nothing was refused. It is kept visibly apart from "no matches", which is plain
   soft-ink body copy on paper.
+- **Showing more:** books added by "Show 20 more" fill the partial row's ruled slots
+  and then the rows below; the books already shown never move.
 
 ### Log Cell (primary action)
 
@@ -851,9 +867,37 @@ the sheet, never a filled badge and never a toggle.
   halves wrap rather than shrinking.
 - **Refusal:** the sentence at the body step in alarm under the line, with "Sign in
   again" where the reader is signed out. Taking off has its own wording ("Not taken off:
-  you're signed out."), never the saving sentence reused.
+  you’re signed out."), never the saving sentence reused.
 - **Announced:** a visually hidden readout says "Saved to your to-read list." or "Taken
   off your to-read list."; the same readout stands under the pile when a spine goes.
+
+### Favourite
+
+A read book's place among the reader's four, set on a book page after the date slip and
+before the description, on the 34rem measure. It is drawn only once the slip holds a
+read, because only a read book may be a favourite. Character: Want to Read's printed
+line, one step further along.
+
+- **Not a favourite:** an Outline Button, "Add to favourites". Pending, it reads
+  "Adding…" in the same grid cell at a held width and keeps its flood under the pointer
+  or focus.
+- **A favourite:** Want to Read's saved line — a ruled line closed by a hairline, the
+  drawn tick in its 20px hairline box, "One of your favourites" in band voice, and at
+  the right end "Your favourites" (to the diary) and "Take it off" as Text Buttons,
+  "Taking it off…" while it runs. With two or more favourites the line adds its place
+  in soft ink ("· 2 of 3"), and "Earlier" and "Later" lead the Text Buttons, ruled
+  through at an end; focus passes to the other when the pressed one reaches an end.
+  They are the single-pointer way to arrange (WCAG 2.5.7), chosen by the user on
+  2026-09-23 so the diary's band stays drag-only.
+- **At four:** the button stays, ruled through (the Outline Button's disabled mark),
+  with one soft-ink 0.8125rem line beside it: "You have four already. Take one off from
+  its own page to make room." and a "Your favourites" link.
+- **Refusal:** one body-step sentence in alarm under the control, with "Sign in again"
+  when the reader is signed out.
+- **Announced:** a visually hidden readout says "Added to your favourites." or "Taken
+  off your favourites.". After either, focus goes to the replacement's first control —
+  "Your favourites" once added, the button once taken off — unless the reader has
+  already moved elsewhere.
 
 ### Masthead (page-scale tri-band)
 
@@ -896,6 +940,57 @@ A full-width ruled band on sunk paper, bordered top and bottom in solid ink: the
 at headline scale left, the group's book count in soft-ink label type right. It is a
 band, not a hairline, because chronology is the shelf's organising structure.
 
+### Favourites Band
+
+Up to four books the reader has chosen, between the masthead and the first year rule:
+the shelf's own cell at a larger scale, so the band reads as a statement drawn from the
+shelf rather than a second list. Character: the four books pulled forward on the shelf.
+
+- **Rule:** the Year Rule's anatomy — sunk paper, solid ink top and bottom — headed
+  "Favourites" at the headline step, the count right in soft-ink band voice: "N of 4"
+  for the owner on their own diary, "N books" in public. The grid hangs 12px under it.
+- **Grid:** 2 columns, 4 from 40rem, joined on the shelf's 1px hairline gap in both
+  directions. Each linked cell rises in paint order under the pointer and on focus, as
+  on the shelf grid.
+- **Four positions, always:** an empty position is a hairline frame (`aria-hidden`)
+  that the row stretches to its neighbours' height. The frames are drawn as positions of
+  their own rather than by the shelf's column gradient; they are the Ruled Signature
+  Rule's empty slots, never placeholder cards.
+- **Cell:** the Entry Card, with the record band holding the title alone at 0.9375rem
+  (600, tight, balanced). Every favourite is logged, so its colour band always wears
+  earned colour. A signed-in viewer's cell is one link to its book page, named by title
+  and author, with the Entry Card's hover and focus; a visitor's is inert, as on the
+  shelf.
+- **Arrange:** on the owner's own diary `/` only, by dragging the cells themselves;
+  there is no control row. The owner on their own `/@handle` sees the public band, with
+  nothing to change it by.
+  - *Mouse:* press a favourite and drag it onto another's position; the rest close up
+    behind it. A press that travels under 6px stays a click on the link, and a drag
+    never opens the book.
+  - *Touch:* press and hold for 350ms, then drag. A swipe that moves before the hold
+    scrolls the page as normal. The long-press callout and text selection are
+    suppressed on these cells.
+  - *Keyboard:* Alt with an arrow key moves the focused favourite one place — Left and
+    Up earlier, Right and Down later — and focus stays on it. At an end nothing moves.
+    Dragging is never the only way.
+- **Printed state while arranging:** the position a carried book would land in takes a
+  2px ink ring at a 2px offset, the focus ring's mark. The carried cell follows the
+  pointer, raised in paint order, its border and record rule in solid ink (the Entry
+  Card's hover mark, which a touch reader otherwise never sees, and which shows the
+  moment a touch hold arms) and nothing else: no shadow, no tilt, no fill. That
+  is direct manipulation, not an authored motion — no transition, no easing — so the
+  One Moment Rule stands. The cursor is grab over a cell, grabbing while one is carried. The position the book was lifted from stays in the grid, drawn as an empty position (a hairline frame) until the book is dropped.
+- **Hint:** on the owner's diary only, one soft-ink 0.8125rem line under the grid, which
+  every favourite's link is `aria-describedby`: "Drag a book to arrange them, or hold
+  Alt (Option on a Mac) and use the arrow keys." on a fine pointer, "Press and hold a book, then drag it
+  to arrange them." on a coarse one.
+- **Order:** it changes at once and settles on what the server returns, so a refused
+  move falls back. A visually hidden readout announces each move: "{title} moved to N
+  of M."
+- **Empty:** the owner with no favourites but at least one read gets the rule ("0 of 4")
+  over the soft-ink hint line at the body step, capped at 38rem. With no reads, and for
+  anyone else looking at none, the band is not drawn.
+
 ### Book Title Page (page-scale tri-band)
 
 One book, opened: the tri-band frame at page scale, run beneath the wordmark band.
@@ -912,7 +1007,8 @@ page.
 - **Band two, frontispiece and title page:** the jacket in a 2:3 sunk-paper well with
   a hairline border, facing the title column (see Layout). In that column: the title
   at display scale, the subtitle at the field step in soft ink, the imprint rows, the
-  Want to Read control, the date slip, then the description in soft-ink body copy.
+  Want to Read control, the date slip, the Favourite control once the slip holds a
+  read, then the description in soft-ink body copy.
 - **Imprint rows:** a list opened by a hairline, one row per known value, each closed
   by a hairline, 10px vertical. The label sits left in soft-ink band voice and the
   value right on the same baseline, at body size, weight 500, in ink. A value Open
@@ -1177,23 +1273,33 @@ log sheet. Character: a band, not a toolbar.
 
 The standing control outside the form — "Mint a code", "Sign out", "Delete this
 account", "Search for a book" on a book page that was not found and on an empty to-read
-list, where it is a link, "Want to read" on a book page, and "Remove" in an edit sheet's
-armed removal. Character: a label with a border drawn around it.
+list, where it is a link, "Want to read" and "Add to favourites" on a book page, "Remove" in an edit sheet's
+armed removal, and "Show 20 more", a link 24px under a full grid of search results,
+its left edge on the page padding. Character: a label with a border drawn around it.
 
 - **Shape:** square, 1px border, 12px/10px padding, band-voice label, paper ground.
 - **Border:** solid ink when the control is available; hairline while it is not.
   Alarm when the control is armed and irreversible: "Delete this account" once the
-  handle is typed back, and "Remove", which is only ever shown armed. Pending, an armed
-  control's label becomes the live readout ("Removing…").
+  handle is typed back, and "Remove", which is only ever shown armed.
+- **Pending:** any Outline Button whose action waits on a source — an armed one or
+  not — turns its label into the live readout in place ("Removing…", "Finding
+  more…"). Both labels share one grid cell, so the button holds the longer width and
+  nothing beside it moves; the flood stays while it is under the pointer or focused.
 - **Hover / focus-visible:** floods with the fiction band. Colour only; nothing moves.
-- **Disabled:** the label is ruled through at 50% opacity — the printed mark for
-  unavailable — never a grey chrome fill.
+- **Disabled:** the label is ruled through and the whole control drops to 50% opacity,
+  label and hairline border together — the printed mark for unavailable — never a grey
+  chrome fill. The delete fence's button before the handle is typed back, "Show 20
+  more", and "Add to favourites" at four all use it. A control that can no longer act is
+  never removed: "Show 20 more" at the cap or after a short step, and "Add to
+  favourites" at four, stay in this mark (a native disabled button), each with one
+  soft-ink line beside it at 0.8125rem saying why.
 
 ### Text Button
 
 The secondary control inside a form row — "Undated" and "Clear" on the log sheet,
-"Remove this read" and "Keep it" under an edit sheet's commit band, and "Your list" and
-"Take it off" on the saved line of a book page's Want to Read.
+"Remove this read" and "Keep it" under an edit sheet's commit band, "Your list" and
+"Take it off" on the saved line of a book page's Want to Read, and "Earlier", "Later",
+"Your favourites" and "Take it off" on a favourite's line.
 Character: a word in the row's margin, not a second button.
 
 - **Shape:** no border, no ground, no padding; a band-voice label in ink, underlined

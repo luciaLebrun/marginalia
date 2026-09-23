@@ -304,8 +304,14 @@ export function buildSearchQuery({ title, author }: BookQuery): string {
 
 /**
  * Search volumes, title and author scoped separately (MRG-068). `printType=books`
- * asks Google to keep magazines out of a reading diary, and its documented cap
- * on `maxResults` is 40.
+ * asks Google to keep magazines out of a reading diary.
+ *
+ * Google serves **at most 20 per request, whatever `maxResults` says** — the
+ * documented cap is 40, and measured live 2026-09-22 `maxResults=40` returns
+ * 20. So a longer ask is paged by `startIndex`, in parallel (MRG-073): the
+ * pages were measured not to overlap, and the first is the same 20 whether or
+ * not more follow. Only the first page is required; a later page failing costs
+ * the tail, not the search.
  *
  * `orderBy` is deliberately absent: `relevance` is the documented default, and
  * the alternative (`newest`) is wrong for a diary. `langRestrict` is absent
@@ -323,13 +329,26 @@ export async function searchVolumes(
   if (!q) return [];
 
   const fields = encodeURIComponent(`items(${VOLUME_FIELDS})`);
-  const url =
-    `${ORIGIN}/volumes?q=${encodeURIComponent(q)}` +
-    `&maxResults=${Math.min(limit, 40)}&printType=books` +
-    `&fields=${fields}`;
+  const page = (start: number) =>
+    fetchJson(
+      `${ORIGIN}/volumes?q=${encodeURIComponent(q)}` +
+        `&maxResults=${Math.min(limit - start, GOOGLE_PAGE)}&startIndex=${start}` +
+        `&printType=books&fields=${fields}`,
+      ONE_DAY,
+    );
 
-  return normalizeSearchResponse(await fetchJson(url, ONE_DAY));
+  const starts: number[] = [];
+  for (let start = 0; start < limit; start += GOOGLE_PAGE) starts.push(start);
+  const [first, ...rest] = await Promise.allSettled(starts.map(page));
+
+  if (first.status === "rejected") throw first.reason;
+  return [first, ...rest].flatMap((result) =>
+    result.status === "fulfilled" ? normalizeSearchResponse(result.value) : [],
+  );
 }
+
+/** What Google actually serves per request, not what it documents. */
+const GOOGLE_PAGE = 20;
 
 /**
  * Fetch one volume by its bare id.

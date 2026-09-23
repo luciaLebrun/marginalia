@@ -2,7 +2,7 @@
 version: 1
 slug: "src-app-search-page-tsx"
 primary_target: "src/app/search/page.tsx"
-related_targets: ["src/components/SearchField.tsx","src/components/SearchResults.tsx","src/components/SearchResult.tsx"]
+related_targets: ["src/components/SearchField.tsx","src/components/SearchResults.tsx","src/components/SearchResult.tsx","src/components/ShowMore.tsx"]
 ---
 
 Scope: `/search` — find the book just finished and pick it. The first step of
@@ -67,7 +67,10 @@ SOURCE, not by closeness, so "closest first" and its kin are forbidden here —
 Google leads the grid because it is steadier under load, not because it ranks
 better.
 Then the shelf grid of result cells, 2 columns at 390, 6 at 1440, starting
-immediately below the band. Blank query: the field and one line of guidance,
+immediately below the band. Under a full grid, 24px down with its left edge on
+the page padding, an Outline Button "Show 20 more" (MRG-073). The band's
+"First N" follows the count — "First 40 — add the author to narrow it" — and
+the no-ordering rule binds at 40 and 60 exactly as at 20. Blank query: the field and one line of guidance,
 nothing else.
 
 FORM: an extension of the established tri-band world (seed 400639f1), not a new
@@ -99,12 +102,40 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 - The guidance is guidance, not a caption: it is on the page only while the
   query is blank. Once either line is filled the reader has followed it.
 
+- **Show more (MRG-073, 2026-09-22):** an Outline Button link, chosen over a
+  full-width ink band; steps of 20, capped at 60 (user's calls). Constraints
+  that bind it:
+  - `?shown=` is URL-backed and only a whole multiple of 20 up to 60 counts;
+    anything else is the first page.
+  - The merge fills **page by page** (12 Google / 8 Open Library each), so
+    page 1 never changes and books only ever append — into the partial row's
+    ruled slots, then below. Merging one block would reshuffle the top.
+  - Google serves at most 20 per request whatever `maxResults` says (measured
+    live), so it is paged by `startIndex`.
+  - `prefetch` off: the control never spends upstream calls by scrolling into
+    view. `scroll` off: the reader stays put. `shown` is left out of the
+    Suspense key, so the books on screen stay while more arrive.
+  - **Focus:** keyboard activation moves focus to the first new result (#21,
+    #41) without scrolling; the band's `<output>` announces the new count. A
+    pointer click moves nothing.
+  - **Never removed** (Printed State Rule): at the cap, or when a step comes
+    back short, it stays ruled through (hairline border, struck label at 50%,
+    a native disabled `<button>`) with one soft-ink line beside it — "Sixty is the most a
+    search shows — add the author to narrow it" (the band's offer, by which
+    line is empty; no offer with both filled), or "That is every book the
+    search found." when the sources are spent — never "both sources": one may
+    be down and merged as nothing, and the surface never names a source.
+
 ## States
 
 Blank (both lines empty, the hint present, band says "No search yet") ·
 searching (both lines stay, band says "Searching…" over the ruled empty grid,
 no skeleton cards) · results 1–20 · exactly 20 (narrowing offer worded by which
-line is still empty) · title only · author only · no results · unavailable (soft ink on sunk paper, not alarm — nothing
+line is still empty) · title only · author only · show more offered (a full page at 20 or 40) ·
+finding more ("Finding more…" in place, width held, flood kept under the
+pointer or focus) · show more ruled through at the cap (60) · ruled through
+because the sources are spent (a short page after a step) · a short first page
+(no control at all) · no results · unavailable (soft ink on sunk paper, not alarm — nothing
 was refused) · signed out → `/` · no handle → `/claim`.
 
 ## Unresolved

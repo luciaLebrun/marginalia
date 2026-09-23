@@ -9,7 +9,7 @@ import { WordmarkBand } from "@/components/WordmarkBand";
 import { OpenLibraryError, searchBooks } from "@/lib/books";
 import { normalizeSearchResponse } from "@/lib/books/openlibrary";
 import { normalizeSearchResponse as normalizeVolumes } from "@/lib/books/google-books";
-import { parseQuery, type Search } from "@/lib/search";
+import { parseQuery, parseShown, type Search } from "@/lib/search";
 
 /**
  * Development harness for the search surface.
@@ -26,10 +26,22 @@ import { parseQuery, type Search } from "@/lib/search";
  * - `empty` — no matches.
  * - `down` — both sources erroring.
  * - `slow` — the fixture after four seconds, to see the pending state.
+ * - `full` — as many as asked for, so "show more" (MRG-073) has full pages to
+ *   page through. The recorded books from both fixtures, repeated under
+ *   distinct keys: real books, never invented ones, but a test grid, not a
+ *   quality baseline.
+ * - `fullslow` — the same after two seconds, to see "show more" pending.
  *
  * It 404s outside development, and it grants nothing: no session, no database,
  * no mutation.
  */
+const recorded = [...normalizeVolumes(googleDune), ...normalizeSearchResponse(dune)];
+const full: Search = async (_query, limit) =>
+  Array.from({ length: limit }, (_, i) => {
+    const book = recorded[i % recorded.length];
+    return { ...book, sourceKey: `${book.sourceKey}-${i}` };
+  });
+
 const SOURCES: Record<string, Search> = {
   fixture: async () => normalizeSearchResponse(dune),
   google: async () => normalizeVolumes(googleDune),
@@ -37,6 +49,11 @@ const SOURCES: Record<string, Search> = {
   empty: async () => [],
   down: async () => {
     throw new OpenLibraryError(503, "dev harness: simulated outage");
+  },
+  full,
+  fullslow: async (query, limit) => {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    return full(query, limit);
   },
   slow: async () => {
     await new Promise((resolve) => setTimeout(resolve, 4000));
@@ -64,6 +81,7 @@ export default async function DevSearchPage({
       <Suspense key={`${source}:${query.title}|${query.author}`} fallback={<SearchPending diaryHref="/dev/shelf" />}>
         <SearchResults
           query={query}
+          shown={parseShown(params.shown)}
           search={SOURCES[source]}
           diaryHref="/dev/shelf"
           searchAction="/dev/search"

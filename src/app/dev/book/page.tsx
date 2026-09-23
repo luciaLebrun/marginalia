@@ -13,6 +13,7 @@ import {
   BookUnavailable,
 } from "@/components/BookStates";
 import { BookTitlePage } from "@/components/BookTitlePage";
+import { toggleDevFavouriteAction } from "./actions";
 import { WordmarkBand } from "@/components/WordmarkBand";
 import type { Book } from "@/db/schema";
 import { toBookRow } from "@/lib/book";
@@ -40,6 +41,10 @@ import { normalizeSearchResponse, normalizeWorkResponse } from "@/lib/books/open
  * - `nocover` — a real coverless result: the type-only jacket.
  * - `subtitle` — a real book whose record carries a subtitle.
  * - `authors` — a real book with three names, to wrap the author band.
+ * - `favourite` — Dune read, and one of the reader's favourites, 2 of 3 (MRG-071).
+ * - `favourite-first` — the same, first of three: Earlier ruled through.
+ * - `full` — Dune read, not a favourite, with four already: the control
+ *   ruled through beside its reason.
  * - `opening` · `down` · `missing` — the three other states.
  *
  * Every book here is real recorded data. The reads are invented, the way
@@ -196,7 +201,47 @@ function State({ state }: Readonly<{ state: string }>) {
     case "saved":
       return <BookTitlePage book={DUNE} reads={[]} onToRead username="lucia" diaryHref={DIARY} />;
     case "shelf":
-      return <BookTitlePage book={DUNE} reads={SHELF_READS} username="lucia" diaryHref={DIARY} />;
+      return (
+        <BookTitlePage
+          book={DUNE}
+          reads={SHELF_READS}
+          username="lucia"
+          diaryHref={DIARY}
+          favouriteAction={toggleDevFavouriteAction}
+        />
+      );
+    case "favourite":
+      return (
+        <BookTitlePage
+          book={DUNE}
+          reads={SHELF_READS}
+          favourite={{ isFavourite: true, full: false, position: 1, count: 3 }}
+          username="lucia"
+          diaryHref={DIARY}
+          favouriteAction={toggleDevFavouriteAction}
+        />
+      );
+    case "favourite-first":
+      return (
+        <BookTitlePage
+          book={DUNE}
+          reads={SHELF_READS}
+          favourite={{ isFavourite: true, full: false, position: 0, count: 3 }}
+          username="lucia"
+          diaryHref={DIARY}
+          favouriteAction={toggleDevFavouriteAction}
+        />
+      );
+    case "full":
+      return (
+        <BookTitlePage
+          book={DUNE}
+          reads={SHELF_READS}
+          favourite={{ isFavourite: false, full: true, position: -1, count: 4 }}
+          username="lucia"
+          diaryHref={DIARY}
+        />
+      );
     case "fallback":
       return <BookTitlePage book={DUNE_WITHOUT_COLOUR} reads={SHELF_READS} username="lucia" diaryHref={DIARY} />;
     case "undated":

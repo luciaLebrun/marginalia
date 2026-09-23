@@ -5,11 +5,14 @@ import { OpenLibraryError } from "@/lib/books";
 import { normalizeSearchResponse } from "@/lib/books/openlibrary";
 import {
   MAX_QUERY_LENGTH,
+  MAX_SHOWN,
   SEARCH_LIMIT,
   bandText,
+  endLine,
   isBlank,
   noMatch,
   parseQuery,
+  parseShown,
   parseTerm,
   queryPhrase,
   runSearch,
@@ -71,6 +74,33 @@ describe("parseQuery", () => {
   });
 });
 
+describe("parseShown", () => {
+  it("reads whole pages up to the cap", () => {
+    expect(parseShown("40")).toBe(40);
+    expect(parseShown(["60", "20"])).toBe(60);
+    expect(parseShown("1000")).toBe(MAX_SHOWN);
+  });
+
+  /* A hand-edited URL gets the ordinary search, never an error. */
+  it("falls back to the first page on anything else", () => {
+    for (const raw of [undefined, "", "abc", "25", "0", "-20", "20.5", "1e9x"]) {
+      expect(parseShown(raw)).toBe(SEARCH_LIMIT);
+    }
+  });
+});
+
+describe("endLine", () => {
+  it("repeats the narrowing offer at the cap, by which line is empty", () => {
+    expect(endLine("cap", q("dune"))).toMatch(/add the author/);
+    expect(endLine("cap", q("", "herbert"))).toMatch(/add a title/);
+    expect(endLine("cap", q("dune", "herbert"))).not.toMatch(/add/);
+  });
+
+  it("never offers to narrow when the sources are spent", () => {
+    expect(endLine("spent", q("dune"))).not.toMatch(/add/);
+  });
+});
+
 describe("isBlank", () => {
   it("is blank only when neither field was filled", () => {
     expect(isBlank(q(""))).toBe(true);
@@ -112,6 +142,44 @@ describe("runSearch", () => {
     }));
     const outcome = await runSearch(q("dune"), vi.fn<Search>().mockResolvedValue(full));
     expect(outcome).toMatchObject({ kind: "results", limited: true });
+  });
+
+  /* MRG-073: a full page is the only evidence there is more to show. */
+  describe("show more", () => {
+    const page = (n: number) =>
+      Array.from({ length: n }, (_, i) => ({ ...dune[0], sourceKey: `OL${i}W` }));
+
+    it("offers the next page after a full one", async () => {
+      const outcome = await runSearch(q("dune"), vi.fn<Search>().mockResolvedValue(page(20)));
+      expect(outcome).toMatchObject({ more: 40 });
+    });
+
+    it("asks the sources for as many as the URL shows", async () => {
+      const search = vi.fn<Search>().mockResolvedValue(page(40));
+      const outcome = await runSearch(q("dune"), search, 40);
+      expect(search).toHaveBeenCalledWith(q("dune"), 40);
+      expect(outcome).toMatchObject({ limited: true, more: 60 });
+    });
+
+    it("says the sources are spent after a short page", async () => {
+      const outcome = await runSearch(q("dune"), vi.fn<Search>().mockResolvedValue(page(27)), 40);
+      expect(outcome).toMatchObject({ limited: false, end: "spent" });
+      expect(outcome).not.toHaveProperty("more");
+    });
+
+    it("stops offering at the cap, and still says the page is limited", async () => {
+      const search = vi.fn<Search>().mockResolvedValue(page(MAX_SHOWN));
+      const outcome = await runSearch(q("dune"), search, MAX_SHOWN);
+      expect(outcome).toMatchObject({ limited: true, end: "cap" });
+      expect(outcome).not.toHaveProperty("more");
+    });
+
+    /* A first page draws no control at all unless there is more to show. */
+    it("gives a short first page neither more nor an end", async () => {
+      const outcome = await runSearch(q("dune"), vi.fn<Search>().mockResolvedValue(page(7)));
+      expect(outcome).not.toHaveProperty("more");
+      expect(outcome).not.toHaveProperty("end");
+    });
   });
 
   it("reports no matches as none", async () => {

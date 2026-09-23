@@ -1,13 +1,17 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   date,
   index,
   integer,
   numeric,
   pgTable,
   primaryKey,
+  smallint,
   text,
   timestamp,
+  unique,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
@@ -233,6 +237,42 @@ export const toRead = pgTable(
   ],
 );
 
+/**
+ * A reader's favourite books (MRG-071): at most four, in an order the reader
+ * sets, shown as a band on their diary and profile.
+ *
+ * The database holds both rules, so no code path can break them:
+ * - **At most four** is `position` between 0 and 3 and unique per reader. A
+ *   fifth insert has no free position and fails the check.
+ * - **The order** is `position`. The unique constraint is DEFERRABLE, added by
+ *   hand in migration 0005 because Drizzle cannot express it, so a swap of two
+ *   positions is one UPDATE checked at the end of the statement. The neon-http
+ *   driver cannot hold a transaction open, so one statement is the only atomic
+ *   unit there is.
+ *
+ * Only a book the reader has logged may be a favourite; that is checked in the
+ * same INSERT (`src/lib/favourites.ts`), and removing a book's last read takes
+ * it off (`removeRead`).
+ */
+export const favourite = pgTable(
+  "favourite",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    bookId: text("book_id")
+      .notNull()
+      .references(() => book.id, { onDelete: "restrict" }),
+    position: smallint("position").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.bookId] }),
+    unique("favourite_user_position_unique").on(t.userId, t.position),
+    check("favourite_position_range", sql`${t.position} BETWEEN 0 AND 3`),
+  ],
+);
+
 export type User = typeof user.$inferSelect;
 export type Book = typeof book.$inferSelect;
 export type NewBook = typeof book.$inferInsert;
@@ -240,3 +280,4 @@ export type Log = typeof log.$inferSelect;
 export type NewLog = typeof log.$inferInsert;
 export type InviteCode = typeof inviteCode.$inferSelect;
 export type ToRead = typeof toRead.$inferSelect;
+export type Favourite = typeof favourite.$inferSelect;

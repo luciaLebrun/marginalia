@@ -67,6 +67,12 @@ one indexed query rather than a third-party round-trip.
 Confirmed in scope for the first release: search for a book, log it with a read
 date, rate it in half-stars, write a review, and view a profile of your entries.
 
+Confirmed with the user on 2026-09-22: **favourite books** are in scope. A
+reader may choose up to four favourites. A favourite belongs to the book, not
+to a particular read, and only a book the reader has read can be one; the
+reader sets their order, and they are shown on the reader's public profile as
+well as their own diary.
+
 Durable constraints:
 
 - **Zero cost.** Every layer must sit inside a permanent free tier, for the
@@ -101,6 +107,8 @@ Beyond the first release, two directions are stated rather than parked:
 
 Explicitly undecided: whether a friends' feed, custom shelves or public lists,
 reading progress, or saved quotes are ever built. They are parked, not planned.
+A fixed four favourites is not a public list, so shipping it leaves public lists
+undecided.
 
 ## Brand Commitments
 

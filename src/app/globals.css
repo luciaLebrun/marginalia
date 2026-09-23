@@ -167,12 +167,64 @@
    * pointed-at or focused cell changes paint order only — nothing moves.
    * Covers every link in the grid: entries, search results, the log cell.
    */
-  .shelf-grid a {
+  .shelf-grid a,
+  .favourites-grid a {
     position: relative;
   }
   .shelf-grid a:hover,
-  .shelf-grid a:focus-visible {
+  .shelf-grid a:focus-visible,
+  .favourites-grid a:hover,
+  .favourites-grid a:focus-visible {
     z-index: 1;
+  }
+
+  /*
+   * Favourites (MRG-071): the shelf's cell at a larger scale, two by two on a
+   * phone and four across from 40rem, joined on the same 1px hairline. Empty
+   * positions are drawn as cells of their own (see Favourites.tsx).
+   */
+  .favourites-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+  }
+
+  @media (min-width: 40rem) {
+    .favourites-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  /*
+   * Arranging favourites: the position a carried book would land in takes the
+   * ink ring a focused cell does — a printed mark, not a fill or a shadow. A
+   * held press on a phone must not open the link's callout or select text.
+   */
+  .favourite-arrangeable {
+    -webkit-touch-callout: none;
+  }
+  .favourite-arrangeable a,
+  .favourite-arrangeable img {
+    -webkit-user-drag: none;
+  }
+  .favourite-arrangeable[data-carried] {
+    outline: 1px solid var(--color-rule);
+    outline-offset: -1px;
+  }
+  /* The hold has armed: the carried cell takes the Entry Card's own hover and
+     focus mark — its border and record rule in solid ink — so a touch reader,
+     who never sees a hover, can tell the moment it is safe to move. */
+  .favourite-arrangeable[data-carried] > a,
+  .favourite-arrangeable[data-carried] > a > div {
+    border-color: var(--color-ink);
+  }
+  .favourite-arrangeable[data-carried] > * {
+    transform: translate(var(--carry-x), var(--carry-y));
+  }
+  .favourite-arrangeable[data-over] > a,
+  .favourite-arrangeable[data-over] > div {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
   }
 }
 
