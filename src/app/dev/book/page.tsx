@@ -62,20 +62,18 @@ function stored(
 }
 
 /*
- * The recorded search doc is the redirect stub OL893415W, and its CoverID
- * 240727 is served by Open Library as another book's jacket. A stored row
- * carries the surviving key, so this one does too, with the CoverID live Open
- * Library returns for that key (checked 2026-09-11).
+ * The recorded search doc is the redirect stub OL893415W. A stored row carries
+ * the surviving key, so this one does too.
  *
- * The band colour is what `bandColorFromCover()` extracts from that cover,
- * run once against the live image on the same day — the value a logged copy
- * would carry. The page shows it only once the book is on the shelf.
+ * The band colour is what `bandColorFromCover()` extracts from its cover,
+ * 11481354, run once against the live image (2026-09-11) — the value a
+ * logged copy would carry. The page shows it only once the book is on the
+ * shelf.
  */
 const DUNE = stored(
   {
     ...mergeGoogleVolume(normalizeWorkResponse(summaries[0], work), google),
     sourceKey: "OL893414W",
-    coverId: 11481354,
   },
   "dev-dune",
   "#70631F",

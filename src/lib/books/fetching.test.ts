@@ -89,7 +89,7 @@ describe("fetchWork", () => {
     expect(detail!.title).toBe("Dune");
     expect(detail!.authors).toEqual(["Frank Herbert"]);
     expect(detail!.description).toContain("Arrakis");
-    expect(detail!.coverId).toBe(240727);
+    expect(detail!.coverId).toBe(11481354);
   });
 
   it("still returns a book when search is down but the work endpoint is up", async () => {
