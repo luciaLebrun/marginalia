@@ -27,6 +27,7 @@ export async function toggleDevToReadAction(
 ): Promise<ToReadState> {
   if (process.env.NODE_ENV === "production") throw new Error("Not available.");
   await new Promise((resolve) => setTimeout(resolve, 1500));
-  const bookId = String(formData.get("bookId"));
+  const sentBook = formData.get("bookId");
+  const bookId = typeof sentBook === "string" ? sentBook : null;
   return { saved: formData.get("intent") === "save", bookId, error: null, signedOut: false };
 }
