@@ -2,6 +2,7 @@ import { eq, inArray } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { getDb, schema } from "@/db";
+import { RUN, runKey } from "../../tests/run";
 import { getEntry } from "./entry";
 
 /**
@@ -11,9 +12,13 @@ import { getEntry } from "./entry";
 const url = process.env.DATABASE_URL ?? "";
 const hasRealDb = url.length > 0 && !url.includes("placeholder");
 
-const READER = "_it_entry_reader";
-const OTHER = "_it_entry_other";
-const BOOK_ID = "_it_entry_book";
+const KEY = runKey("entry");
+const READER = `_it_entry_reader_${RUN}`;
+const OTHER = `_it_entry_other_${RUN}`;
+const BOOK_ID = `_it_entry_book_${RUN}`;
+const BOOK_KEY = `OL99${KEY}0W`;
+const HANDLE = `itentryreader${KEY}`;
+const OTHER_HANDLE = `itentryother${KEY}`;
 
 const REVIEWED = crypto.randomUUID();
 const BARE = crypto.randomUUID();
@@ -25,15 +30,15 @@ describe.skipIf(!hasRealDb)("an entry's permalink (integration)", () => {
     await db
       .insert(schema.user)
       .values([
-        { id: READER, name: "Entry Reader", email: "reader@entry.test", username: "itentryreader" },
-        { id: OTHER, name: "Entry Other", email: "other@entry.test", username: "itentryother" },
+        { id: READER, name: "Entry Reader", email: `reader-${RUN}@entry.test`, username: HANDLE },
+        { id: OTHER, name: "Entry Other", email: `other-${RUN}@entry.test`, username: OTHER_HANDLE },
       ])
       .onConflictDoNothing();
     await db
       .insert(schema.book)
       .values({
         id: BOOK_ID,
-        sourceKey: "OL990000030W",
+        sourceKey: BOOK_KEY,
         title: "An Entry Test",
         authors: ["A. Tester"],
         coverId: 240727,
@@ -64,14 +69,14 @@ describe.skipIf(!hasRealDb)("an entry's permalink (integration)", () => {
   });
 
   it("finds an entry at its reader's handle, with the book and the reader", async () => {
-    const entry = await getEntry("itentryreader", REVIEWED);
+    const entry = await getEntry(HANDLE, REVIEWED);
 
     expect(entry).toMatchObject({
       id: REVIEWED,
-      reader: { id: READER, name: "Entry Reader", username: "itentryreader" },
+      reader: { id: READER, name: "Entry Reader", username: HANDLE },
       book: {
         id: BOOK_ID,
-        sourceKey: "OL990000030W",
+        sourceKey: BOOK_KEY,
         title: "An Entry Test",
         authors: ["A. Tester"],
         coverId: 240727,
@@ -90,7 +95,7 @@ describe.skipIf(!hasRealDb)("an entry's permalink (integration)", () => {
    * resolves; the page says so rather than 404ing.
    */
   it("finds an entry with no words, and says it has no review", async () => {
-    await expect(getEntry("itentryreader", BARE)).resolves.toMatchObject({
+    await expect(getEntry(HANDLE, BARE)).resolves.toMatchObject({
       id: BARE,
       readAt: null,
       rating: null,
@@ -99,11 +104,11 @@ describe.skipIf(!hasRealDb)("an entry's permalink (integration)", () => {
   });
 
   it("does not find an entry under someone else's handle", async () => {
-    await expect(getEntry("itentryreader", OTHERS)).resolves.toBeNull();
-    await expect(getEntry("itentryother", REVIEWED)).resolves.toBeNull();
+    await expect(getEntry(HANDLE, OTHERS)).resolves.toBeNull();
+    await expect(getEntry(OTHER_HANDLE, REVIEWED)).resolves.toBeNull();
   });
 
   it("does not find an id that does not exist", async () => {
-    await expect(getEntry("itentryreader", crypto.randomUUID())).resolves.toBeNull();
+    await expect(getEntry(HANDLE, crypto.randomUUID())).resolves.toBeNull();
   });
 });

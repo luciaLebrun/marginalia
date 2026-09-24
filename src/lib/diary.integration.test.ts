@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { getDb, schema } from "@/db";
+import { RUN } from "../../tests/run";
 import { getDiary, getDiaryCount } from "./diary";
 
 /**
@@ -14,10 +15,11 @@ import { getDiary, getDiaryCount } from "./diary";
 const url = process.env.DATABASE_URL ?? "";
 const hasRealDb = url.length > 0 && !url.includes("placeholder");
 
-const USER = "_it_diary_reader";
-const OTHER = "_it_diary_other";
-const BOOK_A = "_it_diary_book_a";
-const BOOK_B = "_it_diary_book_b";
+const USER = `_it_diary_reader_${RUN}`;
+const OTHER = `_it_diary_other_${RUN}`;
+const BOOK_A = `_it_diary_book_a_${RUN}`;
+const BOOK_B = `_it_diary_book_b_${RUN}`;
+const [D1, D2, D3, D4] = [1, 2, 3, 4].map((n) => `_it_d${n}_${RUN}`);
 
 describe.skipIf(!hasRealDb)("diary (integration)", () => {
   beforeAll(async () => {
@@ -25,8 +27,8 @@ describe.skipIf(!hasRealDb)("diary (integration)", () => {
     await db
       .insert(schema.user)
       .values([
-        { id: USER, name: "Reader", email: "reader@diary.test" },
-        { id: OTHER, name: "Other", email: "other@diary.test" },
+        { id: USER, name: "Reader", email: `reader-${RUN}@diary.test` },
+        { id: OTHER, name: "Other", email: `other-${RUN}@diary.test` },
       ])
       .onConflictDoNothing();
 
@@ -35,7 +37,7 @@ describe.skipIf(!hasRealDb)("diary (integration)", () => {
       .values([
         {
           id: BOOK_A,
-          sourceKey: "OL_IT_DIARY_A",
+          sourceKey: `OL_IT_DIARY_A_${RUN}`,
           title: "The Older Book",
           authors: ["A. Author"],
           coverId: 111,
@@ -43,7 +45,7 @@ describe.skipIf(!hasRealDb)("diary (integration)", () => {
         },
         {
           id: BOOK_B,
-          sourceKey: "OL_IT_DIARY_B",
+          sourceKey: `OL_IT_DIARY_B_${RUN}`,
           title: "The Newer Book",
           authors: ["B. Author"],
           coverId: null,
@@ -53,10 +55,10 @@ describe.skipIf(!hasRealDb)("diary (integration)", () => {
       .onConflictDoNothing();
 
     await db.insert(schema.log).values([
-      { id: "_it_d1", userId: USER, bookId: BOOK_A, readAt: "2024-05-01", rating: "3.5" },
-      { id: "_it_d2", userId: USER, bookId: BOOK_B, readAt: "2026-02-20", rating: "5" },
-      { id: "_it_d3", userId: USER, bookId: BOOK_A, readAt: null, isReread: true, reviewText: "  " },
-      { id: "_it_d4", userId: OTHER, bookId: BOOK_A, readAt: "2026-01-01" },
+      { id: D1, userId: USER, bookId: BOOK_A, readAt: "2024-05-01", rating: "3.5" },
+      { id: D2, userId: USER, bookId: BOOK_B, readAt: "2026-02-20", rating: "5" },
+      { id: D3, userId: USER, bookId: BOOK_A, readAt: null, isReread: true, reviewText: "  " },
+      { id: D4, userId: OTHER, bookId: BOOK_A, readAt: "2026-01-01" },
     ]);
   });
 
@@ -74,34 +76,34 @@ describe.skipIf(!hasRealDb)("diary (integration)", () => {
   it("returns only this reader's entries", async () => {
     const entries = await getDiary(USER);
     expect(entries).toHaveLength(3);
-    expect(entries.map((e) => e.id)).not.toContain("_it_d4");
+    expect(entries.map((e) => e.id)).not.toContain(D4);
   });
 
   it("orders newest first, with undated entries last", async () => {
     const entries = await getDiary(USER);
-    expect(entries.map((e) => e.id)).toEqual(["_it_d2", "_it_d1", "_it_d3"]);
+    expect(entries.map((e) => e.id)).toEqual([D2, D1, D3]);
   });
 
   it("converts the numeric rating to a number, not a string", async () => {
     const entries = await getDiary(USER);
-    const rated = entries.find((e) => e.id === "_it_d1")!;
+    const rated = entries.find((e) => e.id === D1)!;
     expect(rated.rating).toBe(3.5);
     expect(typeof rated.rating).toBe("number");
   });
 
   it("carries the book's stored band colour through, nulls included", async () => {
     const entries = await getDiary(USER);
-    expect(entries.find((e) => e.id === "_it_d1")!.coverColor).toBe("#2E776E");
-    expect(entries.find((e) => e.id === "_it_d2")!.coverColor).toBeNull();
+    expect(entries.find((e) => e.id === D1)!.coverColor).toBe("#2E776E");
+    expect(entries.find((e) => e.id === D2)!.coverColor).toBeNull();
   });
 
   it("treats a whitespace-only review as no review", async () => {
     const entries = await getDiary(USER);
-    expect(entries.find((e) => e.id === "_it_d3")!.hasReview).toBe(false);
+    expect(entries.find((e) => e.id === D3)!.hasReview).toBe(false);
   });
 
   it("preserves the reread flag and a null read date", async () => {
-    const reread = (await getDiary(USER)).find((e) => e.id === "_it_d3")!;
+    const reread = (await getDiary(USER)).find((e) => e.id === D3)!;
     expect(reread.isReread).toBe(true);
     expect(reread.readAt).toBeNull();
   });

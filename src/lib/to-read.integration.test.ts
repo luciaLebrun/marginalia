@@ -2,6 +2,7 @@ import { eq, inArray } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import { getDb, schema } from "@/db";
+import { RUN, runKey } from "../../tests/run";
 import { createRead } from "./read";
 import { getToRead, isOnToRead, removeToRead, saveToRead } from "./to-read";
 
@@ -12,20 +13,12 @@ import { getToRead, isOnToRead, removeToRead, saveToRead } from "./to-read";
 const url = process.env.DATABASE_URL ?? "";
 const hasRealDb = url.length > 0 && !url.includes("placeholder");
 
-/*
- * Scoped to this run. CI runs a workflow per push and per pull request, and
- * both hit the same Neon branch: with fixed ids, one run's cleanup deletes the
- * rows the other is asserting on, and its writes put back rows the other has
- * just removed. The work keys stay OL-shaped because `book.ol_work_key` is
- * unique and the column is read back as one.
- */
-const RUN = process.env.GITHUB_RUN_ID ?? `local${process.pid}`;
-const KEY = [...RUN].reduce((hash, char) => (hash * 31 + char.codePointAt(0)!) % 900000, 7) + 100000;
+const KEY = runKey("toread");
 
 const READER = `_it_toread_reader_${RUN}`;
 const OTHER = `_it_toread_other_${RUN}`;
 const BOOKS = [`_it_toread_book_a_${RUN}`, `_it_toread_book_b_${RUN}`];
-const KEYS = [`OL${KEY}0W`, `OL${KEY}1W`];
+const KEYS = [`OL99${KEY}0W`, `OL99${KEY}1W`];
 
 describe.skipIf(!hasRealDb)("the to-read list (integration)", () => {
   beforeAll(async () => {
