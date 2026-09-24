@@ -227,8 +227,9 @@ function Field({
       {/* Capped, so the rule under a value is a line on a page rather than a
           1400px stroke across a laptop. */}
       <div
-        className="mt-2 flex max-w-[34rem] items-baseline border-b-2 focus-within:border-ink"
-        style={{ borderColor: error ? "var(--color-alarm)" : "var(--color-rule)" }}
+        className={`mt-2 flex max-w-[34rem] items-baseline border-b-2 transition-colors ${
+          error ? "border-alarm" : "border-rule focus-within:border-ink"
+        }`}
       >
         {prefix && (
           <span aria-hidden="true" className="pr-0.5 text-[1.375rem] text-ink-soft">
