@@ -149,16 +149,21 @@ export function FavouriteToggle({
             >
               Your favourites
             </Link>
-            {/* aria-disabled while pending, as "Add to favourites" is below. */}
+            {/* aria-disabled while pending, both labels in one grid cell, as
+                "Add to favourites" is below: the row is set from the right, so
+                a wider label would slide everything before it. */}
             <button
               type="submit"
               aria-disabled={pending || undefined}
               onClick={(event) => {
                 if (pending) event.preventDefault();
               }}
-              className="band-label underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink aria-disabled:cursor-progress"
+              className="band-label inline-grid underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink aria-disabled:cursor-progress"
             >
-              {pending ? "Taking it off…" : "Take it off"}
+              <span className={`[grid-area:1/1] ${pending ? "invisible" : ""}`}>Take it off</span>
+              <span aria-hidden={!pending} className={`[grid-area:1/1] ${pending ? "" : "invisible"}`}>
+                Taking it off…
+              </span>
             </button>
           </span>
         </div>

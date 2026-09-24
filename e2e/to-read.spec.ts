@@ -99,9 +99,13 @@ test.describe("Want to read on the book page", () => {
      the replacement, not the page (MRG-074). */
   test("keeps keyboard focus while it runs, then hands it on", async ({ page }) => {
     await page.goto("/dev/book?state=saved", { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: "Take it off" }).focus();
+    const off = page.getByRole("button", { name: "Take it off" });
+    const offWidth = (await off.boundingBox())?.width;
+    await off.focus();
     await page.keyboard.press("Enter");
-    await expect(page.getByRole("button", { name: /Taking it off/ })).toBeFocused();
+    const taking = page.getByRole("button", { name: /Taking it off/ });
+    await expect(taking).toBeFocused();
+    expect((await taking.boundingBox())?.width).toBe(offWidth);
     const want = page.getByRole("button", { name: "Want to read" });
     await expect(want).toBeFocused();
 

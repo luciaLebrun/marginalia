@@ -86,9 +86,12 @@ export function ToReadToggle({
               type="submit"
               aria-disabled={pending || undefined}
               onClick={hold}
-              className="band-label underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink aria-disabled:cursor-progress"
+              className="band-label inline-grid underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink aria-disabled:cursor-progress"
             >
-              {pending ? "Taking it off…" : "Take it off"}
+              <span className={`[grid-area:1/1] ${pending ? "invisible" : ""}`}>Take it off</span>
+              <span aria-hidden={!pending} className={`[grid-area:1/1] ${pending ? "" : "invisible"}`}>
+                Taking it off…
+              </span>
             </button>
           </span>
         </div>

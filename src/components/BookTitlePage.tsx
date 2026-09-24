@@ -123,7 +123,7 @@ export function BookTitlePage({
               off the list — re-renders the control fresh. Not on the stored
               state: the control's own press changes that, and remounting it
               then would drop keyboard focus to the page (MRG-074). */}
-          <ToReadToggle key={reads.length} bookId={book.id} saved={onToRead} action={toReadAction} />
+          <ToReadToggle key={`to-read-${reads.length}`} bookId={book.id} saved={onToRead} action={toReadAction} />
 
           <DateSlip reads={reads} bookId={book.id} username={username} />
 
@@ -132,7 +132,7 @@ export function BookTitlePage({
               Read is, so removing a read re-renders it fresh. */}
           {reads.length > 0 && (
             <FavouriteToggle
-              key={reads.length}
+              key={`favourite-${reads.length}`}
               bookId={book.id}
               favourite={favourite.isFavourite}
               full={favourite.full}

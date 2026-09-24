@@ -160,6 +160,12 @@ test.describe("the favourite control on a book page", () => {
 
   /* The control pressed is replaced; focus goes to its replacement, not the page. */
   test("hands keyboard focus on after adding and after taking off", async ({ page }) => {
+    // Want to Read and this control are siblings keyed on the read count; a
+    // clash between their keys shows only as a console error (MRG-074).
+    const errors: string[] = [];
+    page.on("console", (message) => {
+      if (message.type() === "error") errors.push(message.text());
+    });
     await page.goto("/dev/book?state=shelf", { waitUntil: "networkidle" });
     const add = page.getByRole("button", { name: "Add to favourites" });
     await add.focus();
@@ -168,10 +174,16 @@ test.describe("the favourite control on a book page", () => {
     await expect(page.getByRole("link", { name: "Your favourites" })).toBeFocused();
 
     await page.keyboard.press("Tab");
-    await expect(page.getByRole("button", { name: "Take it off" })).toBeFocused();
+    const off = page.getByRole("button", { name: "Take it off" });
+    await expect(off).toBeFocused();
+    const offWidth = (await off.boundingBox())?.width;
     await page.keyboard.press("Enter");
-    // Pending, it keeps focus rather than going natively disabled (MRG-074).
-    await expect(page.getByRole("button", { name: /Taking it off/ })).toBeFocused();
+    // Pending, it keeps focus and its width rather than going natively
+    // disabled (MRG-074).
+    const taking = page.getByRole("button", { name: /Taking it off/ });
+    await expect(taking).toBeFocused();
+    expect((await taking.boundingBox())?.width).toBe(offWidth);
     await expect(page.getByRole("button", { name: "Add to favourites" })).toBeFocused();
+    expect(errors).toEqual([]);
   });
 });

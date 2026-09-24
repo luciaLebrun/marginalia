@@ -877,9 +877,9 @@ the sheet, never a filled badge and never a toggle.
   off your to-read list."; the same readout stands under the pile when a spine goes.
   After either, focus goes to the replacement's first control — "Your list" once saved,
   the button once taken off — unless the reader has already moved elsewhere.
-- **Pending keeps focus:** a pending control here, and on the Favourite line, is
-  `aria-disabled` and ignores presses; it is never natively disabled, which would drop
-  a keyboard reader's focus to the page for the length of the request.
+- **Pending keeps focus:** a pending control here is `aria-disabled` and ignores
+  presses; it is never natively disabled, which would drop a keyboard reader's focus to
+  the page for the length of the request.
 
 ### Favourite
 
@@ -908,6 +908,8 @@ line, one step further along.
   off your favourites.". After either, focus goes to the replacement's first control —
   "Your favourites" once added, the button once taken off — unless the reader has
   already moved elsewhere.
+- **Pending keeps focus:** as on Want to Read, a pending control is `aria-disabled` and
+  ignores presses, never natively disabled, so a keyboard reader's focus stays on it.
 
 ### Masthead (page-scale tri-band)
 
@@ -1334,6 +1336,11 @@ Character: a word in the row's margin, not a second button.
   takes the standard 2px ink ring. Colour only.
 - **Current:** where a row of Text Buttons picks one of several views, the chosen one
   carries `aria-current` and a 2px ink underline (the Printed State Rule's current mark).
+- **Pending:** a Text Button whose action waits on a source ("Take it off" on Want to
+  Read's and a favourite's line) turns its label into the live readout in place
+  ("Taking it off…"). Both labels share one grid cell, so it holds the longer width and
+  nothing beside it moves. It is `aria-disabled` and ignores presses, never natively
+  disabled, so keyboard focus stays on it.
 - **Unavailable:** when there is nothing to undo — the date already empty, the rating
   already unrated, or "Keep it" while a removal runs — the label is ruled through in
   ink at 50% opacity, as a disabled
