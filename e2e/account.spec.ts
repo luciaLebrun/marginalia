@@ -82,6 +82,16 @@ test.describe("the account sheet", () => {
     await expect(page.getByRole("button", { name: /^save/i })).toHaveCount(0);
   });
 
+  /*
+   * The line's tone is a class, not an inline style: a style would hold the
+   * resting hairline down over `focus-within` (MRG-060).
+   */
+  test("inks the line under the field being typed in", async ({ page }) => {
+    const line = page.locator("#name").locator("xpath=..");
+    await page.focus("#name");
+    await expect(line).toHaveCSS("border-bottom-color", "rgb(22, 19, 15)");
+  });
+
   test("warns before a handle move that breaks the old address", async ({ page }) => {
     await page.fill("#username", "luciareads");
     await expect(page.getByText(/old address stops working/i)).toBeVisible();
