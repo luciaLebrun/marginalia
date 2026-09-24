@@ -90,6 +90,17 @@ test.describe("search", () => {
       // The Dune fixture holds books with and without a cover_i.
       expect(images).toBeGreaterThan(0);
       expect(images).toBeLessThan(results);
+
+      // The same type-only jacket a book page sets, scaled to the cell: the
+      // title at its head, held inside the well rather than spilling past it.
+      const coverless = page.locator("ol.shelf-grid > li:not(:has(img))").first();
+      const jacket = coverless.locator('div[aria-hidden="true"]');
+      const title = (await coverless.locator("h2").textContent()) ?? "";
+      await expect(jacket.locator("span").first()).toHaveText(title);
+      const spill = await jacket.evaluate((el) =>
+        [el, ...el.children].some((node) => node.scrollWidth > node.clientWidth),
+      );
+      expect(spill).toBe(false);
     });
 
     test("never addresses a cover by ISBN", async ({ page }) => {

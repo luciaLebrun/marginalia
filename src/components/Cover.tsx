@@ -36,22 +36,9 @@ export function Cover({
 }>) {
   const art = jacket({ coverId, coverUrl });
 
-  if (!art) {
-    if (scale === "page") return <PageJacket title={title} authors={authors} />;
-
-    return (
-      <div className="flex h-full w-full items-center justify-center bg-paper-sunk px-3 py-4">
-        {/* Plenty of books have no cover. That is a real state, not an error,
-            so it gets a real setting rather than a broken-image icon. */}
-        <span className="text-center text-[0.8125rem] leading-snug font-medium text-ink-soft">
-          {title}
-          {authors[0] && (
-            <span className="mt-1 block font-normal">{authors[0]}</span>
-          )}
-        </span>
-      </div>
-    );
-  }
+  // Plenty of books have no cover. That is a real state, not an error, so it
+  // gets a real setting rather than a broken-image icon.
+  if (!art) return <TypeJacket title={title} authors={authors} scale={scale} />;
 
   return (
     // Deliberate, see ADR 0004: Open Library asks that public pages point src
@@ -74,23 +61,40 @@ export function Cover({
 }
 
 /**
- * A coverless book at frontispiece size: a type-only jacket, set the way a
- * paperback with no illustration was — the title large at the head, the
- * author in the band voice at the foot. The shelf cell's small centred label
- * blown up to 384px reads as an empty placeholder; this reads as a jacket.
+ * A coverless book as a type-only jacket, set the way a paperback with no
+ * illustration was — the title large at the head, the author in the band voice
+ * at the foot. One answer at both scales: a small centred caption in a grid
+ * well read as a failed image load beside a full-bleed jacket, and blown up to
+ * 384px it read as an empty placeholder. This reads as a jacket.
  *
- * Hidden from assistive tech: the page's own heading already says the title,
- * and a screen reader should not hear it twice.
+ * Hidden from assistive tech: wherever a Cover sits, a heading or a record
+ * band beside it already says the title, and a screen reader should not hear
+ * it twice.
  */
-function PageJacket({ title, authors }: Readonly<{ title: string; authors: string[] }>) {
+function TypeJacket({
+  title,
+  authors,
+  scale,
+}: Readonly<{ title: string; authors: string[]; scale: "cell" | "page" }>) {
+  const page = scale === "page";
+
   return (
     <div
       aria-hidden="true"
-      className="flex h-full w-full flex-col justify-between gap-4 bg-paper-sunk px-5 py-6 lg:px-7 lg:py-8"
+      className={`flex h-full w-full flex-col justify-between bg-paper-sunk ${
+        page ? "gap-4 px-5 py-6 lg:px-7 lg:py-8" : "gap-3 px-3 py-4"
+      }`}
     >
-      {/* The headline step, holding 1.75rem until the frontispiece column is
-          wide enough for 2.25rem not to break a word. */}
-      <span className="text-[1.75rem] leading-none font-semibold tracking-[-0.02em] text-balance break-words lg:text-[2.25rem]">
+      {/* The headline step at the head of a frontispiece, holding 1.75rem
+          until its column is wide enough for 2.25rem not to break a word. A
+          cell takes the field step, the size a spine sets its title at. */}
+      <span
+        className={`font-semibold text-balance break-words ${
+          page
+            ? "text-[1.75rem] leading-none tracking-[-0.02em] lg:text-[2.25rem]"
+            : "line-clamp-5 text-[1.375rem] leading-snug tracking-[-0.01em]"
+        }`}
+      >
         {title}
       </span>
       {authors[0] && (

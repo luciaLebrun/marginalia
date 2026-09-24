@@ -18,9 +18,11 @@ import { moveDevFavouriteAction } from "./actions";
  * with real cover art.
  *
  * It 404s outside development. It reads one hard-coded local user and has no
- * session; `?favourites=none|four` overrides the favourites it draws, render
- * only. Its one mutation is arranging that user's
- * favourites, through an action that refuses in production (./actions.ts).
+ * session; `?favourites=none|four` overrides the favourites it draws, and
+ * `?coverless=1` strips the jacket from the first book on the shelf and in the
+ * band, since the seed holds no coverless book — both render only. Its one
+ * mutation is arranging that user's favourites, through an action that
+ * refuses in production (./actions.ts).
  */
 export default async function DevShelfPage({ searchParams }: PageProps<"/dev/shelf">) {
   if (process.env.NODE_ENV === "production") notFound();
@@ -28,7 +30,7 @@ export default async function DevShelfPage({ searchParams }: PageProps<"/dev/she
   const user = await getDevReader();
   if (!user) return <NoDevReader />;
 
-  const [entries, count, stored] = await Promise.all([
+  const [diary, count, stored] = await Promise.all([
     getDiary(user.id, user.lastSeenAt),
     getDiaryCount(user.id),
     getFavourites(user.id),
@@ -37,7 +39,12 @@ export default async function DevShelfPage({ searchParams }: PageProps<"/dev/she
   // `?favourites=none` draws the owner's hint; `?favourites=four` a full band
   // from the first four books on the shelf. Both are render-only: they write
   // nothing, and arranging them moves nothing.
-  const { favourites: override, by } = await searchParams;
+  const { favourites: override, by, coverless } = await searchParams;
+  const bare = <T,>(books: T[]) =>
+    coverless === "1"
+      ? books.map((book, i) => (i ? book : { ...book, coverId: null, coverUrl: null }))
+      : books;
+  const entries = bare(diary);
   let favourites = stored;
   if (override === "none") favourites = [];
   if (override === "four") {
@@ -52,7 +59,7 @@ export default async function DevShelfPage({ searchParams }: PageProps<"/dev/she
     <main className="flex-1">
       <Masthead name={user.name} span={readingSpan(entries)} count={count} />
       <Favourites
-        books={favourites}
+        books={bare(favourites)}
         arrange
         hint={count > 0}
         moveAction={moveDevFavouriteAction}
