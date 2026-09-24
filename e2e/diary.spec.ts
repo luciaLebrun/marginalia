@@ -62,6 +62,29 @@ test.describe("reading diary", () => {
     await expect(first).toHaveCSS("z-index", "1");
   });
 
+  /*
+   * MRG-072: the shelf regroups by author or category through a plain link,
+   * and logging stays with the chronology.
+   */
+  test("regroups the shelf by author and by category", async ({ page }) => {
+    const order = page.getByRole("navigation", { name: "Shelf order" });
+    await expect(order.getByRole("link", { name: "Year" })).toHaveAttribute("aria-current", "true");
+
+    await order.getByRole("link", { name: "Author" }).click();
+    await expect(page).toHaveURL(/\?by=author$/);
+    await expect(order.getByRole("link", { name: "Author" })).toHaveAttribute("aria-current", "true");
+    await expect(page.getByRole("heading", { level: 2, name: "Frank Herbert" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /log a book/i })).toHaveCount(0);
+
+    await order.getByRole("link", { name: "Category" }).click();
+    await expect(page).toHaveURL(/\?by=category$/);
+    await expect(page.getByRole("heading", { level: 2, name: /^20\d\d$/ })).toHaveCount(0);
+
+    await order.getByRole("link", { name: "Year" }).click();
+    await expect(page).toHaveURL(/\/dev\/shelf$/);
+    await expect(page.getByRole("link", { name: /log a book/i })).toBeVisible();
+  });
+
   test("never addresses a cover by ISBN", async ({ page }) => {
     // ISBN-addressed covers are rate limited to 100 per IP per 5 minutes and
     // 403 for everyone behind the same egress. This is the load-bearing rule.

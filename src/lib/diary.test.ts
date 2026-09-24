@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { entryLabel, groupByYear, readingSpan } from "./diary";
+import { entryLabel, groupShelf, parseShelfOrder, readingSpan, surnameKey } from "./diary";
 import type { DiaryEntry } from "@/components/Entry";
 
 function entry(id: string, readAt: string | null): DiaryEntry {
@@ -12,6 +12,7 @@ function entry(id: string, readAt: string | null): DiaryEntry {
     coverUrl: null,
     coverColor: null,
     sourceKey: `OL${id}W`,
+    category: null,
     rating: null,
     readAt: readAt === null ? null : new Date(readAt),
     isReread: false,
@@ -20,35 +21,35 @@ function entry(id: string, readAt: string | null): DiaryEntry {
   };
 }
 
-describe("groupByYear", () => {
+describe("groupShelf by year", () => {
   it("returns nothing for an empty shelf", () => {
-    expect(groupByYear([])).toEqual([]);
+    expect(groupShelf([])).toEqual([]);
   });
 
   it("groups by the year the book was finished", () => {
-    const groups = groupByYear([
+    const groups = groupShelf([
       entry("a", "2026-08-14"),
       entry("b", "2026-02-11"),
       entry("c", "2025-12-28"),
     ]);
-    expect(groups.map((g) => g.year)).toEqual(["2026", "2025"]);
+    expect(groups.map((g) => g.label)).toEqual(["2026", "2025"]);
     expect(groups[0].entries.map((e) => e.id)).toEqual(["a", "b"]);
     expect(groups[1].entries.map((e) => e.id)).toEqual(["c"]);
   });
 
   it("orders years newest first regardless of input order", () => {
-    const groups = groupByYear([
+    const groups = groupShelf([
       entry("old", "2019-01-01"),
       entry("new", "2026-01-01"),
       entry("mid", "2022-01-01"),
     ]);
-    expect(groups.map((g) => g.year)).toEqual(["2026", "2022", "2019"]);
+    expect(groups.map((g) => g.label)).toEqual(["2026", "2022", "2019"]);
   });
 
   it("preserves the order entries arrived in within a year", () => {
     // The query already sorts by read date descending; grouping must not
     // reshuffle it, or the shelf would reorder itself against the index.
-    const groups = groupByYear([
+    const groups = groupShelf([
       entry("first", "2026-09-01"),
       entry("second", "2026-05-01"),
       entry("third", "2026-01-01"),
@@ -63,27 +64,27 @@ describe("groupByYear", () => {
   it("collects undated entries under their own heading, last", () => {
     // readAt null means "read at some point, date unknown" — a real state that
     // must be neither hidden nor silently dated today.
-    const groups = groupByYear([
+    const groups = groupShelf([
       entry("dated", "2026-03-01"),
       entry("undated", null),
       entry("older", "2024-03-01"),
     ]);
-    expect(groups.map((g) => g.year)).toEqual(["2026", "2024", "Undated"]);
+    expect(groups.map((g) => g.label)).toEqual(["2026", "2024", "Undated"]);
     expect(groups.at(-1)!.entries.map((e) => e.id)).toEqual(["undated"]);
   });
 
   it("handles a shelf that is entirely undated", () => {
-    const groups = groupByYear([entry("a", null), entry("b", null)]);
+    const groups = groupShelf([entry("a", null), entry("b", null)]);
     expect(groups).toHaveLength(1);
-    expect(groups[0].year).toBe("Undated");
+    expect(groups[0].label).toBe("Undated");
     expect(groups[0].entries).toHaveLength(2);
   });
 
   it("uses UTC, so a January 1st entry does not slip into the previous year", () => {
     // A date column has no timezone; reading it in local time would move
     // year boundaries for anyone west of UTC.
-    const groups = groupByYear([entry("newyear", "2026-01-01")]);
-    expect(groups[0].year).toBe("2026");
+    const groups = groupShelf([entry("newyear", "2026-01-01")]);
+    expect(groups[0].label).toBe("2026");
   });
 
   it("loses no entries", () => {
@@ -93,7 +94,7 @@ describe("groupByYear", () => {
       entry("c", "2025-06-06"),
       entry("d", "2026-12-31"),
     ];
-    const total = groupByYear(input).reduce((n, g) => n + g.entries.length, 0);
+    const total = groupShelf(input).reduce((n, g) => n + g.entries.length, 0);
     expect(total).toBe(input.length);
   });
 });
@@ -155,5 +156,67 @@ describe("entryLabel", () => {
   it("says unrated and reread, and leaves out what is not known", () => {
     const e = { ...entry("b", null), title: "Untitled", authors: [], isReread: true };
     expect(entryLabel(e)).toBe("Untitled, unrated, reread");
+  });
+});
+
+function book(id: string, extra: Partial<DiaryEntry>): DiaryEntry {
+  return { ...entry(id, "2026-01-01"), ...extra };
+}
+
+describe("groupShelf by author", () => {
+  it("orders authors by surname, particles included, and keeps the rest last", () => {
+    const groups = groupShelf(
+      [
+        book("a", { authors: ["Frank Herbert"] }),
+        book("b", { authors: ["Ursula K. Le Guin"] }),
+        book("c", { authors: [] }),
+        book("d", { authors: ["Albert Camus", "A Translator"] }),
+        book("e", { authors: ["Ursula K. Le Guin"] }),
+      ],
+      "author",
+    );
+    expect(groups.map((g) => g.label)).toEqual([
+      "Albert Camus",
+      "Frank Herbert",
+      "Ursula K. Le Guin",
+      "Unknown author",
+    ]);
+    expect(groups[2].entries.map((e) => e.id)).toEqual(["b", "e"]);
+  });
+});
+
+describe("groupShelf by category", () => {
+  it("orders categories A-Z with Uncategorised last", () => {
+    const groups = groupShelf(
+      [
+        book("a", { category: "Science Fiction" }),
+        book("b", { category: null }),
+        book("c", { category: "Literary" }),
+      ],
+      "category",
+    );
+    expect(groups.map((g) => g.label)).toEqual(["Literary", "Science Fiction", "Uncategorised"]);
+    // Flagged, not recognised by name, so a real category of that name is not mistaken for it.
+    expect(groups.map((g) => g.rest ?? false)).toEqual([false, false, true]);
+  });
+});
+
+describe("surnameKey", () => {
+  it("files a name under its surname, with any particle", () => {
+    expect(surnameKey("Frank Herbert")).toBe("herbert");
+    expect(surnameKey("Ursula K. Le Guin")).toBe("le guin");
+    expect(surnameKey("Simone de Beauvoir")).toBe("de beauvoir");
+    expect(surnameKey("Martin Luther King Jr.")).toBe("king");
+    expect(surnameKey("Homer")).toBe("homer");
+  });
+});
+
+describe("parseShelfOrder", () => {
+  it("accepts the three orders and falls back to year", () => {
+    expect(parseShelfOrder("author")).toBe("author");
+    expect(parseShelfOrder("category")).toBe("category");
+    expect(parseShelfOrder("nonsense")).toBe("year");
+    expect(parseShelfOrder(["author"])).toBe("year");
+    expect(parseShelfOrder(undefined)).toBe("year");
   });
 });

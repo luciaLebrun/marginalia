@@ -727,6 +727,10 @@ page, not by chrome:
   the underline under a slip line's "Edit" under the pointer and while open, a ticked reread box (with its tick drawn in), a text
   button's or link's underline under the pointer (the band's full foreground on a
   band; full alarm inside a refusal sentence).
+- **Current** — the stroke thickened to 2px solid ink, with `aria-current`: the order
+  the shelf is shelved by, on the shelf-order line. It is thicker than the 1px ink a
+  hovered neighbour takes, so a pointer resting on another order never reads as the
+  current one.
 - **Where a carried book would land** — the focus ring's mark, 2px ink at a 2px
   offset, on the favourites position under the pointer; the carried cell itself takes the
   Entry Card's hover mark — border and record rule in solid ink — from the moment it
@@ -936,13 +940,28 @@ device repeated, and the year rule immediately below is already a ruled strip.
 
 ### Year Rule
 
-A full-width ruled band on sunk paper, bordered top and bottom in solid ink: the year
-at headline scale left, the group's book count in soft-ink label type right. It is a
-band, not a hairline, because chronology is the shelf's organising structure.
+A full-width ruled band on sunk paper, bordered top and bottom in solid ink: the
+group's name at headline scale left, its book count in soft-ink label type right. It
+is a band, not a hairline, because the grouping is the shelf's organising structure —
+a year by default, or an author or a category (MRG-072). A long name ("Biography &
+Autobiography", "Emily St. John Mandel") wraps balanced at 390 and the count never
+shrinks off the band. The group with nothing to file it under — "Undated", "Unknown
+author", "Uncategorised" — comes last, its name in soft ink.
+
+### Shelf-Order Line
+
+One line on the page margin between the Favourites band (or the masthead, when it is
+not drawn) and the first group: "Shelved by" in band voice and soft ink, then "Year",
+"Author" and "Category" as Text Buttons, the current one in the current mark. They are
+plain links carrying `?by=`, so the order works without script, keeps the reader's
+scroll position, and a sorted shelf can be shared; an unknown value falls back to
+Year. The same on the owner's diary and on a profile; not drawn on an empty shelf.
+The Log Cell leads the first group in the Year order only — Author and Category are
+for looking back. MRG-069's language choice is meant to reuse this line.
 
 ### Favourites Band
 
-Up to four books the reader has chosen, between the masthead and the first year rule:
+Up to four books the reader has chosen, between the masthead and the shelf-order line:
 the shelf's own cell at a larger scale, so the band reads as a statement drawn from the
 shelf rather than a second list. Character: the four books pulled forward on the shelf.
 
@@ -1298,14 +1317,17 @@ its left edge on the page padding. Character: a label with a border drawn around
 
 The secondary control inside a form row — "Undated" and "Clear" on the log sheet,
 "Remove this read" and "Keep it" under an edit sheet's commit band, "Your list" and
-"Take it off" on the saved line of a book page's Want to Read, and "Earlier", "Later",
-"Your favourites" and "Take it off" on a favourite's line.
+"Take it off" on the saved line of a book page's Want to Read, "Earlier", "Later",
+"Your favourites" and "Take it off" on a favourite's line, and "Year", "Author" and
+"Category" on the shelf-order line.
 Character: a word in the row's margin, not a second button.
 
 - **Shape:** no border, no ground, no padding; a band-voice label in ink, underlined
   4px below in hairline tone.
 - **Hover / focus-visible:** the underline goes to ink under the pointer; keyboard focus
   takes the standard 2px ink ring. Colour only.
+- **Current:** where a row of Text Buttons picks one of several views, the chosen one
+  carries `aria-current` and a 2px ink underline (the Printed State Rule's current mark).
 - **Unavailable:** when there is nothing to undo — the date already empty, the rating
   already unrated, or "Keep it" while a removal runs — the label is ruled through in
   ink at 50% opacity, as a disabled

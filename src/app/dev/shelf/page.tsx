@@ -5,7 +5,7 @@ import { Favourites } from "@/components/Favourites";
 import { MarkSeen } from "@/components/MarkSeen";
 import { Masthead } from "@/components/Masthead";
 import { Shelf } from "@/components/Shelf";
-import { getDiary, getDiaryCount, readingSpan } from "@/lib/diary";
+import { getDiary, getDiaryCount, parseShelfOrder, readingSpan } from "@/lib/diary";
 import { getFavourites } from "@/lib/favourites";
 import { moveDevFavouriteAction } from "./actions";
 
@@ -37,7 +37,7 @@ export default async function DevShelfPage({ searchParams }: PageProps<"/dev/she
   // `?favourites=none` draws the owner's hint; `?favourites=four` a full band
   // from the first four books on the shelf. Both are render-only: they write
   // nothing, and arranging them moves nothing.
-  const { favourites: override } = await searchParams;
+  const { favourites: override, by } = await searchParams;
   let favourites = stored;
   if (override === "none") favourites = [];
   if (override === "four") {
@@ -57,7 +57,7 @@ export default async function DevShelfPage({ searchParams }: PageProps<"/dev/she
         hint={count > 0}
         moveAction={moveDevFavouriteAction}
       />
-      <Shelf entries={entries} />
+      <Shelf entries={entries} by={parseShelfOrder(by)} path="/dev/shelf" />
       <MarkSeen userId={user.id} />
     </main>
   );

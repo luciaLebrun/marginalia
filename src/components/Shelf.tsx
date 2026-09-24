@@ -1,7 +1,9 @@
 import { Entry, type DiaryEntry } from "./Entry";
 import { LogCell } from "./LogCell";
 import { YearRule } from "./YearRule";
-import { groupByYear } from "@/lib/diary";
+import Link from "next/link";
+
+import { groupShelf, type ShelfOrder } from "@/lib/diary";
 
 /**
  * The shelf.
@@ -13,11 +15,17 @@ import { groupByYear } from "@/lib/diary";
  */
 export function Shelf({
   entries,
+  by = "year",
+  path,
   canLog = true,
   linkBooks = true,
   readerName,
 }: Readonly<{
   entries: DiaryEntry[];
+  /** How the shelf is grouped (MRG-072), from the page's `?by=`. */
+  by?: ShelfOrder;
+  /** This page's path, which the order links point back at. */
+  path: string;
   /** False on someone else's profile: the action is not yours to take. */
   canLog?: boolean;
   /** False for a signed-out visitor: the book page is signed-in only. */
@@ -29,22 +37,63 @@ export function Shelf({
     return canLog ? <EmptyShelf /> : <EmptyProfile name={readerName} />;
   }
 
-  const groups = groupByYear(entries);
+  const groups = groupShelf(entries, by);
 
   return (
-    <div className="flex flex-col gap-10 px-4 py-6 sm:px-6">
-      {groups.map((group, groupIndex) => (
-        <section key={group.year} className="flex flex-col gap-3">
-          <YearRule year={group.year} count={group.entries.length} />
-          <div className="shelf-grid">
-            {groupIndex === 0 && canLog && <LogCell />}
-            {group.entries.map((entry) => (
-              <Entry key={entry.id} entry={entry} linked={linkBooks} />
-            ))}
-          </div>
-        </section>
-      ))}
+    <div className="flex flex-col gap-6 px-4 py-6 sm:px-6">
+      <ShelfOrderLine by={by} path={path} />
+      <div className="flex flex-col gap-10">
+        {groups.map((group, groupIndex) => (
+          <section key={`${group.rest ? "rest" : "group"}:${group.label}`} className="flex flex-col gap-3">
+            <YearRule
+              year={group.label}
+              count={group.entries.length}
+              rest={group.rest}
+            />
+            <div className="shelf-grid">
+              {/* Capture belongs to the chronology. Author and Category are
+                  for looking back, so they show books alone. */}
+              {groupIndex === 0 && canLog && by === "year" && <LogCell />}
+              {group.entries.map((entry) => (
+                <Entry key={entry.id} entry={entry} linked={linkBooks} />
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
     </div>
+  );
+}
+
+const ORDER_LABELS: Record<ShelfOrder, string> = {
+  year: "Year",
+  author: "Author",
+  category: "Category",
+};
+
+/**
+ * "Shelved by Year · Author · Category" (MRG-072): three Text Buttons on the
+ * page margin. Plain links carrying `?by=`, so the order works without script
+ * and a sorted shelf can be shared; `scroll={false}` keeps the reader where
+ * they were. The current order's underline is 2px ink, so a hovered one (1px ink) never reads as current.
+ */
+function ShelfOrderLine({ by, path }: Readonly<{ by: ShelfOrder; path: string }>) {
+  return (
+    <nav aria-label="Shelf order" className="flex flex-wrap items-baseline gap-x-5 gap-y-2">
+      <span className="band-label text-ink-soft">Shelved by</span>
+      {(Object.keys(ORDER_LABELS) as ShelfOrder[]).map((order) => (
+        <Link
+          key={order}
+          href={order === "year" ? path : `${path}?by=${order}`}
+          scroll={false}
+          prefetch={false}
+          aria-current={order === by ? "true" : undefined}
+          className="band-label underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink aria-[current]:decoration-ink aria-[current]:decoration-2"
+        >
+          {ORDER_LABELS[order]}
+        </Link>
+      ))}
+    </nav>
   );
 }
 

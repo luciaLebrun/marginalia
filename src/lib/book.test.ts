@@ -82,6 +82,7 @@ describe("toBookRow", () => {
     editionCount: 120,
     pageCount: 604,
     description: "Set on the desert planet Arrakis.",
+    category: "Science Fiction",
     source: "openlibrary+google",
   };
 
@@ -99,6 +100,7 @@ describe("toBookRow", () => {
       isbn13: "9780441013593",
       pageCount: 604,
       description: "Set on the desert planet Arrakis.",
+      category: "Science Fiction",
       source: "openlibrary+google",
     });
   });

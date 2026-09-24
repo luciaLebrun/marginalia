@@ -120,6 +120,9 @@ export const inviteCode = pgTable(
  * from an external API again. That is what keeps diaries and reviews working
  * when openlibrary.org is slow or down.
  */
+/** `book.category` on a row the MRG-072 backfill has not reached yet. */
+export const CATEGORY_PENDING = "?";
+
 export const book = pgTable(
   "book",
   {
@@ -164,6 +167,15 @@ export const book = pgTable(
     isbn13: text("isbn13"),
     pageCount: integer("page_count"),
     description: text("description"),
+
+    /**
+     * One shelf category, e.g. "Science Fiction" (MRG-072), from the source at
+     * first open. Null means none was found, and the shelf files the book
+     * under "Uncategorised". `CATEGORY_PENDING` marks a row opened before
+     * MRG-072 that scripts/backfill-categories.mts has not reached yet —
+     * migration 0006 sets it. See src/lib/books/category.ts.
+     */
+    category: text("category"),
 
     /** Which source filled this row: "google", "openlibrary" or "openlibrary+google". */
     source: text("source").notNull().default("openlibrary"),
