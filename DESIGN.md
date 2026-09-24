@@ -977,7 +977,8 @@ shelf rather than a second list. Character: the four books pulled forward on the
   their own rather than by the shelf's column gradient; they are the Ruled Signature
   Rule's empty slots, never placeholder cards.
 - **Cell:** the Entry Card, with the record band holding the title alone at 0.9375rem
-  (600, tight, balanced). Every favourite is logged, so its colour band always wears
+  (600, tight, balanced). A coverless favourite's type-only jacket is set at
+  `scale="band"`: its title steps up to the headline at ≥64rem (see Cover). Every favourite is logged, so its colour band always wears
   earned colour. A signed-in viewer's cell is one link to its book page, named by title
   and author, with the Entry Card's hover and focus; a visitor's is inert, as on the
   shelf.
@@ -1368,8 +1369,15 @@ size. The jacket is `aria-hidden`, because a heading or record band beside every
 Cover already says the title.
 
 - **Cell** (the default): the title at the field step (1.375rem, snug, −0.01em),
-  balanced, breaking an unbroken word rather than overflowing and clamped at five
-  lines, with 16px/12px padding — it holds at 2 columns on a 390px phone.
+  balanced, clamped at five lines, with 16px/12px padding — it holds at 2 columns on
+  a 390px phone. Only a word of twelve letters or more hyphenates
+  (`hyphenate-limit-chars: 12 5 5`), so ordinary titles never do. Browsers never
+  hyphenate a capitalised word, so a title-case word too wide for the cell still
+  breaks bare rather than overflowing.
+- **Band** (`scale="band"`, the favourites band): the cell setting, with the title a
+  step up at the headline step (1.75rem, lh 1, −0.02em) from ≥64rem, where the band
+  runs four across in a ~276px well — as its record band steps up from the shelf's.
+  At 2 across it stays at the field step.
 - **Page** (`scale="page"`): the title at the headline step, with 24px/20px padding
   (32px/28px at ≥64rem). A page-scale cover also passes its own `sizes` for the
   frontispiece column and loads eagerly.
