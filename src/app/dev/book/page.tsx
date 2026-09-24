@@ -13,7 +13,7 @@ import {
   BookUnavailable,
 } from "@/components/BookStates";
 import { BookTitlePage } from "@/components/BookTitlePage";
-import { toggleDevFavouriteAction } from "./actions";
+import { toggleDevFavouriteAction, toggleDevToReadAction } from "./actions";
 import { WordmarkBand } from "@/components/WordmarkBand";
 import type { Book } from "@/db/schema";
 import { toBookRow } from "@/lib/book";
@@ -41,6 +41,8 @@ import { normalizeSearchResponse, normalizeWorkResponse } from "@/lib/books/open
  * - `nocover` — a real coverless result: the type-only jacket.
  * - `subtitle` — a real book whose record carries a subtitle.
  * - `authors` — a real book with three names, to wrap the author band.
+ * - `saved` — Dune on the to-read list, taken off and saved again by a
+ *   stand-in action, so its pending and focus-after states can be driven.
  * - `favourite` — Dune read, and one of the reader's favourites, 2 of 3 (MRG-071).
  * - `favourite-first` — the same, first of three: Earlier ruled through.
  * - `full` — Dune read, not a favourite, with four already: the control
@@ -199,7 +201,16 @@ function State({ state }: Readonly<{ state: string }>) {
     case "authors":
       return <BookTitlePage book={MANY_AUTHORS} reads={[]} username="lucia" diaryHref={DIARY} />;
     case "saved":
-      return <BookTitlePage book={DUNE} reads={[]} onToRead username="lucia" diaryHref={DIARY} />;
+      return (
+        <BookTitlePage
+          book={DUNE}
+          reads={[]}
+          onToRead
+          username="lucia"
+          diaryHref={DIARY}
+          toReadAction={toggleDevToReadAction}
+        />
+      );
     case "shelf":
       return (
         <BookTitlePage
