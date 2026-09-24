@@ -37,7 +37,6 @@ const summaries = normalizeSearchResponse(search);
 const DUNE = {
   ...mergeGoogleVolume(normalizeWorkResponse(summaries[0], work), google),
   sourceKey: "OL893414W",
-  coverId: 11481354,
 };
 
 /*
