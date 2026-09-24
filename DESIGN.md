@@ -492,7 +492,8 @@ of the system, and it is what makes a second typeface unnecessary.
   The one exception is the log sheet's review, set at the body
   step (see the Value Over Label Rule). A spine on the to-read list sets its title at
   this step in paper, balanced and underlined, because a waiting book's title is the
-  value that spine carries.
+  value that spine carries. The title at the head of a cell-scale type-only jacket
+  takes it too, in ink.
 - **Title** (600, 0.8125rem, lh tight, balanced): a book title in an entry's record
   band. Small on purpose — the jacket above it is the identifying object. A favourite's
   record band sets its title one step up, at 0.9375rem, because the cell runs four
@@ -762,8 +763,8 @@ printed, impersonal, identical to its four hundred neighbours.
   at 80% opacity when relevant. Foreground from `readableOn()`.
 - **Band two — field:** a fixed 2:3 well on sunk paper. The jacket is `object-contain`
   — letterboxed on paper, never cropped, because a cropped jacket loses its
-  typography. With no cover, the well holds the title and author centred in soft ink
-  at 0.8125rem; that is a real state with a real setting, never a broken-image icon.
+  typography. With no cover, the well holds the cell-scale type-only jacket (see
+  Cover); that is a real state with a real setting, never a broken-image icon.
 - **Band three — record:** paper, separated by a hairline, 8px/10px padding. Title
   (balanced) on top; rating and date pinned to the bottom edge of the cell so the
   baseline holds across a ragged row.
@@ -976,7 +977,8 @@ shelf rather than a second list. Character: the four books pulled forward on the
   their own rather than by the shelf's column gradient; they are the Ruled Signature
   Rule's empty slots, never placeholder cards.
 - **Cell:** the Entry Card, with the record band holding the title alone at 0.9375rem
-  (600, tight, balanced). Every favourite is logged, so its colour band always wears
+  (600, tight, balanced). A coverless favourite's type-only jacket is set at
+  `scale="band"`: its title steps up to the headline at ≥64rem (see Cover). Every favourite is logged, so its colour band always wears
   earned colour. A signed-in viewer's cell is one link to its book page, named by title
   and author, with the Entry Card's hover and focus; a visitor's is inert, as on the
   shelf.
@@ -1359,13 +1361,26 @@ A plain lazy `<img>` at `object-contain` inside the fixed 2:3 well, with a
 `"{title} by {author}"` and is load-bearing rather than decorative, because the
 interface is built around cover art.
 
-**Page scale.** `scale="page"` changes only the coverless setting. At frontispiece
-size the cell's small centred label reads as an empty placeholder, so the well holds
-a type-only jacket instead: the title at the headline step at the head, and the first
-author in soft-ink band voice (1.4 leading, balanced) at the foot, with 24px/20px
-padding (32px/28px at ≥64rem). The jacket is `aria-hidden`, because the page's heading
-already says the title. The cell-scale no-cover setting is unchanged. A page-scale
-cover passes its own `sizes` for the frontispiece column.
+**No cover.** A coverless book gets one answer at both scales: a type-only jacket
+filling the well, the title at the head and the first author in soft-ink band voice
+(1.4 leading, balanced) at the foot. A small centred caption read as a failed image
+load beside a full-bleed jacket in a grid, and as an empty placeholder at frontispiece
+size. The jacket is `aria-hidden`, because a heading or record band beside every
+Cover already says the title.
+
+- **Cell** (the default): the title at the field step (1.375rem, snug, −0.01em),
+  balanced, clamped at five lines, with 16px/12px padding — it holds at 2 columns on
+  a 390px phone. Only a word of twelve letters or more hyphenates
+  (`hyphenate-limit-chars: 12 5 5`), so ordinary titles never do. Browsers never
+  hyphenate a capitalised word, so a title-case word too wide for the cell still
+  breaks bare rather than overflowing.
+- **Band** (`scale="band"`, the favourites band): the cell setting, with the title a
+  step up at the headline step (1.75rem, lh 1, −0.02em) from ≥64rem, where the band
+  runs four across in a ~276px well — as its record band steps up from the shelf's.
+  At 2 across it stays at the field step.
+- **Page** (`scale="page"`): the title at the headline step, with 24px/20px padding
+  (32px/28px at ≥64rem). A page-scale cover also passes its own `sizes` for the
+  frontispiece column and loads eagerly.
 
 ### Motion
 

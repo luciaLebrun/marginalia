@@ -113,7 +113,7 @@ function FavouriteCell({
         <span className="band-label truncate">{author}</span>
       </div>
       <div className="aspect-[2/3] overflow-hidden bg-paper-sunk">
-        <Cover coverId={book.coverId} coverUrl={book.coverUrl} title={book.title} authors={book.authors} />
+        <Cover coverId={book.coverId} coverUrl={book.coverUrl} title={book.title} authors={book.authors} scale="band" />
       </div>
       <div className="flex-1 border-t border-rule px-2.5 py-2 transition-colors group-hover:border-ink group-focus-visible:border-ink">
         <h3 className="text-[0.9375rem] leading-tight font-semibold text-balance">{book.title}</h3>
