@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef, type MouseEvent } from "react";
 
 import { toggleToReadAction, type ToReadState } from "@/app/actions";
 import { INK } from "@/lib/color";
@@ -26,20 +26,40 @@ export function ToReadToggle({
   bookId,
   saved,
   listHref = "/to-read",
+  action = toggleToReadAction,
 }: Readonly<{
   bookId: string;
   /** Whether the book is on the reader's list as the page was rendered. */
   saved: boolean;
   listHref?: string;
+  /** The book harness substitutes one that needs no session. */
+  action?: (previous: ToReadState, form: FormData) => Promise<ToReadState>;
 }>) {
-  const [state, submit, pending] = useActionState<ToReadState, FormData>(
-    toggleToReadAction,
-    INITIAL,
-  );
+  const [state, submit, pending] = useActionState<ToReadState, FormData>(action, INITIAL);
   const onList = state.saved ?? saved;
+  const form = useRef<HTMLFormElement>(null);
+  const onward = useRef<HTMLAnchorElement>(null);
+  const want = useRef<HTMLButtonElement>(null);
+
+  // Pending, a control is aria-disabled and ignores presses rather than going
+  // natively disabled: disabling the focused control would throw keyboard
+  // focus to the page mid-save.
+  const hold = (event: MouseEvent) => {
+    if (pending) event.preventDefault();
+  };
+
+  // The control pressed is replaced by the other state's; hand focus to the
+  // replacement's first control, as Favourite does — unless the reader has
+  // already moved on somewhere else.
+  useEffect(() => {
+    if (state.saved === null || state.error) return;
+    const active = document.activeElement;
+    if (active && active !== document.body && !form.current?.contains(active)) return;
+    (state.saved ? onward.current : want.current)?.focus();
+  }, [state]);
 
   return (
-    <form action={submit} className="mt-6 max-w-[34rem]">
+    <form ref={form} action={submit} className="mt-6 max-w-[34rem]">
       <input type="hidden" name="bookId" value={bookId} />
       <input type="hidden" name="intent" value={onList ? "remove" : "save"} />
 
@@ -56,6 +76,7 @@ export function ToReadToggle({
           </span>
           <span className="ml-auto flex items-center gap-4">
             <Link
+              ref={onward}
               href={listHref}
               className="band-label underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink"
             >
@@ -63,20 +84,28 @@ export function ToReadToggle({
             </Link>
             <button
               type="submit"
-              disabled={pending}
-              className="band-label underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink disabled:cursor-progress"
+              aria-disabled={pending || undefined}
+              onClick={hold}
+              className="band-label underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink aria-disabled:cursor-progress"
             >
               {pending ? "Taking it off…" : "Take it off"}
             </button>
           </span>
         </div>
       ) : (
+        // Both labels share one grid cell so the button holds its width — the
+        // Outline Button's pending state.
         <button
+          ref={want}
           type="submit"
-          disabled={pending}
-          className="band-label border border-ink px-3 py-2.5 transition-colors hover:bg-band-fiction focus-visible:bg-band-fiction disabled:cursor-progress"
+          aria-disabled={pending || undefined}
+          onClick={hold}
+          className="band-label inline-grid border border-ink px-3 py-2.5 transition-colors hover:bg-band-fiction focus-visible:bg-band-fiction aria-disabled:cursor-progress"
         >
-          {pending ? "Saving…" : "Want to read"}
+          <span className={`[grid-area:1/1] ${pending ? "invisible" : ""}`}>Want to read</span>
+          <span aria-hidden={!pending} className={`[grid-area:1/1] ${pending ? "" : "invisible"}`}>
+            Saving…
+          </span>
         </button>
       )}
 

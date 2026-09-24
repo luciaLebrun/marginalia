@@ -149,10 +149,14 @@ export function FavouriteToggle({
             >
               Your favourites
             </Link>
+            {/* aria-disabled while pending, as "Add to favourites" is below. */}
             <button
               type="submit"
-              disabled={pending}
-              className="band-label underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink disabled:cursor-progress"
+              aria-disabled={pending || undefined}
+              onClick={(event) => {
+                if (pending) event.preventDefault();
+              }}
+              className="band-label underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink aria-disabled:cursor-progress"
             >
               {pending ? "Taking it off…" : "Take it off"}
             </button>

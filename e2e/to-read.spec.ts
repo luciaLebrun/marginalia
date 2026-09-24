@@ -95,6 +95,24 @@ test.describe("Want to read on the book page", () => {
     await expect(page.getByRole("button", { name: "Take it off" })).toBeVisible();
   });
 
+  /* Pending, the pressed control keeps focus at its width; after, focus goes to
+     the replacement, not the page (MRG-074). */
+  test("keeps keyboard focus while it runs, then hands it on", async ({ page }) => {
+    await page.goto("/dev/book?state=saved", { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: "Take it off" }).focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("button", { name: /Taking it off/ })).toBeFocused();
+    const want = page.getByRole("button", { name: "Want to read" });
+    await expect(want).toBeFocused();
+
+    const width = (await want.boundingBox())?.width;
+    await page.keyboard.press("Enter");
+    const saving = page.getByRole("button", { name: /Saving/ });
+    await expect(saving).toBeFocused();
+    expect((await saving.boundingBox())?.width).toBe(width);
+    await expect(page.getByRole("link", { name: "Your list" })).toBeFocused();
+  });
+
   test("refuses to save without a signed-in reader", async ({ page }) => {
     await page.goto("/dev/book?state=new", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Want to read" }).click();

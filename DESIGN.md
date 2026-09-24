@@ -863,8 +863,9 @@ The one press that keeps a book without logging a read, set on a book page betwe
 imprint rows and the date slip, on the same 34rem measure. Character: a line printed on
 the sheet, never a filled badge and never a toggle.
 
-- **Not on the list:** an Outline Button reading "Want to read" ("Saving…" while it
-  commits).
+- **Not on the list:** an Outline Button reading "Want to read". Pending, it reads
+  "Saving…" in the same grid cell at a held width and keeps its flood under the pointer
+  or focus.
 - **On the list:** a ruled line closed by a hairline, 12px vertical — the reread tick's
   20px hairline box with its drawn tick, "On your to-read list" beside it in band voice,
   and at the right end "Your list" and "Take it off" as Text Buttons. At 390px the two
@@ -874,6 +875,11 @@ the sheet, never a filled badge and never a toggle.
   you’re signed out."), never the saving sentence reused.
 - **Announced:** a visually hidden readout says "Saved to your to-read list." or "Taken
   off your to-read list."; the same readout stands under the pile when a spine goes.
+  After either, focus goes to the replacement's first control — "Your list" once saved,
+  the button once taken off — unless the reader has already moved elsewhere.
+- **Pending keeps focus:** a pending control here, and on the Favourite line, is
+  `aria-disabled` and ignores presses; it is never natively disabled, which would drop
+  a keyboard reader's focus to the page for the length of the request.
 
 ### Favourite
 

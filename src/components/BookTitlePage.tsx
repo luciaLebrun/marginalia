@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Cover } from "./Cover";
 import { DateSlip } from "./DateSlip";
 import { FavouriteToggle } from "./FavouriteToggle";
-import type { FavouriteState } from "@/app/actions";
+import type { FavouriteState, ToReadState } from "@/app/actions";
 import { ToReadToggle } from "./ToReadToggle";
 import type { Book } from "@/db/schema";
 import {
@@ -32,6 +32,7 @@ export function BookTitlePage({
   favourite = { isFavourite: false, full: false, position: -1, count: 0 },
   username,
   diaryHref = "/",
+  toReadAction,
   favouriteAction,
   favouriteMoveAction,
 }: Readonly<{
@@ -45,7 +46,9 @@ export function BookTitlePage({
   username: string;
   /** The dev harness points this at its own shelf. */
   diaryHref?: string;
-  /** The dev harness's session-free stand-in for the favourite action. */
+  /** The dev harness's session-free stand-ins for the to-read action… */
+  toReadAction?: (previous: ToReadState, form: FormData) => Promise<ToReadState>;
+  /** …the favourite action… */
   favouriteAction?: (previous: FavouriteState, form: FormData) => Promise<FavouriteState>;
   /** …and for moving a favourite earlier or later. */
   favouriteMoveAction?: (form: FormData) => Promise<void>;
@@ -116,18 +119,20 @@ export function BookTitlePage({
           {/* Before the description, not after it: the reads and the line the
               next one goes on are the task, and a long blurb must not push
               them out of the first viewport on either device. */}
-          {/* Keyed on the stored state, so a logged read — which takes the book
-              off the list — re-renders the control fresh. */}
-          <ToReadToggle key={String(onToRead)} bookId={book.id} saved={onToRead} />
+          {/* Keyed on the read count, so a logged read — which takes the book
+              off the list — re-renders the control fresh. Not on the stored
+              state: the control's own press changes that, and remounting it
+              then would drop keyboard focus to the page (MRG-074). */}
+          <ToReadToggle key={reads.length} bookId={book.id} saved={onToRead} action={toReadAction} />
 
           <DateSlip reads={reads} bookId={book.id} username={username} />
 
           {/* Only a read book may be a favourite, so the control arrives with
-              the first read on the slip. Keyed on the stored state, so a change
-              made elsewhere re-renders it fresh. */}
+              the first read on the slip. Keyed on the read count, as Want to
+              Read is, so removing a read re-renders it fresh. */}
           {reads.length > 0 && (
             <FavouriteToggle
-              key={`${favourite.isFavourite}-${favourite.full}`}
+              key={reads.length}
               bookId={book.id}
               favourite={favourite.isFavourite}
               full={favourite.full}

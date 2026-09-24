@@ -170,6 +170,8 @@ test.describe("the favourite control on a book page", () => {
     await page.keyboard.press("Tab");
     await expect(page.getByRole("button", { name: "Take it off" })).toBeFocused();
     await page.keyboard.press("Enter");
+    // Pending, it keeps focus rather than going natively disabled (MRG-074).
+    await expect(page.getByRole("button", { name: /Taking it off/ })).toBeFocused();
     await expect(page.getByRole("button", { name: "Add to favourites" })).toBeFocused();
   });
 });
