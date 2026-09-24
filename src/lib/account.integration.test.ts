@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
 import { getDb, schema } from "@/db";
+import { RUN } from "../../tests/run";
 import { deleteAccount } from "./account";
 import { createInviteCodes, listInvitesWithState } from "./invite";
 
@@ -12,8 +13,9 @@ import { createInviteCodes, listInvitesWithState } from "./invite";
 const url = process.env.DATABASE_URL ?? "";
 const hasRealDb = url.length > 0 && !url.includes("placeholder");
 
-const OWNER = "_it_del_owner";
-const GUEST = "_it_del_guest";
+const OWNER = `_it_del_owner_${RUN}`;
+const GUEST = `_it_del_guest_${RUN}`;
+const SESSION = `_it_del_session_${RUN}`;
 const IDS = [OWNER, GUEST];
 
 async function wipe() {
@@ -28,8 +30,8 @@ describe.skipIf(!hasRealDb)("account deletion (integration)", () => {
     await getDb()
       .insert(schema.user)
       .values([
-        { id: OWNER, name: "Owner", email: "owner@del.test" },
-        { id: GUEST, name: "Guest", email: "guest@del.test" },
+        { id: OWNER, name: "Owner", email: `owner-${RUN}@del.test` },
+        { id: GUEST, name: "Guest", email: `guest-${RUN}@del.test` },
       ]);
   });
 
@@ -48,8 +50,8 @@ describe.skipIf(!hasRealDb)("account deletion (integration)", () => {
 
   it("takes their sessions with them", async () => {
     await getDb().insert(schema.session).values({
-      id: "_it_del_session",
-      token: "_it_del_token",
+      id: SESSION,
+      token: `_it_del_token_${RUN}`,
       userId: OWNER,
       expiresAt: new Date(Date.now() + 60_000),
     });
@@ -59,7 +61,7 @@ describe.skipIf(!hasRealDb)("account deletion (integration)", () => {
     const rows = await getDb()
       .select({ id: schema.session.id })
       .from(schema.session)
-      .where(eq(schema.session.id, "_it_del_session"));
+      .where(eq(schema.session.id, SESSION));
 
     expect(rows).toHaveLength(0);
   });

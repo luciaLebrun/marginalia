@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import { getDb, schema } from "@/db";
+import { RUN } from "../../tests/run";
 import { createInviteCodes, enforceInvite } from "./invite";
 
 /**
@@ -21,7 +22,7 @@ import { createInviteCodes, enforceInvite } from "./invite";
 const url = process.env.DATABASE_URL ?? "";
 const hasRealDb = url.length > 0 && !url.includes("placeholder");
 
-const OWNER = "_it_gate_owner";
+const OWNER = `_it_gate_owner_${RUN}`;
 
 /** The invite code this instance will present, swapped per test. */
 let presentedCode: string | undefined;
@@ -72,7 +73,7 @@ describe.skipIf(!hasRealDb)("signup gate (integration)", () => {
   beforeAll(async () => {
     await getDb()
       .insert(schema.user)
-      .values({ id: OWNER, name: "Owner", email: "owner@gate.test" })
+      .values({ id: OWNER, name: "Owner", email: `owner-${RUN}@gate.test` })
       .onConflictDoNothing();
   });
 
@@ -88,7 +89,7 @@ describe.skipIf(!hasRealDb)("signup gate (integration)", () => {
   });
 
   it("refuses an account when no invite code is presented", async () => {
-    const email = "nocode@gate.test";
+    const email = `nocode-${RUN}@gate.test`;
     presentedCode = undefined;
 
     await expect(attemptSignUp(email)).rejects.toThrow();
@@ -98,7 +99,7 @@ describe.skipIf(!hasRealDb)("signup gate (integration)", () => {
   });
 
   it("refuses an account for a code that was never issued", async () => {
-    const email = "badcode@gate.test";
+    const email = `badcode-${RUN}@gate.test`;
     presentedCode = "ZZZZ-ZZZZ";
 
     await expect(attemptSignUp(email)).rejects.toThrow();
@@ -107,7 +108,7 @@ describe.skipIf(!hasRealDb)("signup gate (integration)", () => {
   });
 
   it("refuses an account for an expired code", async () => {
-    const email = "expired@gate.test";
+    const email = `expired-${RUN}@gate.test`;
     [presentedCode] = await createInviteCodes(OWNER, 1, -1);
 
     await expect(attemptSignUp(email)).rejects.toThrow();
@@ -116,7 +117,7 @@ describe.skipIf(!hasRealDb)("signup gate (integration)", () => {
   });
 
   it("creates the account when a valid code is presented", async () => {
-    const email = "valid@gate.test";
+    const email = `valid-${RUN}@gate.test`;
     [presentedCode] = await createInviteCodes(OWNER, 1);
 
     await expect(attemptSignUp(email)).resolves.toBeTruthy();
@@ -125,8 +126,8 @@ describe.skipIf(!hasRealDb)("signup gate (integration)", () => {
   });
 
   it("burns the code, so the same invite cannot admit a second person", async () => {
-    const first = "first@gate.test";
-    const second = "second@gate.test";
+    const first = `first-${RUN}@gate.test`;
+    const second = `second-${RUN}@gate.test`;
     [presentedCode] = await createInviteCodes(OWNER, 1);
 
     await expect(attemptSignUp(first)).resolves.toBeTruthy();
