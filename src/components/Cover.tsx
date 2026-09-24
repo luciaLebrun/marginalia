@@ -65,6 +65,24 @@ export function Cover({
   );
 }
 
+const CELL_TITLE =
+  "line-clamp-5 text-[1.375rem] leading-snug tracking-[-0.01em] hyphens-auto [hyphenate-limit-chars:12_5_5]";
+
+/**
+ * The jacket title at each scale. A frontispiece sets it at the headline step,
+ * holding 1.75rem until its column is wide enough for 2.25rem not to break a
+ * word. A cell takes the field step, the size a spine sets its title at, and
+ * hyphenates only a long word too wide for it — though browsers never
+ * hyphenate a capitalised word, so a title-case one still breaks bare. The
+ * favourites band, four across on a laptop, steps up to the headline, as its
+ * record band steps up from the shelf's.
+ */
+const TITLE: Record<Scale, string> = {
+  cell: CELL_TITLE,
+  band: `${CELL_TITLE} lg:text-[1.75rem] lg:leading-none lg:tracking-[-0.02em]`,
+  page: "text-[1.75rem] leading-none tracking-[-0.02em] lg:text-[2.25rem]",
+};
+
 /**
  * A coverless book as a type-only jacket, set the way a paperback with no
  * illustration was — the title large at the head, the author in the band voice
@@ -90,23 +108,7 @@ function TypeJacket({
         page ? "gap-4 px-5 py-6 lg:px-7 lg:py-8" : "gap-3 px-3 py-4"
       }`}
     >
-      {/* The headline step at the head of a frontispiece, holding 1.75rem
-          until its column is wide enough for 2.25rem not to break a word. A
-          cell takes the field step, the size a spine sets its title at, and
-          hyphenates only a long word too wide for it — though browsers never
-          hyphenate a capitalised word, so a title-case one still breaks
-          bare. The favourites band, four
-          across on a laptop, steps up to the headline, as its record band
-          steps up from the shelf's. */}
-      <span
-        className={`font-semibold text-balance break-words ${
-          page
-            ? "text-[1.75rem] leading-none tracking-[-0.02em] lg:text-[2.25rem]"
-            : `line-clamp-5 text-[1.375rem] leading-snug tracking-[-0.01em] hyphens-auto [hyphenate-limit-chars:12_5_5] ${
-                scale === "band" ? "lg:text-[1.75rem] lg:leading-none lg:tracking-[-0.02em]" : ""
-              }`
-        }`}
-      >
+      <span className={`font-semibold text-balance break-words ${TITLE[scale]}`}>
         {title}
       </span>
       {authors[0] && (
