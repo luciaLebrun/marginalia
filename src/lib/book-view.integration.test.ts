@@ -2,6 +2,7 @@ import { eq, inArray } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { getDb, schema } from "@/db";
+import { RUN, runKey } from "../../tests/run";
 import { findStoredBook } from "./book";
 import { getReads } from "./book-view";
 
@@ -13,10 +14,12 @@ import { getReads } from "./book-view";
 const url = process.env.DATABASE_URL ?? "";
 const hasRealDb = url.length > 0 && !url.includes("placeholder");
 
-const READER = "_it_slip_reader";
-const OTHER = "_it_slip_other";
-const BOOK_ID = "_it_slip_book";
-const BOOK_KEY = "OL990000010W";
+const KEY = runKey("slip");
+const READER = `_it_slip_reader_${RUN}`;
+const OTHER = `_it_slip_other_${RUN}`;
+const BOOK_ID = `_it_slip_book_${RUN}`;
+const BOOK_KEY = `OL99${KEY}0W`;
+const LOGS = [1, 2, 3, 4].map((n) => `_it_slip_${n}_${RUN}`);
 
 describe.skipIf(!hasRealDb)("the date slip (integration)", () => {
   beforeAll(async () => {
@@ -24,8 +27,8 @@ describe.skipIf(!hasRealDb)("the date slip (integration)", () => {
     await db
       .insert(schema.user)
       .values([
-        { id: READER, name: "Slip Reader", email: "reader@slip.test" },
-        { id: OTHER, name: "Slip Other", email: "other@slip.test" },
+        { id: READER, name: "Slip Reader", email: `reader-${RUN}@slip.test` },
+        { id: OTHER, name: "Slip Other", email: `other-${RUN}@slip.test` },
       ])
       .onConflictDoNothing();
     await db
@@ -33,17 +36,17 @@ describe.skipIf(!hasRealDb)("the date slip (integration)", () => {
       .values({ id: BOOK_ID, sourceKey: BOOK_KEY, title: "A Slip Test", authors: [] })
       .onConflictDoNothing();
     await db.insert(schema.log).values([
-      { id: "_it_slip_1", userId: READER, bookId: BOOK_ID, readAt: "2024-03-02", rating: "4.5" },
-      { id: "_it_slip_2", userId: READER, bookId: BOOK_ID, readAt: null, reviewText: "   " },
+      { id: LOGS[0], userId: READER, bookId: BOOK_ID, readAt: "2024-03-02", rating: "4.5" },
+      { id: LOGS[1], userId: READER, bookId: BOOK_ID, readAt: null, reviewText: "   " },
       {
-        id: "_it_slip_3",
+        id: LOGS[2],
         userId: READER,
         bookId: BOOK_ID,
         readAt: "2026-08-14",
         isReread: true,
         reviewText: "Better the second time.",
       },
-      { id: "_it_slip_4", userId: OTHER, bookId: BOOK_ID, readAt: "2026-09-01", rating: "2.0" },
+      { id: LOGS[3], userId: OTHER, bookId: BOOK_ID, readAt: "2026-09-01", rating: "2.0" },
     ]);
   });
 
@@ -56,7 +59,7 @@ describe.skipIf(!hasRealDb)("the date slip (integration)", () => {
 
   it("lists only this reader's reads, newest first and undated last", async () => {
     const reads = await getReads(READER, BOOK_ID);
-    expect(reads.map((read) => read.id)).toEqual(["_it_slip_3", "_it_slip_1", "_it_slip_2"]);
+    expect(reads.map((read) => read.id)).toEqual([LOGS[2], LOGS[0], LOGS[1]]);
   });
 
   it("hands back dates, numeric ratings and whether there are words", async () => {
@@ -76,7 +79,7 @@ describe.skipIf(!hasRealDb)("the date slip (integration)", () => {
   it("finds a stored book by key, and nothing for one never opened or malformed", async () => {
     await expect(findStoredBook(BOOK_KEY)).resolves.toMatchObject({ id: BOOK_ID });
     await expect(findStoredBook(`/works/${BOOK_KEY}`)).resolves.toMatchObject({ id: BOOK_ID });
-    await expect(findStoredBook("OL990000011W")).resolves.toBeNull();
+    await expect(findStoredBook(`OL99${KEY}1W`)).resolves.toBeNull();
     await expect(findStoredBook("../search")).resolves.toBeNull();
   });
 });
