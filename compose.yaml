@@ -47,5 +47,18 @@ services:
     depends_on:
       migrate: { condition: service_completed_successfully }
 
+  # Public ingress on the VM only: a locally-managed named tunnel. Credentials
+  # JSON is copied to deploy/cloudflared/ by hand (gitignored). The Mac stack
+  # never starts it; the VM passes --profile tunnel.
+  tunnel:
+    profiles: ["tunnel"]
+    image: cloudflare/cloudflared:2026.9.3
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    volumes:
+      - ./deploy/cloudflared:/etc/cloudflared:ro
+    depends_on:
+      - app
+
 volumes:
   pgdata:

@@ -1,0 +1,6 @@
+tunnel: marginalia
+credentials-file: /etc/cloudflared/marginalia.json
+ingress:
+  - hostname: marginalia.dpdns.org
+    service: http://app:3000
+  - service: http_status:404
