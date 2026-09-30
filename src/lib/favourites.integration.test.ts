@@ -2,6 +2,7 @@ import { inArray } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import { getDb, schema } from "@/db";
+import { RUN, runKey } from "../../tests/run";
 import {
   addFavourite,
   getFavouriteState,
@@ -20,14 +21,12 @@ import { createRead, removeRead } from "./read";
 const url = process.env.DATABASE_URL ?? "";
 const hasRealDb = url.length > 0 && !url.includes("placeholder");
 
-// Scoped to this run: CI's push and PR workflows share one Neon branch.
-const RUN = process.env.GITHUB_RUN_ID ?? `local${process.pid}`;
-const KEY = [...RUN].reduce((hash, char) => (hash * 31 + char.codePointAt(0)!) % 900000, 7) + 100000;
+const KEY = runKey("fav");
 
 const READER = `_it_fav_reader_${RUN}`;
 const OTHER = `_it_fav_other_${RUN}`;
 const BOOKS = Array.from({ length: 6 }, (_, i) => `_it_fav_book_${i}_${RUN}`);
-const KEYS = BOOKS.map((_, i) => `OL${KEY}${i}W`);
+const KEYS = BOOKS.map((_, i) => `OL99${KEY}${i}W`);
 
 async function read(userId: string, bookId: string) {
   const result = await createRead(userId, {

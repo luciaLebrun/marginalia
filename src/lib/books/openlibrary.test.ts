@@ -53,7 +53,7 @@ describe("normalizeSearchResponse", () => {
       subtitle: undefined,
       authors: ["Frank Herbert"],
       firstPublishYear: 1965,
-      coverId: 240727,
+      coverId: 11481354,
       editionCount: 312,
       isbn13: "9780441013593",
     });
@@ -103,7 +103,7 @@ describe("normalizeWorkResponse", () => {
   });
 
   it("keeps the search coverId when there is one", () => {
-    expect(normalizeWorkResponse(summary, workFixture).coverId).toBe(240727);
+    expect(normalizeWorkResponse(summary, workFixture).coverId).toBe(11481354);
   });
 
   it("falls back to the first VALID work cover, skipping the -1 sentinel", () => {
@@ -112,7 +112,7 @@ describe("normalizeWorkResponse", () => {
       { ...summary, coverId: undefined },
       workFixture,
     );
-    expect(detail.coverId).toBe(240727);
+    expect(detail.coverId).toBe(11481354);
   });
 
   it("survives an empty work body", () => {
