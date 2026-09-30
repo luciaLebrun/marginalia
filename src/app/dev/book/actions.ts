@@ -1,6 +1,6 @@
 "use server";
 
-import type { FavouriteState } from "@/app/actions";
+import type { FavouriteState, ToReadState } from "@/app/actions";
 
 /**
  * The book harness's stand-in for `toggleFavouriteAction` (MRG-071): it writes
@@ -18,4 +18,16 @@ export async function toggleDevFavouriteAction(
   if (process.env.NODE_ENV === "production") throw new Error("Not available.");
   await new Promise((resolve) => setTimeout(resolve, 1500));
   return { favourite: formData.get("intent") === "add", error: null, signedOut: false };
+}
+
+/** The same stand-in for `toggleToReadAction` (MRG-074). */
+export async function toggleDevToReadAction(
+  _previous: ToReadState,
+  formData: FormData,
+): Promise<ToReadState> {
+  if (process.env.NODE_ENV === "production") throw new Error("Not available.");
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+  const sentBook = formData.get("bookId");
+  const bookId = typeof sentBook === "string" ? sentBook : null;
+  return { saved: formData.get("intent") === "save", bookId, error: null, signedOut: false };
 }
