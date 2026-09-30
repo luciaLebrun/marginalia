@@ -1,15 +1,9 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { PREVIEW_ORIGIN_PATTERN, requestOrigin, trustedOrigins } from "./trusted-origins";
 
-const KEYS = ["VERCEL_ENV"] as const;
-const ORIGINAL = Object.fromEntries(KEYS.map((k) => [k, process.env[k]]));
-
 afterEach(() => {
-  for (const k of KEYS) {
-    if (ORIGINAL[k] === undefined) delete process.env[k];
-    else process.env[k] = ORIGINAL[k];
-  }
+  vi.unstubAllEnvs();
 });
 
 describe("trustedOrigins", () => {
@@ -19,25 +13,42 @@ describe("trustedOrigins", () => {
    * needs the proxy — so it trusts nothing extra, rather than merely not
    * exercising the trust it holds.
    */
-  it("trusts nothing extra in production", () => {
-    process.env.VERCEL_ENV = "production";
+  it("trusts nothing extra in production on Vercel", () => {
+    vi.stubEnv("VERCEL", "1");
+    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("NODE_ENV", "production");
     expect(trustedOrigins()).toEqual([]);
   });
 
+  /* Self-hosted there is no VERCEL_ENV to say so, only NODE_ENV. */
+  it("trusts nothing extra in production outside Vercel", () => {
+    vi.stubEnv("VERCEL", "");
+    vi.stubEnv("VERCEL_ENV", "");
+    vi.stubEnv("NODE_ENV", "production");
+    expect(trustedOrigins()).toEqual([]);
+  });
+
+  /* A preview build is a production build too; VERCEL is what tells them apart. */
   it("trusts preview deployments on preview", () => {
-    process.env.VERCEL_ENV = "preview";
+    vi.stubEnv("VERCEL", "1");
+    vi.stubEnv("VERCEL_ENV", "preview");
+    vi.stubEnv("NODE_ENV", "production");
     expect(trustedOrigins()).toEqual([PREVIEW_ORIGIN_PATTERN]);
   });
 
   it("trusts them in local development too, where VERCEL_ENV is unset", () => {
-    delete process.env.VERCEL_ENV;
+    vi.stubEnv("VERCEL", "");
+    vi.stubEnv("VERCEL_ENV", "");
+    vi.stubEnv("NODE_ENV", "development");
     expect(trustedOrigins()).toEqual([PREVIEW_ORIGIN_PATTERN]);
   });
 
   it("reads the environment at call time, not at import", () => {
-    process.env.VERCEL_ENV = "preview";
+    vi.stubEnv("VERCEL", "1");
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("VERCEL_ENV", "preview");
     expect(trustedOrigins()).toHaveLength(1);
-    process.env.VERCEL_ENV = "production";
+    vi.stubEnv("VERCEL_ENV", "production");
     expect(trustedOrigins()).toHaveLength(0);
   });
 });
