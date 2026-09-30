@@ -1,6 +1,6 @@
 name: Image
 
-# Builds the self-host images (linux/amd64) and pushes them to GHCR.
+# Builds the self-host images (linux/amd64), pushes them to GHCR and scans them with Trivy.
 on:
   push:
     branches: [develop, main, "feature/MRG-081-*"]
@@ -13,6 +13,7 @@ concurrency:
 permissions:
   contents: read
   packages: write
+  security-events: write
 
 jobs:
   build:
@@ -51,6 +52,7 @@ jobs:
 
       # tools first: app shares its deps stage, so it reuses this cache.
       - name: Build and push tools
+        id: build-tools
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
@@ -62,7 +64,36 @@ jobs:
           cache-from: type=gha,scope=tools
           cache-to: type=gha,scope=tools,mode=max
 
+      # Scan by digest: exactly what was just pushed. Pass 1 reports every
+      # severity to the Security tab; pass 2 fails the build on fixable CRITICALs.
+      - name: Scan tools (report)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          image-ref: ghcr.io/lucialebrun/marginalia-tools@${{ steps.build-tools.outputs.digest }}
+          format: sarif
+          output: trivy-tools.sarif
+
+      - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: trivy-tools.sarif
+          category: trivy-tools
+
+      - name: Scan tools (gate)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          image-ref: ghcr.io/lucialebrun/marginalia-tools@${{ steps.build-tools.outputs.digest }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: 1
+
       - name: Build and push app
+        id: build-app
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
@@ -75,3 +106,31 @@ jobs:
             type=gha,scope=app
             type=gha,scope=tools
           cache-to: type=gha,scope=app,mode=max
+
+      # Scan by digest: exactly what was just pushed. Pass 1 reports every
+      # severity to the Security tab; pass 2 fails the build on fixable CRITICALs.
+      - name: Scan app (report)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          image-ref: ghcr.io/lucialebrun/marginalia@${{ steps.build-app.outputs.digest }}
+          format: sarif
+          output: trivy-app.sarif
+
+      - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: trivy-app.sarif
+          category: trivy-app
+
+      - name: Scan app (gate)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          image-ref: ghcr.io/lucialebrun/marginalia@${{ steps.build-app.outputs.digest }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: 1
