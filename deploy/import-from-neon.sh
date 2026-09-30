@@ -48,7 +48,7 @@ echo "== dumping source (read-only)"
 net=()
 [ -z "${DUMP_NETWORK:-}" ] || net=(--network "$DUMP_NETWORK")
 SRC_URL=$url docker run --rm --env SRC_URL ${net[@]+"${net[@]}"} \
-  mirror.gcr.io/library/postgres:17-alpine \
+  mirror.gcr.io/library/postgres:18-alpine \
   sh -c 'pg_dump -Fc --no-owner --no-privileges "$SRC_URL"' > "$dump"
 [ -s "$dump" ] || { echo "import failed: empty dump" >&2; exit 1; }
 

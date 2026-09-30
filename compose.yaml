@@ -5,7 +5,8 @@
 
 services:
   db:
-    image: mirror.gcr.io/library/postgres:17-alpine
+    # Same major as Neon production (18), so its dumps restore without a downgrade.
+    image: mirror.gcr.io/library/postgres:18-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: marginalia
@@ -16,7 +17,8 @@ services:
       postgres -c shared_buffers=64MB -c work_mem=2MB
       -c maintenance_work_mem=32MB -c max_connections=20
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      # 18+ keeps data under /var/lib/postgresql/<major>/docker; mount the parent.
+      - pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U marginalia -d marginalia"]
       interval: 5s
