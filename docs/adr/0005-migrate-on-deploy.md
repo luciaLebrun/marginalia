@@ -1,5 +1,7 @@
 # ADR 0005 — Each Vercel environment migrates its own database on deploy
 
+> Superseded in part by [ADR 0010](0010-self-host-on-a-free-vm.md): migrations now run in the compose migrate job, not `vercel.json`.
+
 **Status:** accepted · 2026-09-10
 
 ## Context

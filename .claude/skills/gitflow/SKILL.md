@@ -9,8 +9,8 @@ Two permanent branches, no release branches.
 
 | Branch | Role |
 |---|---|
-| `main` | Production. Protected. Every merge is tagged `vX.Y.Z`. Deploys to Vercel production. |
-| `develop` | Default branch and integration target. Deploys to a persistent Vercel preview. |
+| `main` | Production. Protected. Every merge is tagged `vX.Y.Z`. Production: its `latest` images run on the GCP VM, deployed manually with `deploy/deploy.sh`. |
+| `develop` | Default branch and integration target. No deployed environment. |
 | `feature/MRG-###-slug` | Cut from `develop`, PR back into `develop`. |
 | `hotfix/slug` | Cut from `main`, PR into `main`, **then back-merged into `develop`**. |
 
@@ -128,5 +128,5 @@ PR, since `develop` is protected too.
   required and both CI checks must pass. Force pushes and deletions are blocked.
 - Protection is set with `enforce_admins: false`, so the repo owner *can*
   bypass it. Do not — the point is that the checks ran.
-- Deployment is Vercel's Git integration, not a workflow. There is no
-  `deploy.yml` and there should not be one.
+- Images are built by `image.yml`; deployment to the VM is manual
+  (`deploy/deploy.sh <tag>`) for now. See ADR 0010.

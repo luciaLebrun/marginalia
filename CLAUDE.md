@@ -31,13 +31,13 @@ pnpm db:studio:prod     # …against .env.production
 
 ### Looking at a deployed environment's data
 
-Vercel stores `DATABASE_URL` as a Secret, so it cannot be read back — not from
-the dashboard and not from `vercel env pull`, which returns `[SENSITIVE]`. Get
-the connection string from the **Neon** dashboard instead, per branch, and put
-it in a gitignored `.env.preview` or `.env.production`:
+Production's Postgres runs in Docker Compose on the VM and is not exposed
+publicly; reach it over IAP SSH. (Neon is kept untouched as a rollback; its
+connection string comes from the Neon dashboard.) To point Studio at a database,
+put the connection string in a gitignored `.env.preview` or `.env.production`:
 
 ```
-DATABASE_URL=postgresql://…   # that branch's pooled connection string
+DATABASE_URL=postgresql://…   # that database's connection string
 ```
 
 Then `pnpm db:studio:preview` or `pnpm db:studio:prod`. The file exists so the
@@ -46,22 +46,27 @@ already gitignored. A one-off `DATABASE_URL="…" pnpm db:studio` also works —
 `drizzle.config.ts` loads `.env.local` without overriding what is already in
 the environment, so the inline value wins.
 
-**Which branch is which is worth checking rather than assuming.** Preview and
-local sharing one branch is how seeded development fixtures ended up publicly
+**Which database is which is worth checking rather than assuming.** Preview and
+local sharing one database is how seeded development fixtures ended up publicly
 readable on a deployed URL — see MRG-046.
 
 ## Stack
 
 Next.js 16 (App Router, RSC) · TypeScript strict · Tailwind v4 · Drizzle ORM ·
-PostgreSQL on Neon · Better Auth (Google OAuth) · Zod · Vitest.
+PostgreSQL (postgres-js) · Better Auth (Google OAuth) · Zod · Vitest.
 
-Hosting: Vercel Hobby. `main` → production, `develop` → preview, via Vercel's
-Git integration (there is deliberately no deploy workflow).
+Hosting: a Google Cloud e2-micro VM running Docker Compose (Postgres 18, a
+migrate+backfill job, the standalone app, a Cloudflare tunnel) at
+https://marginalia.dpdns.org — see ADR 0010. Production is the `main` images
+(`latest`), built by `.github/workflows/image.yml` and deployed manually with
+`deploy/deploy.sh <tag>`; nothing deploys automatically yet. `develop` is the
+integration branch.
 
-`vercel.json` sets the build command to `pnpm db:migrate && pnpm build`, so each
-environment migrates the database it points at before building — see ADR 0005.
-A destructive migration must therefore be split across two deploys: expand
-first, contract once nothing reads the old shape.
+The compose migrate job runs `pnpm db:migrate` on every deploy, before the new
+app starts — see ADR 0005. A destructive migration must therefore be split
+across two deploys: expand first, contract once nothing reads the old shape.
+`deploy/backup.sh` dumps the database nightly to a GCS bucket. Neon is kept
+untouched as a rollback.
 
 ## Architectural invariants
 
@@ -130,9 +135,9 @@ the same reason `getDb()` is.
   update.
 - The code crosses the Google round-trip in a short-lived httpOnly cookie
   (`INVITE_COOKIE`), because OAuth gives us no way to carry a form field.
-- `transaction: false` on the Drizzle adapter is required: the neon-http driver
-  sends one HTTP request per statement and cannot hold a transaction open. The
-  consequence is that a code is burned if user creation then fails — the safer
+- `transaction: false` on the Drizzle adapter is required: the old neon-http driver
+  could not hold a transaction open, and turning it on with postgres-js would
+  change sign-up's behaviour. The consequence is that a code is burned if user creation then fails — the safer
   direction to fail in for a closed POC.
 - **Only the owner mints codes, and the owner is an env var.**
   `MARGINALIA_OWNER_EMAIL` (one address or several, comma separated) is checked
@@ -211,8 +216,8 @@ the same reason `getDb()` is.
   the opt-in live check.
 - Covers render as a plain `<img>`, **not** `next/image`. Open Library asks
   that public pages point `src` at their CDN, Google Books jackets are pointed
-  at for the same reason, and it keeps us off Vercel Hobby's
-  image-transformation quota for images we do not own. Grid covers are lazy; a
+  at for the same reason, and it keeps us off
+  image-transformation work for images we do not own. Grid covers are lazy; a
   page-scale jacket is the LCP and loads eagerly at high priority.
 - **Client components import nothing that builds a Zod schema or reaches the
   database.** Shared limits live in `src/lib/client-safe.ts`;
