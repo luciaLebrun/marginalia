@@ -87,6 +87,24 @@ change. Tag *after* the merge lands, not before.
 
 Never `--squash` a release — see the Merging table above.
 
+**Then back-merge, as the last step of every release — without asking.** The
+release merge commit exists only on `main`, so until it reaches `develop` the
+next release PR is not clean. Open the back-merge PR right after the tag and
+the production deploy check:
+
+```bash
+# after the merge into main lands (release or hotfix)
+git fetch origin
+git checkout -b chore/back-merge-vX.Y.Z origin/develop
+git merge --no-ff origin/main -m "chore: back-merge vX.Y.Z into develop"
+git push -u origin chore/back-merge-vX.Y.Z
+gh pr create --base develop --title "chore: back-merge vX.Y.Z into develop"
+gh pr merge <n> --merge          # its diff is empty: history only
+```
+
+Do not open the PR with `--head main`: branch protection requires the head to
+be up to date with `develop`, so that PR can never be merged.
+
 ## Hotfixes
 
 The back-merge is not optional. Skipping it is how a fix gets silently reverted
@@ -96,9 +114,10 @@ by the next `develop` → `main` merge.
 git checkout -b hotfix/cover-403 main
 # ... fix, PR into main, merge, tag vX.Y.Z+1 ...
 
-# back-merge — also a PR, since develop is protected too
-gh pr create --base develop --head main --title "chore: back-merge hotfix/cover-403"
 ```
+
+Then back-merge exactly as a release does (see Releasing above). It is also a
+PR, since `develop` is protected too.
 
 ## Notes
 

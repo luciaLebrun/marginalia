@@ -16,6 +16,8 @@ export interface DiaryEntry {
   coverUrl: string | null;
   coverColor: string | null;
   sourceKey: string;
+  /** Shelf category, e.g. "Science Fiction"; null when there is none. */
+  category: string | null;
   rating: number | null;
   readAt: Date | null;
   isReread: boolean;

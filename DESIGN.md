@@ -492,7 +492,8 @@ of the system, and it is what makes a second typeface unnecessary.
   The one exception is the log sheet's review, set at the body
   step (see the Value Over Label Rule). A spine on the to-read list sets its title at
   this step in paper, balanced and underlined, because a waiting book's title is the
-  value that spine carries.
+  value that spine carries. The title at the head of a cell-scale type-only jacket
+  takes it too, in ink.
 - **Title** (600, 0.8125rem, lh tight, balanced): a book title in an entry's record
   band. Small on purpose — the jacket above it is the identifying object. A favourite's
   record band sets its title one step up, at 0.9375rem, because the cell runs four
@@ -727,6 +728,10 @@ page, not by chrome:
   the underline under a slip line's "Edit" under the pointer and while open, a ticked reread box (with its tick drawn in), a text
   button's or link's underline under the pointer (the band's full foreground on a
   band; full alarm inside a refusal sentence).
+- **Current** — the stroke thickened to 2px solid ink, with `aria-current`: the order
+  the shelf is shelved by, on the shelf-order line. It is thicker than the 1px ink a
+  hovered neighbour takes, so a pointer resting on another order never reads as the
+  current one.
 - **Where a carried book would land** — the focus ring's mark, 2px ink at a 2px
   offset, on the favourites position under the pointer; the carried cell itself takes the
   Entry Card's hover mark — border and record rule in solid ink — from the moment it
@@ -758,8 +763,8 @@ printed, impersonal, identical to its four hundred neighbours.
   at 80% opacity when relevant. Foreground from `readableOn()`.
 - **Band two — field:** a fixed 2:3 well on sunk paper. The jacket is `object-contain`
   — letterboxed on paper, never cropped, because a cropped jacket loses its
-  typography. With no cover, the well holds the title and author centred in soft ink
-  at 0.8125rem; that is a real state with a real setting, never a broken-image icon.
+  typography. With no cover, the well holds the cell-scale type-only jacket (see
+  Cover); that is a real state with a real setting, never a broken-image icon.
 - **Band three — record:** paper, separated by a hairline, 8px/10px padding. Title
   (balanced) on top; rating and date pinned to the bottom edge of the cell so the
   baseline holds across a ragged row.
@@ -859,8 +864,9 @@ The one press that keeps a book without logging a read, set on a book page betwe
 imprint rows and the date slip, on the same 34rem measure. Character: a line printed on
 the sheet, never a filled badge and never a toggle.
 
-- **Not on the list:** an Outline Button reading "Want to read" ("Saving…" while it
-  commits).
+- **Not on the list:** an Outline Button reading "Want to read". Pending, it reads
+  "Saving…" in the same grid cell at a held width and keeps its flood under the pointer
+  or focus.
 - **On the list:** a ruled line closed by a hairline, 12px vertical — the reread tick's
   20px hairline box with its drawn tick, "On your to-read list" beside it in band voice,
   and at the right end "Your list" and "Take it off" as Text Buttons. At 390px the two
@@ -870,6 +876,11 @@ the sheet, never a filled badge and never a toggle.
   you’re signed out."), never the saving sentence reused.
 - **Announced:** a visually hidden readout says "Saved to your to-read list." or "Taken
   off your to-read list."; the same readout stands under the pile when a spine goes.
+  After either, focus goes to the replacement's first control — "Your list" once saved,
+  the button once taken off — unless the reader has already moved elsewhere.
+- **Pending keeps focus:** a pending control here is `aria-disabled` and ignores
+  presses; it is never natively disabled, which would drop a keyboard reader's focus to
+  the page for the length of the request.
 
 ### Favourite
 
@@ -898,6 +909,8 @@ line, one step further along.
   off your favourites.". After either, focus goes to the replacement's first control —
   "Your favourites" once added, the button once taken off — unless the reader has
   already moved elsewhere.
+- **Pending keeps focus:** as on Want to Read, a pending control is `aria-disabled` and
+  ignores presses, never natively disabled, so a keyboard reader's focus stays on it.
 
 ### Masthead (page-scale tri-band)
 
@@ -936,13 +949,28 @@ device repeated, and the year rule immediately below is already a ruled strip.
 
 ### Year Rule
 
-A full-width ruled band on sunk paper, bordered top and bottom in solid ink: the year
-at headline scale left, the group's book count in soft-ink label type right. It is a
-band, not a hairline, because chronology is the shelf's organising structure.
+A full-width ruled band on sunk paper, bordered top and bottom in solid ink: the
+group's name at headline scale left, its book count in soft-ink label type right. It
+is a band, not a hairline, because the grouping is the shelf's organising structure —
+a year by default, or an author or a category (MRG-072). A long name ("Biography &
+Autobiography", "Emily St. John Mandel") wraps balanced at 390 and the count never
+shrinks off the band. The group with nothing to file it under — "Undated", "Unknown
+author", "Uncategorised" — comes last, its name in soft ink.
+
+### Shelf-Order Line
+
+One line on the page margin between the Favourites band (or the masthead, when it is
+not drawn) and the first group: "Shelved by" in band voice and soft ink, then "Year",
+"Author" and "Category" as Text Buttons, the current one in the current mark. They are
+plain links carrying `?by=`, so the order works without script, keeps the reader's
+scroll position, and a sorted shelf can be shared; an unknown value falls back to
+Year. The same on the owner's diary and on a profile; not drawn on an empty shelf.
+The Log Cell leads the first group in the Year order only — Author and Category are
+for looking back. MRG-069's language choice is meant to reuse this line.
 
 ### Favourites Band
 
-Up to four books the reader has chosen, between the masthead and the first year rule:
+Up to four books the reader has chosen, between the masthead and the shelf-order line:
 the shelf's own cell at a larger scale, so the band reads as a statement drawn from the
 shelf rather than a second list. Character: the four books pulled forward on the shelf.
 
@@ -957,7 +985,8 @@ shelf rather than a second list. Character: the four books pulled forward on the
   their own rather than by the shelf's column gradient; they are the Ruled Signature
   Rule's empty slots, never placeholder cards.
 - **Cell:** the Entry Card, with the record band holding the title alone at 0.9375rem
-  (600, tight, balanced). Every favourite is logged, so its colour band always wears
+  (600, tight, balanced). A coverless favourite's type-only jacket is set at
+  `scale="band"`: its title steps up to the headline at ≥64rem (see Cover). Every favourite is logged, so its colour band always wears
   earned colour. A signed-in viewer's cell is one link to its book page, named by title
   and author, with the Entry Card's hover and focus; a visitor's is inert, as on the
   shelf.
@@ -1298,14 +1327,22 @@ its left edge on the page padding. Character: a label with a border drawn around
 
 The secondary control inside a form row — "Undated" and "Clear" on the log sheet,
 "Remove this read" and "Keep it" under an edit sheet's commit band, "Your list" and
-"Take it off" on the saved line of a book page's Want to Read, and "Earlier", "Later",
-"Your favourites" and "Take it off" on a favourite's line.
+"Take it off" on the saved line of a book page's Want to Read, "Earlier", "Later",
+"Your favourites" and "Take it off" on a favourite's line, and "Year", "Author" and
+"Category" on the shelf-order line.
 Character: a word in the row's margin, not a second button.
 
 - **Shape:** no border, no ground, no padding; a band-voice label in ink, underlined
   4px below in hairline tone.
 - **Hover / focus-visible:** the underline goes to ink under the pointer; keyboard focus
   takes the standard 2px ink ring. Colour only.
+- **Current:** where a row of Text Buttons picks one of several views, the chosen one
+  carries `aria-current` and a 2px ink underline (the Printed State Rule's current mark).
+- **Pending:** a Text Button whose action waits on a source ("Take it off" on Want to
+  Read's and a favourite's line) turns its label into the live readout in place
+  ("Taking it off…"). Both labels share one grid cell, so it holds the longer width and
+  nothing beside it moves. It is `aria-disabled` and ignores presses, never natively
+  disabled, so keyboard focus stays on it.
 - **Unavailable:** when there is nothing to undo — the date already empty, the rating
   already unrated, or "Keep it" while a removal runs — the label is ruled through in
   ink at 50% opacity, as a disabled
@@ -1337,13 +1374,26 @@ A plain lazy `<img>` at `object-contain` inside the fixed 2:3 well, with a
 `"{title} by {author}"` and is load-bearing rather than decorative, because the
 interface is built around cover art.
 
-**Page scale.** `scale="page"` changes only the coverless setting. At frontispiece
-size the cell's small centred label reads as an empty placeholder, so the well holds
-a type-only jacket instead: the title at the headline step at the head, and the first
-author in soft-ink band voice (1.4 leading, balanced) at the foot, with 24px/20px
-padding (32px/28px at ≥64rem). The jacket is `aria-hidden`, because the page's heading
-already says the title. The cell-scale no-cover setting is unchanged. A page-scale
-cover passes its own `sizes` for the frontispiece column.
+**No cover.** A coverless book gets one answer at both scales: a type-only jacket
+filling the well, the title at the head and the first author in soft-ink band voice
+(1.4 leading, balanced) at the foot. A small centred caption read as a failed image
+load beside a full-bleed jacket in a grid, and as an empty placeholder at frontispiece
+size. The jacket is `aria-hidden`, because a heading or record band beside every
+Cover already says the title.
+
+- **Cell** (the default): the title at the field step (1.375rem, snug, −0.01em),
+  balanced, clamped at five lines, with 16px/12px padding — it holds at 2 columns on
+  a 390px phone. Only a word of twelve letters or more hyphenates
+  (`hyphenate-limit-chars: 12 5 5`), so ordinary titles never do. Browsers never
+  hyphenate a capitalised word, so a title-case word too wide for the cell still
+  breaks bare rather than overflowing.
+- **Band** (`scale="band"`, the favourites band): the cell setting, with the title a
+  step up at the headline step (1.75rem, lh 1, −0.02em) from ≥64rem, where the band
+  runs four across in a ~276px well — as its record band steps up from the shelf's.
+  At 2 across it stays at the field step.
+- **Page** (`scale="page"`): the title at the headline step, with 24px/20px padding
+  (32px/28px at ≥64rem). A page-scale cover also passes its own `sizes` for the
+  frontispiece column and loads eagerly.
 
 ### Motion
 

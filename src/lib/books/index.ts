@@ -22,7 +22,13 @@ import { fetchWork, searchWorks, stripWorkPrefix } from "./openlibrary.ts";
 import type { BookDetail, BookQuery, BookSummary } from "./types.ts";
 
 export { coverUrl, jacket, sampleUrl, type CoverSize, type Jacket } from "./covers.ts";
-export { fetchWork, searchWorks, stripWorkPrefix, OpenLibraryError } from "./openlibrary.ts";
+export {
+  fetchWork,
+  fillCategory,
+  searchWorks,
+  stripWorkPrefix,
+  OpenLibraryError,
+} from "./openlibrary.ts";
 export {
   GOOGLE_KEY_PREFIX,
   GoogleBooksError,

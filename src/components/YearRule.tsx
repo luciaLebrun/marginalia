@@ -6,13 +6,24 @@
 export function YearRule({
   year,
   count,
-}: Readonly<{ year: string; count: number }>) {
+  rest = false,
+}: Readonly<{
+  /** The group's name: a year, or an author or category (MRG-072). */
+  year: string;
+  count: number;
+  /** The group with nothing to file it under — "Undated" and its kin. */
+  rest?: boolean;
+}>) {
   return (
     <div className="flex items-baseline justify-between gap-4 border-y border-ink bg-paper-sunk px-3 py-2">
-      <h2 className="text-[1.75rem] leading-none font-semibold tracking-[-0.02em] sm:text-[2.25rem]">
+      {/* An author or a category can run long; it wraps balanced rather than
+          pushing the count off the band. */}
+      <h2
+        className={`min-w-0 text-[1.75rem] leading-none font-semibold tracking-[-0.02em] text-balance sm:text-[2.25rem] ${rest ? "text-ink-soft" : ""}`}
+      >
         {year}
       </h2>
-      <span className="band-label text-ink-soft">
+      <span className="band-label shrink-0 text-ink-soft">
         {count} {count === 1 ? "book" : "books"}
       </span>
     </div>

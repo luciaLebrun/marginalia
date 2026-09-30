@@ -38,5 +38,7 @@ export interface BookDetail extends BookSummary {
   olEditionKey?: string;
   pageCount?: number;
   description?: string;
+  /** One shelf category, e.g. "Science Fiction" (MRG-072). See category.ts. */
+  category?: string;
   source: "google" | "openlibrary" | "openlibrary+google";
 }

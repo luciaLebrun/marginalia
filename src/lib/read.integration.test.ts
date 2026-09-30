@@ -2,6 +2,7 @@ import { eq, inArray } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import { getDb, schema } from "@/db";
+import { RUN, runKey } from "../../tests/run";
 import { getReads } from "./book-view";
 import { createRead, removeRead, updateRead } from "./read";
 import type { ReadInput } from "./read-schema";
@@ -14,10 +15,10 @@ import type { ReadInput } from "./read-schema";
 const url = process.env.DATABASE_URL ?? "";
 const hasRealDb = url.length > 0 && !url.includes("placeholder");
 
-const READER = "_it_read_reader";
-const OTHER = "_it_read_other";
-const BOOK_ID = "_it_read_book";
-const BOOK_KEY = "OL990000020W";
+const READER = `_it_read_reader_${RUN}`;
+const OTHER = `_it_read_other_${RUN}`;
+const BOOK_ID = `_it_read_book_${RUN}`;
+const BOOK_KEY = `OL99${runKey("read")}0W`;
 
 const read: ReadInput = {
   bookId: BOOK_ID,
@@ -33,8 +34,8 @@ describe.skipIf(!hasRealDb)("writing a read (integration)", () => {
     await db
       .insert(schema.user)
       .values([
-        { id: READER, name: "Read Reader", email: "reader@read.test" },
-        { id: OTHER, name: "Other Reader", email: "other@read.test" },
+        { id: READER, name: "Read Reader", email: `reader-${RUN}@read.test` },
+        { id: OTHER, name: "Other Reader", email: `other-${RUN}@read.test` },
       ])
       .onConflictDoNothing();
     await db

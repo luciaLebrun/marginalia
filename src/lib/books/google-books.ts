@@ -1,3 +1,4 @@
+import { categoryFromBisac } from "./category.ts";
 import type { BookDetail, BookQuery, BookSummary } from "./types.ts";
 
 const ORIGIN = "https://www.googleapis.com/books/v1";
@@ -85,7 +86,7 @@ export function apiKey(): string | undefined {
 
 /** Only the fields we keep. The default volume payload is ten times this. */
 const VOLUME_FIELDS =
-  "id,volumeInfo(title,subtitle,authors,publishedDate,industryIdentifiers,pageCount,description,imageLinks)";
+  "id,volumeInfo(title,subtitle,authors,publishedDate,industryIdentifiers,pageCount,description,imageLinks,categories)";
 
 interface RawImageLinks {
   extraLarge?: unknown;
@@ -105,6 +106,7 @@ interface RawVolumeInfo {
   pageCount?: unknown;
   description?: unknown;
   imageLinks?: RawImageLinks;
+  categories?: unknown;
 }
 
 /**
@@ -233,6 +235,7 @@ export function normalizeVolume(item: unknown): BookDetail | null {
         ? info.pageCount
         : undefined,
     description: description || undefined,
+    category: categoryFromBisac(info.categories),
     source: "google",
   };
 }

@@ -5,7 +5,7 @@ import { Favourites } from "@/components/Favourites";
 import { Masthead } from "@/components/Masthead";
 import { Shelf } from "@/components/Shelf";
 import { getAuth } from "@/lib/auth";
-import { getDiary, getDiaryCount, readingSpan } from "@/lib/diary";
+import { getDiary, getDiaryCount, parseShelfOrder, readingSpan } from "@/lib/diary";
 import { getFavourites } from "@/lib/favourites";
 import { profileMastheadLink } from "@/lib/masthead-link";
 import { findByUsername } from "@/lib/profile";
@@ -25,6 +25,7 @@ import { parseHandle } from "@/lib/username";
  */
 export default async function ProfilePage({
   params,
+  searchParams,
 }: PageProps<"/[handle]">) {
   const { handle } = await params;
 
@@ -58,6 +59,8 @@ export default async function ProfilePage({
       <Favourites books={favourites} linkBooks={session !== null} />
       <Shelf
         entries={entries}
+        by={parseShelfOrder((await searchParams).by)}
+        path={`/@${profile.username}`}
         canLog={false}
         linkBooks={session !== null}
         readerName={profile.name}

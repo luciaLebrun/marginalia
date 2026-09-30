@@ -5,6 +5,7 @@ import type { Book, NewBook } from "@/db/schema";
 import {
   enrich,
   fetchBook,
+  fillCategory,
   parseBookKey,
   sampleUrl,
   type BookDetail,
@@ -38,7 +39,9 @@ export interface BookSources {
 
 const live: BookSources = {
   fetchBook,
-  enrich,
+  // Google first for the description and page count, then Open Library for a
+  // category Google did not give. Both best-effort, neither throws.
+  enrich: (detail) => enrich(detail).then(fillCategory),
   bandColor: (detail) => bandColorFromCover(sampleUrl(detail)),
 };
 
@@ -66,6 +69,7 @@ export function toBookRow(
     isbn13: detail.isbn13 ?? null,
     pageCount: detail.pageCount ?? null,
     description: detail.description ?? null,
+    category: detail.category ?? null,
     source: detail.source,
   };
 }
