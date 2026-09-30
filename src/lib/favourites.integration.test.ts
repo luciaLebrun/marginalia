@@ -94,6 +94,8 @@ describe.skipIf(!hasRealDb)("favourites (integration)", () => {
     expect(await order()).toEqual(BOOKS.slice(0, 4));
   });
 
+  // Five adds race over five fresh connections to a remote database; with
+  // TLS set-up per connection that runs close to the 5 s default (MRG-083).
   it("never lets concurrent adds past four", async () => {
     for (const book of BOOKS) await read(READER, book);
     await Promise.all(BOOKS.map((book) => addFavourite(READER, book)));
@@ -101,7 +103,7 @@ describe.skipIf(!hasRealDb)("favourites (integration)", () => {
     const favourites = await order();
     expect(favourites.length).toBeLessThanOrEqual(4);
     expect(new Set(favourites).size).toBe(favourites.length);
-  });
+  }, 20_000);
 
   /* A drag and drop: the dropped book takes the place, the rest close up. */
   it("moves a favourite to any position, the others closing up behind it", async () => {
