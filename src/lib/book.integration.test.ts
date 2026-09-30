@@ -3,6 +3,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getDb, schema } from "@/db";
 import type { BookDetail } from "@/lib/books";
+import { runKey } from "../../tests/run";
 import { openBook, type BookSources } from "./book";
 
 /**
@@ -15,10 +16,11 @@ const url = process.env.DATABASE_URL ?? "";
 const hasRealDb = url.length > 0 && !url.includes("placeholder");
 
 // Real-shaped work keys no real work will ever be stored under here.
-const FRESH = "OL990000001W";
-const STUB = "OL990000002W";
-const SURVIVOR = "OL990000003W";
-const MISSING = "OL990000004W";
+const KEY = runKey("book");
+const FRESH = `OL99${KEY}1W`;
+const STUB = `OL99${KEY}2W`;
+const SURVIVOR = `OL99${KEY}3W`;
+const MISSING = `OL99${KEY}4W`;
 const KEYS = [FRESH, STUB, SURVIVOR, MISSING];
 
 function detail(sourceKey: string, extra: Partial<BookDetail> = {}): BookDetail {
