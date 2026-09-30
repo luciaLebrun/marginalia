@@ -1,11 +1,11 @@
 /**
  * Fill in `book.category` for rows opened before MRG-072.
  *
- * Migration 0006 marks every such row `CATEGORY_PENDING`. This runs in the
- * Vercel build straight after `db:migrate` (see vercel.json), so each
- * environment backfills its own database, once. A row whose source is down
- * keeps its mark and is retried on the next build; once none are left this
- * costs one query.
+ * Migration 0006 marks every such row `CATEGORY_PENDING`. This runs straight
+ * after `db:migrate` in the compose migrate job on every deploy (MRG-081), so
+ * each environment backfills its own database, once. A row whose source is
+ * down keeps its mark and is retried on the next deploy; once none are left
+ * this costs one query.
  *
  *   pnpm backfill:categories
  */
@@ -72,6 +72,8 @@ async function main() {
   console.log(
     `backfill-categories: ${filled} filled, ${missed} left for the next build (source unavailable)`,
   );
+  // postgres-js holds its connections open; without this the build hangs here.
+  await db.$client.end();
 }
 
 await main();

@@ -188,3 +188,6 @@ await db.insert(schema.inviteCode).values([
 ]);
 
 console.log("seeded 3 invite codes: one unused, one used, one expired");
+
+// postgres-js holds its connections open; close them so the script exits.
+await db.$client.end();

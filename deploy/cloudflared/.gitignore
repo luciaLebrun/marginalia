@@ -1,0 +1,2 @@
+# Tunnel credentials never enter the repo.
+*.json

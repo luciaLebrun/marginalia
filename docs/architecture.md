@@ -6,20 +6,20 @@ infrastructure.
 
 ## Shape
 
-A single Next.js 16 application on Vercel, rendering server-side against a
-Postgres database on Neon. There is no separate API service — route handlers and
+A single Next.js 16 application on a self-hosted VM (ADR 0010), rendering
+server-side against a Postgres database beside it. There is no separate API service — route handlers and
 server actions are the API.
 
 ```
 browser
   │
   ▼
-Next.js (App Router, RSC) ── Vercel Hobby
+Next.js (App Router, RSC) ── GCP e2-micro, Docker Compose
   │                    │
   │                    └── src/lib/books/ ──► googleapis.com    (primary)
   │                                       └─► openlibrary.org   (fallback)
   ▼
-Postgres ── Neon Free
+Postgres 18 ── same VM
 ```
 
 Covers are loaded by the browser directly from `books.google.com` or
@@ -43,8 +43,8 @@ Either source failing leaves the other's results standing; only both failing is
 an outage.
 
 Google is asked only with an API key. Keyless requests carry a daily quota of
-zero, and Vercel shares egress IPs between projects, so keyless in production
-would break everyone's search at once. Without `GOOGLE_BOOKS_API_KEY` the app
+zero, and keyless requests from a shared egress IP would break everyone's search at
+once. Without `GOOGLE_BOOKS_API_KEY` the app
 runs entirely on Open Library, which needs none.
 
 The cost, which is permanent and worth remembering: a Google key identifies an
@@ -103,7 +103,7 @@ account removes its data.
 100 requests per IP per 5 minutes, then returns 403. Covers addressed by
 **CoverID** or OLID are unrestricted.
 
-Because Vercel's serverless egress shares IPs, one user scrolling a grid could
+Because a shared egress IP is easy to exhaust, one user scrolling a grid could
 403 covers for everyone. So `book.coverId` stores Open Library's `cover_i`, and
 `coverUrl()` accepts a CoverID and nothing else. There is intentionally no
 ISBN-based variant.
@@ -116,8 +116,8 @@ normalization: that value becomes an `<img src>` on a public page.
 
 Covers render as a plain lazy `<img>` rather than `next/image`: Open Library
 asks that public pages point `src` at their CDN, Google jackets are pointed at
-for the same reason, and it keeps us off Vercel Hobby's image-transformation
-quota for images we do not own.
+for the same reason, and it keeps us off image-transformation work for images
+we do not own.
 
 ## Routes
 
@@ -142,12 +142,13 @@ visitor classify themselves before doing anything, to reach the same gate.
 
 | | Branch | URL | Database |
 |---|---|---|---|
-| Production | `main` | Vercel production | Neon `main` branch |
-| Preview | `develop` | persistent Vercel preview | Neon `main` branch |
-| Local | any | `localhost:3000` | a Neon dev branch |
+| Production | `main` (`latest` images) | https://marginalia.dpdns.org | Postgres 18 in compose on the VM |
+| Local | any | `localhost:3000` | the Neon `local` branch, or the compose stack's Postgres |
 
-Deployment is Vercel's Git integration, not a workflow — there is no
-`deploy.yml` and there should not be one.
+CI builds the images (`image.yml`); `deploy/deploy.sh <tag>` deploys them to the
+VM over IAP SSH. Deploys are manual for now. The compose migrate job applies
+migrations on every deploy, and `deploy/backup.sh` dumps the database nightly to
+a GCS bucket. Neon is kept untouched as a rollback.
 
 ## Decisions
 

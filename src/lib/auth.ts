@@ -19,8 +19,9 @@ function create() {
     database: drizzleAdapter(getDb(), {
       provider: "pg",
       schema,
-      // The neon-http driver speaks one HTTP request per statement and cannot
-      // hold a transaction open. Better Auth sequences the operations instead.
+      // Written for the neon-http driver, which could not hold a transaction
+      // open; Better Auth sequences the operations instead. Kept off after the
+      // move to postgres-js so sign-up behaves exactly as before.
       transaction: false,
     }),
 

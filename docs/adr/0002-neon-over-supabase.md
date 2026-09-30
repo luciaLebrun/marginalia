@@ -1,5 +1,7 @@
 # ADR 0002 — Neon rather than Supabase for Postgres
 
+> Superseded in part by [ADR 0010](0010-self-host-on-a-free-vm.md): production no longer runs on Neon.
+
 **Status:** accepted · 2026-09-09
 
 ## Context
