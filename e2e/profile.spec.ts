@@ -71,10 +71,15 @@ test.describe("public profile", () => {
 /**
  * The owner's and a friend's view need a session, which e2e cannot get, so
  * `/dev/profile` renders the real masthead for each viewer.
+ *
+ * Every assertion here is on server-rendered markup, so these wait for `load`
+ * rather than `networkidle`, which also waits out every lazy cover from
+ * books.google.com. One viewer to a test: three loads in one test, on a cold
+ * and busy dev server, ran it past its timeout (MRG-070).
  */
 test.describe("profile masthead by viewer (harness)", () => {
   test("keeps the account link for the owner", async ({ page }) => {
-    await page.goto("/dev/profile?viewer=owner", { waitUntil: "networkidle" });
+    await page.goto("/dev/profile?viewer=owner");
     await expect(page.getByRole("link", { name: "Your account" })).toHaveAttribute(
       "href",
       "/settings",
@@ -83,33 +88,33 @@ test.describe("profile masthead by viewer (harness)", () => {
   });
 
   test("sends a signed-in friend back to their own diary", async ({ page }) => {
-    await page.goto("/dev/profile?viewer=friend", { waitUntil: "networkidle" });
+    await page.goto("/dev/profile?viewer=friend");
     await expect(page.getByRole("link", { name: "Your diary" })).toHaveAttribute("href", "/");
     await expect(page.getByRole("link", { name: "Your account" })).toHaveCount(0);
   });
 
   test("offers a signed-out visitor nothing", async ({ page }) => {
-    await page.goto("/dev/profile?viewer=visitor", { waitUntil: "networkidle" });
+    await page.goto("/dev/profile?viewer=visitor");
     await expect(page.locator("header a")).toHaveCount(0);
     // The book page is signed-in only, so the cells are inert too.
     await expect(page.locator("article a")).toHaveCount(0);
   });
 
-  test("links a signed-in reader's cells to book pages", async ({ page }) => {
-    for (const viewer of ["owner", "friend"]) {
-      await page.goto(`/dev/profile?viewer=${viewer}`, { waitUntil: "networkidle" });
+  for (const viewer of ["owner", "friend"]) {
+    test(`links the ${viewer}'s cells to book pages`, async ({ page }) => {
+      await page.goto(`/dev/profile?viewer=${viewer}`);
       const cells = page.locator("article > a");
       expect(await cells.count()).toBe(await page.locator("article").count());
       await expect(cells.first()).toHaveAttribute("href", /^\/book\/(OL\d+W|gb:[\w-]+)$/);
-    }
-  });
+    });
+  }
 
-  test("shows the handle and bio in every view", async ({ page }) => {
-    for (const viewer of ["owner", "friend", "visitor"]) {
-      await page.goto(`/dev/profile?viewer=${viewer}`, { waitUntil: "networkidle" });
+  for (const viewer of ["owner", "friend", "visitor"]) {
+    test(`shows the handle and bio to the ${viewer}`, async ({ page }) => {
+      await page.goto(`/dev/profile?viewer=${viewer}`);
       await expect(page.locator("header").getByText("@lucia", { exact: true })).toBeVisible();
-    }
-  });
+    });
+  }
 });
 
 test.describe("username claim", () => {
