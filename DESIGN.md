@@ -863,8 +863,9 @@ The one press that keeps a book without logging a read, set on a book page betwe
 imprint rows and the date slip, on the same 34rem measure. Character: a line printed on
 the sheet, never a filled badge and never a toggle.
 
-- **Not on the list:** an Outline Button reading "Want to read" ("Saving…" while it
-  commits).
+- **Not on the list:** an Outline Button reading "Want to read". Pending, it reads
+  "Saving…" in the same grid cell at a held width and keeps its flood under the pointer
+  or focus.
 - **On the list:** a ruled line closed by a hairline, 12px vertical — the reread tick's
   20px hairline box with its drawn tick, "On your to-read list" beside it in band voice,
   and at the right end "Your list" and "Take it off" as Text Buttons. At 390px the two
@@ -874,6 +875,11 @@ the sheet, never a filled badge and never a toggle.
   you’re signed out."), never the saving sentence reused.
 - **Announced:** a visually hidden readout says "Saved to your to-read list." or "Taken
   off your to-read list."; the same readout stands under the pile when a spine goes.
+  After either, focus goes to the replacement's first control — "Your list" once saved,
+  the button once taken off — unless the reader has already moved elsewhere.
+- **Pending keeps focus:** a pending control here is `aria-disabled` and ignores
+  presses; it is never natively disabled, which would drop a keyboard reader's focus to
+  the page for the length of the request.
 
 ### Favourite
 
@@ -902,6 +908,8 @@ line, one step further along.
   off your favourites.". After either, focus goes to the replacement's first control —
   "Your favourites" once added, the button once taken off — unless the reader has
   already moved elsewhere.
+- **Pending keeps focus:** as on Want to Read, a pending control is `aria-disabled` and
+  ignores presses, never natively disabled, so a keyboard reader's focus stays on it.
 
 ### Masthead (page-scale tri-band)
 
@@ -1328,6 +1336,11 @@ Character: a word in the row's margin, not a second button.
   takes the standard 2px ink ring. Colour only.
 - **Current:** where a row of Text Buttons picks one of several views, the chosen one
   carries `aria-current` and a 2px ink underline (the Printed State Rule's current mark).
+- **Pending:** a Text Button whose action waits on a source ("Take it off" on Want to
+  Read's and a favourite's line) turns its label into the live readout in place
+  ("Taking it off…"). Both labels share one grid cell, so it holds the longer width and
+  nothing beside it moves. It is `aria-disabled` and ignores presses, never natively
+  disabled, so keyboard focus stays on it.
 - **Unavailable:** when there is nothing to undo — the date already empty, the rating
   already unrated, or "Keep it" while a removal runs — the label is ruled through in
   ink at 50% opacity, as a disabled
