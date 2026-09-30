@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { getDb, schema } from "@/db";
+import { RUN } from "../../tests/run";
 import {
   attributeInviteCode,
   claimInviteCode,
@@ -24,13 +25,13 @@ import {
 const url = process.env.DATABASE_URL ?? "";
 const hasRealDb = url.length > 0 && !url.includes("placeholder");
 
-const OWNER = "_it_invite_owner";
+const OWNER = `_it_invite_owner_${RUN}`;
 
 describe.skipIf(!hasRealDb)("invite codes (integration)", () => {
   beforeAll(async () => {
     await getDb()
       .insert(schema.user)
-      .values({ id: OWNER, name: "Owner", email: "owner@integration.test" })
+      .values({ id: OWNER, name: "Owner", email: `owner-${RUN}@integration.test` })
       .onConflictDoNothing();
   });
 

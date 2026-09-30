@@ -2,6 +2,7 @@ import { eq, inArray } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import { getDb, schema } from "@/db";
+import { RUN, runKey } from "../../tests/run";
 import {
   claimUsername,
   findByUsername,
@@ -17,8 +18,10 @@ import {
 const url = process.env.DATABASE_URL ?? "";
 const hasRealDb = url.length > 0 && !url.includes("placeholder");
 
-const A = "_it_name_a";
-const B = "_it_name_b";
+const A = `_it_name_a_${RUN}`;
+const B = `_it_name_b_${RUN}`;
+// A username is at most 20 characters, so the run goes in as six digits.
+const TAG = runKey("profile");
 const IDS = [A, B];
 
 async function reset() {
@@ -33,8 +36,8 @@ describe.skipIf(!hasRealDb)("username claim (integration)", () => {
     await getDb()
       .insert(schema.user)
       .values([
-        { id: A, name: "Reader A", email: "a@name.test" },
-        { id: B, name: "Reader B", email: "b@name.test" },
+        { id: A, name: "Reader A", email: `a-${RUN}@name.test` },
+        { id: B, name: "Reader B", email: `b-${RUN}@name.test` },
       ])
       .onConflictDoNothing();
   });
@@ -48,16 +51,16 @@ describe.skipIf(!hasRealDb)("username claim (integration)", () => {
   });
 
   it("claims a free username and normalizes it on the way in", async () => {
-    await expect(claimUsername(A, "  @ItLucia ")).resolves.toEqual({
+    await expect(claimUsername(A, `  @ItLucia${TAG} `)).resolves.toEqual({
       ok: true,
-      username: "itlucia",
+      username: `itlucia${TAG}`,
     });
 
     const [row] = await getDb()
       .select({ username: schema.user.username })
       .from(schema.user)
       .where(eq(schema.user.id, A));
-    expect(row.username).toBe("itlucia");
+    expect(row.username).toBe(`itlucia${TAG}`);
   });
 
   it("refuses an invalid username without touching the row", async () => {
@@ -78,16 +81,16 @@ describe.skipIf(!hasRealDb)("username claim (integration)", () => {
   });
 
   it("refuses a name another reader already has", async () => {
-    await claimUsername(A, "ittaken");
-    await expect(claimUsername(B, "ittaken")).resolves.toEqual({
+    await claimUsername(A, `ittaken${TAG}`);
+    await expect(claimUsername(B, `ittaken${TAG}`)).resolves.toEqual({
       ok: false,
       reason: "taken",
     });
   });
 
   it("refuses a second claim by the same reader, so a handle is permanent", async () => {
-    await claimUsername(A, "itfirst");
-    await expect(claimUsername(A, "itsecond")).resolves.toEqual({
+    await claimUsername(A, `itfirst${TAG}`);
+    await expect(claimUsername(A, `itsecond${TAG}`)).resolves.toEqual({
       ok: false,
       reason: "already-claimed",
     });
@@ -96,36 +99,36 @@ describe.skipIf(!hasRealDb)("username claim (integration)", () => {
       .select({ username: schema.user.username })
       .from(schema.user)
       .where(eq(schema.user.id, A));
-    expect(row.username).toBe("itfirst");
+    expect(row.username).toBe(`itfirst${TAG}`);
   });
 
   it("lets exactly one of five concurrent claims on one name win", async () => {
     // Two readers, five attempts, one name. The unique index is what decides.
     const results = await Promise.all([
-      claimUsername(A, "itrace"),
-      claimUsername(B, "itrace"),
-      claimUsername(A, "itrace"),
-      claimUsername(B, "itrace"),
-      claimUsername(A, "itrace"),
+      claimUsername(A, `itrace${TAG}`),
+      claimUsername(B, `itrace${TAG}`),
+      claimUsername(A, `itrace${TAG}`),
+      claimUsername(B, `itrace${TAG}`),
+      claimUsername(A, `itrace${TAG}`),
     ]);
 
     expect(results.filter((r) => r.ok)).toHaveLength(1);
-    expect(await findByUsername("itrace")).not.toBeNull();
+    expect(await findByUsername(`itrace${TAG}`)).not.toBeNull();
   });
 
   it("lets one reader's two simultaneous claims produce one username", async () => {
     const results = await Promise.all([
-      claimUsername(A, "itonly"),
-      claimUsername(A, "itother"),
+      claimUsername(A, `itonly${TAG}`),
+      claimUsername(A, `itother${TAG}`),
     ]);
     expect(results.filter((r) => r.ok)).toHaveLength(1);
   });
 
   it("reports availability, and stops reporting it once claimed", async () => {
-    await expect(isUsernameAvailable("itfree")).resolves.toBe(true);
-    await claimUsername(A, "itfree");
-    await expect(isUsernameAvailable("itfree")).resolves.toBe(false);
-    await expect(isUsernameAvailable("ITFREE")).resolves.toBe(false);
+    await expect(isUsernameAvailable(`itfree${TAG}`)).resolves.toBe(true);
+    await claimUsername(A, `itfree${TAG}`);
+    await expect(isUsernameAvailable(`itfree${TAG}`)).resolves.toBe(false);
+    await expect(isUsernameAvailable(`ITFREE${TAG}`)).resolves.toBe(false);
   });
 
   it("never reports an invalid name as available", async () => {
@@ -134,10 +137,10 @@ describe.skipIf(!hasRealDb)("username claim (integration)", () => {
   });
 
   it("finds a reader by username, in any case", async () => {
-    await claimUsername(A, "itfound");
-    const profile = await findByUsername("ITFOUND");
+    await claimUsername(A, `itfound${TAG}`);
+    const profile = await findByUsername(`ITFOUND${TAG}`);
     expect(profile?.id).toBe(A);
-    expect(profile?.username).toBe("itfound");
+    expect(profile?.username).toBe(`itfound${TAG}`);
     expect(profile?.name).toBe("Reader A");
   });
 
@@ -157,8 +160,8 @@ describe.skipIf(!hasRealDb)("account update (integration)", () => {
     await getDb()
       .insert(schema.user)
       .values([
-        { id: A, name: "Reader A", email: "a@name.test" },
-        { id: B, name: "Reader B", email: "b@name.test" },
+        { id: A, name: "Reader A", email: `a-${RUN}@name.test` },
+        { id: B, name: "Reader B", email: `b-${RUN}@name.test` },
       ])
       .onConflictDoNothing();
   });
@@ -174,36 +177,36 @@ describe.skipIf(!hasRealDb)("account update (integration)", () => {
   it("writes name, handle and bio together", async () => {
     const result = await updateAccount(A, {
       name: "Renamed",
-      username: "itest_renamed",
+      username: `itest_renamed${TAG}`,
       bio: "A note.",
     });
 
-    expect(result).toEqual({ ok: true, username: "itest_renamed" });
+    expect(result).toEqual({ ok: true, username: `itest_renamed${TAG}` });
 
-    const profile = await findByUsername("itest_renamed");
+    const profile = await findByUsername(`itest_renamed${TAG}`);
     expect(profile).toMatchObject({ name: "Renamed", bio: "A note." });
   });
 
   it("moves a handle and frees the old address", async () => {
-    await claimUsername(A, "itest_first");
-    await updateAccount(A, { name: "Reader A", username: "itest_second", bio: null });
+    await claimUsername(A, `itest_first${TAG}`);
+    await updateAccount(A, { name: "Reader A", username: `itest_second${TAG}`, bio: null });
 
-    expect(await findByUsername("itest_first")).toBeNull();
-    expect(await findByUsername("itest_second")).not.toBeNull();
+    expect(await findByUsername(`itest_first${TAG}`)).toBeNull();
+    expect(await findByUsername(`itest_second${TAG}`)).not.toBeNull();
     // Freed, not reserved: the whole point of the trade this project made.
-    expect(await isUsernameAvailable("itest_first")).toBe(true);
+    expect(await isUsernameAvailable(`itest_first${TAG}`)).toBe(true);
   });
 
   it("lets a second reader take a handle the first has left", async () => {
-    await claimUsername(A, "itest_shared");
-    await updateAccount(A, { name: "Reader A", username: "itest_moved", bio: null });
+    await claimUsername(A, `itest_shared${TAG}`);
+    await updateAccount(A, { name: "Reader A", username: `itest_moved${TAG}`, bio: null });
 
     const taken = await updateAccount(B, {
       name: "Reader B",
-      username: "itest_shared",
+      username: `itest_shared${TAG}`,
       bio: null,
     });
-    expect(taken).toEqual({ ok: true, username: "itest_shared" });
+    expect(taken).toEqual({ ok: true, username: `itest_shared${TAG}` });
   });
 
   /*
@@ -212,23 +215,23 @@ describe.skipIf(!hasRealDb)("account update (integration)", () => {
    * never write two of three fields and report a failure.
    */
   it("writes nothing at all when the handle is taken", async () => {
-    await claimUsername(B, "itest_theirs");
-    await claimUsername(A, "itest_mine");
+    await claimUsername(B, `itest_theirs${TAG}`);
+    await claimUsername(A, `itest_mine${TAG}`);
 
     const result = await updateAccount(A, {
       name: "Should Not Land",
-      username: "itest_theirs",
+      username: `itest_theirs${TAG}`,
       bio: "Should not land either.",
     });
 
     expect(result).toEqual({ ok: false, reason: "taken" });
 
-    const mine = await findByUsername("itest_mine");
+    const mine = await findByUsername(`itest_mine${TAG}`);
     expect(mine).toMatchObject({ name: "Reader A", bio: null });
   });
 
   it("refuses a handle that cannot be a username without touching the row", async () => {
-    await claimUsername(A, "itest_intact");
+    await claimUsername(A, `itest_intact${TAG}`);
 
     const result = await updateAccount(A, {
       name: "Should Not Land",
@@ -237,7 +240,7 @@ describe.skipIf(!hasRealDb)("account update (integration)", () => {
     });
 
     expect(result).toEqual({ ok: false, reason: "invalid" });
-    expect(await findByUsername("itest_intact")).toMatchObject({ name: "Reader A" });
+    expect(await findByUsername(`itest_intact${TAG}`)).toMatchObject({ name: "Reader A" });
   });
 
   it("reports a reader who no longer exists rather than silently succeeding", async () => {
