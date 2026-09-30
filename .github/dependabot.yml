@@ -1,0 +1,50 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+    groups:
+      npm-minor-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(docker)"
+    groups:
+      docker-minor-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker-compose
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(docker)"
+    groups:
+      compose-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      # A Postgres major is a planned dump/restore, never a routine merge.
+      - dependency-name: postgres
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(ci)"
+    groups:
+      actions-minor-patch:
+        update-types: [minor, patch]

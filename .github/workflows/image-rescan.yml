@@ -1,0 +1,48 @@
+name: Image rescan
+
+# Weekly rescan of the production images: CVEs published after a build still surface.
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+  security-events: write
+
+jobs:
+  scan:
+    name: Scan ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: app
+            image: ghcr.io/lucialebrun/marginalia:latest
+          - name: tools
+            image: ghcr.io/lucialebrun/marginalia-tools:latest
+    env:
+      TRIVY_USERNAME: ${{ github.actor }}
+      TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Scan (report)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ matrix.image }}
+          format: sarif
+          output: trivy.sarif
+
+      - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: trivy.sarif
+          category: trivy-${{ matrix.name }}
+
+      - name: Scan (gate)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ matrix.image }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: 1
