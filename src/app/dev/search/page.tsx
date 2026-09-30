@@ -18,7 +18,10 @@ import { parseQuery, parseShown, type Search } from "@/lib/search";
  * renders the same components with the search function swapped by `?source=`:
  *
  * - `fixture` (default) — the recorded Open Library response; what e2e runs
- *   against, so a third-party outage cannot turn a test red.
+ *   against, so a third-party outage cannot turn a test red. Dune Messiah's
+ *   cover (8771464, 400x314) is a real scan of the whole wraparound, kept on
+ *   purpose: it is the grid's only jacket far off 2:3, the specimen for the
+ *   never-crop rule. Do not re-record it to a tidier one (MRG-066).
  * - `google` — the recorded Google Books response, the primary source since
  *   MRG-063: jackets addressed by URL, a grid of one-size covers.
  * - `live` — the real thing, Google first and Open Library behind it, for
