@@ -242,7 +242,10 @@ sets `buildPath: "code"` (build directly; ambition goes in the direction
 contract and is audited at the finish).
 
 After finishing changed UI, run the mechanical detector once:
-`.claude/skills/impeccable/scripts/impeccable detect --json <changed targets>`
+`node "<skill-base-dir>/scripts/detect.mjs" --json <changed targets>`
+where `<skill-base-dir>` is the base directory of the loaded
+`impeccable:impeccable` plugin skill
+(`~/.claude/plugins/cache/impeccable/impeccable/<version>/skills/impeccable`).
 
 DESIGN.md and `.impeccable/design.json` exist, written from the shipped
 tri-band build by the Impeccable documenter — not by hand. An ordinary
