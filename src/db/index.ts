@@ -1,5 +1,5 @@
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 
 import * as schema from "./schema.ts";
 
@@ -17,7 +17,10 @@ function create() {
       "DATABASE_URL is not set. Copy .env.example to .env.local and fill it in.",
     );
   }
-  return drizzle(neon(url), { schema });
+  // A plain Postgres connection, so the same code runs against Neon and
+  // against a self-hosted Postgres (MRG-081). `prepare: false` keeps it safe
+  // behind a transaction-mode pooler such as Neon's.
+  return drizzle(postgres(url, { prepare: false }), { schema });
 }
 
 export function getDb() {

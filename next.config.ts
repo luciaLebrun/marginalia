@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
    * Errors still surface in the console and in the terminal.
    */
   devIndicators: false,
+
+  /*
+   * A self-contained server under .next/standalone, so the Docker image ships
+   * only what `next start` needs rather than every node_module (MRG-081).
+   */
+  output: "standalone",
 };
 
 export default nextConfig;

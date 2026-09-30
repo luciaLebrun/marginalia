@@ -72,6 +72,8 @@ async function main() {
   console.log(
     `backfill-categories: ${filled} filled, ${missed} left for the next build (source unavailable)`,
   );
+  // postgres-js holds its connections open; without this the build hangs here.
+  await db.$client.end();
 }
 
 await main();

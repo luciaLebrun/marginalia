@@ -12,7 +12,7 @@ import { describe, expect, it } from "vitest";
  */
 
 const SRC = path.resolve(__dirname, "..");
-const FORBIDDEN = ["zod", "@/db", "drizzle-orm", "better-auth", "@neondatabase/serverless"];
+const FORBIDDEN = ["zod", "@/db", "drizzle-orm", "better-auth", "postgres"];
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {

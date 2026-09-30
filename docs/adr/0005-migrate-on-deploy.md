@@ -79,3 +79,12 @@ is in the repository, reviewable in a diff, and the same for everyone.
   transaction. It is also why `transaction: false` is required on the Better
   Auth adapter but *not* on migrations — the constraint belongs to neon-http
   alone.
+
+## Amendment (MRG-081): one driver
+
+`@neondatabase/serverless` is gone. The app now runs on `postgres` (postgres-js)
+over plain TCP, and drizzle-kit, finding that package installed, migrates over
+the same driver. So the websocket warning above no longer prints, and both work
+against Neon and against a self-hosted Postgres alike. `transaction: false`
+stays on the Better Auth adapter: postgres-js could hold a transaction, but
+turning it on would change sign-up's behaviour, which this move does not do.
