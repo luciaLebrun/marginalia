@@ -24,7 +24,8 @@ services:
 
   migrate:
     build: { context: ., target: tools }
-    image: marginalia-tools
+    # Override with prebuilt GHCR images on the VM: docker compose pull && docker compose up -d --no-build
+    image: ${TOOLS_IMAGE:-marginalia-tools}
     environment: &env
       DATABASE_URL: postgresql://marginalia:${POSTGRES_PASSWORD}@db:5432/marginalia
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET}
@@ -38,7 +39,7 @@ services:
 
   app:
     build: { context: ., target: app }
-    image: marginalia-app
+    image: ${APP_IMAGE:-marginalia-app}
     restart: unless-stopped
     environment: *env
     ports:
