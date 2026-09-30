@@ -27,14 +27,6 @@ const summaries = [
   ...normalizeSearchResponse(subtitled),
 ];
 
-/*
- * The recorded search fixture carries CoverIDs that Open Library serves as
- * other books' jackets for the Dune titles (see /dev/book). Dune takes the
- * CoverID live Open Library returns for its key, as /dev/book does; Dune
- * Messiah is shown coverless rather than wearing a stranger's jacket.
- */
-const COVERS: Record<string, number | null> = { Dune: 11481354, "Dune Messiah": null };
-
 const PAGES: Record<string, number> = {
   Dune: 604,
   "Dune Messiah": 256,
@@ -50,7 +42,7 @@ const STACK: ToReadBook[] = summaries
     sourceKey: summary.sourceKey,
     title: summary.title,
     authors: summary.authors,
-    coverId: summary.title in COVERS ? COVERS[summary.title] : (summary.coverId ?? null),
+    coverId: summary.coverId ?? null,
     coverUrl: summary.coverUrl ?? null,
     pageCount: PAGES[summary.title],
     savedAt: new Date(Date.UTC(2026, 8, 14 - index)),
