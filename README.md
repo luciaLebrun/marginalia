@@ -15,11 +15,11 @@ Phase 1–2 (foundation and data layer). No UI yet.
 ```bash
 pnpm install
 cp .env.example .env.local     # then fill it in
-pnpm db:migrate                # apply migrations to your Neon branch
+pnpm db:migrate                # apply migrations to your Postgres
 pnpm dev
 ```
 
-You need a [Neon](https://neon.com) project and a Google OAuth client. See
+You need a Postgres database and a Google OAuth client. See
 `.env.example` for what each variable is and where to get it.
 
 ## Commands
@@ -40,10 +40,10 @@ You need a [Neon](https://neon.com) project and a Google OAuth client. See
 ## Stack
 
 Next.js 16 (App Router, RSC) · TypeScript · Tailwind v4 · Drizzle ORM ·
-PostgreSQL on Neon · Better Auth · Zod · Vitest.
+PostgreSQL · Better Auth · Zod · Vitest.
 
 Book data from [Open Library](https://openlibrary.org), enriched by Google
-Books. Hosted on Vercel. CI on GitHub Actions with SonarQube Cloud.
+Books. Self-hosted on a free Google Cloud VM with Docker Compose. CI on GitHub Actions with SonarQube Cloud.
 
 ## Documentation
 

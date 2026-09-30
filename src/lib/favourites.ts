@@ -9,8 +9,8 @@ import { sqlState } from "./read";
  * caller, which takes it from the session, never from a form.
  *
  * The rules live in the database (see `schema.favourite`), and each write here
- * is ONE statement, because the neon-http driver cannot hold a transaction
- * open. Two concurrent writes can therefore lose a race, but never break a
+ * is ONE statement, because the neon-http driver it was written for could
+ * not hold a transaction open. Two concurrent writes can therefore lose a race, but never break a
  * rule: the loser gets a constraint error and a "try again".
  */
 
@@ -65,7 +65,7 @@ export async function addFavourite(userId: string, bookId: string): Promise<AddR
       returning book_id
     `);
 
-    if (result.rows.length > 0) return { ok: true };
+    if (result.length > 0) return { ok: true };
     // Nothing inserted: either it was already a favourite, or it is unread.
     return (await isFavourite(userId, bookId)) ? { ok: true } : { ok: false, reason: "unread" };
   } catch (error) {
@@ -136,7 +136,7 @@ export async function moveFavourite(userId: string, bookId: string, to: number):
            or f.position between least(t.from_pos, t.to_pos) and greatest(t.from_pos, t.to_pos))
     returning f.book_id
   `);
-  return result.rows.length > 0;
+  return result.length > 0;
 }
 
 export async function isFavourite(userId: string, bookId: string): Promise<boolean> {

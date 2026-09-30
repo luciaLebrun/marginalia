@@ -39,7 +39,7 @@ export async function isInviteCodeUsable(code: string): Promise<boolean> {
  * statement can flip it, and RETURNING tells us whether we were the one.
  *
  * This deliberately does not run inside a transaction with the user insert —
- * the neon-http driver does not support them. The consequence is that a code
+ * the neon-http driver it was written for did not support them. The consequence is that a code
  * is burned if user creation then fails. For a closed POC that is the safer
  * direction to fail in: a wasted code is an annoyance, a double-used one is a
  * hole in the gate.

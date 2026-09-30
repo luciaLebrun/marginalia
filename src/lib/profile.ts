@@ -52,7 +52,8 @@ export async function claimUsername(
  * error it throws — checking one level finds nothing and the violation escapes
  * as a 500 instead of becoming "that name is taken". Verified against
  * neon-http: `cause.code === "23505"`, `cause.constraint_name` is
- * `user_username_idx`. Walking the chain rather than reaching for `.cause`
+ * `user_username_idx`; postgres-js's PostgresError carries the same two
+ * fields. Walking the chain rather than reaching for `.cause`
  * once keeps this working if another layer wraps it later.
  */
 function isUniqueViolation(error: unknown): boolean {

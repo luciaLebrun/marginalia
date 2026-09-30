@@ -1,4 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm db:migrate && pnpm backfill:categories && pnpm build"
+  "redirects": [
+    {
+      "source": "/:path*",
+      "destination": "https://marginalia.dpdns.org/:path*",
+      "permanent": true
+    }
+  ]
 }

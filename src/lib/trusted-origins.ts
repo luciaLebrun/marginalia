@@ -29,10 +29,18 @@ export const PREVIEW_ORIGIN_PATTERN =
  * at the production URL — but a production session must not be forwardable to a
  * preview origin under any circumstances, so the trust is withdrawn as well as
  * unused. `VERCEL_ENV` is set by Vercel itself and is `production`, `preview`
- * or `development`; anything else, including undefined, is local development.
+ * or `development`; it is also how we know this is production on Vercel.
+ *
+ * Self-hosted there is no `VERCEL_ENV`, so a production build outside Vercel
+ * (`NODE_ENV=production`, `VERCEL` unset) is production too. Reading only
+ * `VERCEL_ENV` would take it for local development and trust the preview
+ * pattern on the live site. Anything else, including undefined, is local
+ * development or a Vercel preview, which keep the pattern.
  */
 export function trustedOrigins(): string[] {
-  return process.env.VERCEL_ENV === "production" ? [] : [PREVIEW_ORIGIN_PATTERN];
+  const { VERCEL_ENV, VERCEL, NODE_ENV } = process.env;
+  const production = VERCEL_ENV === "production" || (NODE_ENV === "production" && !VERCEL);
+  return production ? [] : [PREVIEW_ORIGIN_PATTERN];
 }
 
 /**
