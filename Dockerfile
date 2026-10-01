@@ -25,12 +25,14 @@ RUN DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder
     pnpm build
 CMD ["sh", "-c", "pnpm db:migrate && pnpm backfill:categories"]
 
-FROM mirror.gcr.io/library/node:22-bookworm-slim AS app
+# Distroless: no shell, no package manager, so none of the unfixed Debian CVEs
+# the slim image carries. It lives on gcr.io itself, not on the Docker Hub
+# mirror. Entrypoint is node; runs as uid 65532 (nonroot).
+FROM gcr.io/distroless/nodejs22-debian12:nonroot AS app
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0
-COPY --from=tools --chown=node:node /app/.next/standalone ./
-COPY --from=tools --chown=node:node /app/.next/static ./.next/static
-COPY --from=tools --chown=node:node /app/public ./public
-USER node
+COPY --from=tools --chown=65532:65532 /app/.next/standalone ./
+COPY --from=tools --chown=65532:65532 /app/.next/static ./.next/static
+COPY --from=tools --chown=65532:65532 /app/public ./public
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["server.js"]
