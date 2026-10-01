@@ -30,7 +30,7 @@ updates:
       # A Node major is a planned upgrade (CI, local and image together).
       - dependency-name: node
         update-types: ["version-update:semver-major"]
-      - dependency-name: distroless/nodejs22-debian12
+      - dependency-name: distroless/nodejs22-debian13
         update-types: ["version-update:semver-major"]
 
   - package-ecosystem: docker-compose

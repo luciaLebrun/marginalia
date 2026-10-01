@@ -27,8 +27,9 @@ CMD ["sh", "-c", "pnpm db:migrate && pnpm backfill:categories"]
 
 # Distroless: no shell, no package manager, so none of the unfixed Debian CVEs
 # the slim image carries. It lives on gcr.io itself, not on the Docker Hub
-# mirror. Entrypoint is node; runs as uid 65532 (nonroot).
-FROM gcr.io/distroless/nodejs22-debian12:nonroot AS app
+# mirror. Entrypoint is node; runs as uid 65532 (nonroot). Debian 13: the 12
+# variant's libssl3 lagged a CRITICAL fix that the scan gate rightly refused.
+FROM gcr.io/distroless/nodejs22-debian13:nonroot AS app
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0
 COPY --from=tools --chown=65532:65532 /app/.next/standalone ./
