@@ -29,7 +29,13 @@ vi.mock("next/navigation", () => ({
 
 const { beginSignInAction } = await import("./actions");
 
-describe("beginSignInAction", () => {
+// getAuth() builds its Drizzle adapter on a real client, so this skips without a
+// database, like every other *.integration test (a PR from Dependabot gets no
+// repo secrets).
+const url = process.env.DATABASE_URL ?? "";
+const hasRealDb = url.length > 0 && !url.includes("placeholder");
+
+describe.skipIf(!hasRealDb)("beginSignInAction", () => {
   beforeEach(() => {
     forwarded = {};
   });
