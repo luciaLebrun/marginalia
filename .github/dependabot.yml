@@ -11,6 +11,10 @@ updates:
     groups:
       npm-minor-patch:
         update-types: [minor, patch]
+    ignore:
+      # A Node major is a planned upgrade (CI, local and image together).
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: docker
     directory: /
@@ -22,6 +26,12 @@ updates:
     groups:
       docker-minor-patch:
         update-types: [minor, patch]
+    ignore:
+      # A Node major is a planned upgrade (CI, local and image together).
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
+      - dependency-name: distroless/nodejs22-debian13
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: docker-compose
     directory: /
