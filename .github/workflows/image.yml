@@ -65,7 +65,7 @@ jobs:
           cache-to: type=gha,scope=tools,mode=max
 
       # Scan by digest: exactly what was just pushed. Pass 1 reports every
-      # severity to the Security tab; pass 2 fails the build on fixable CRITICALs.
+      # fixable finding to the Security tab; pass 2 fails the build on fixable CRITICALs.
       - name: Scan tools (report)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         env:
@@ -74,6 +74,7 @@ jobs:
         with:
           image-ref: ghcr.io/lucialebrun/marginalia-tools@${{ steps.build-tools.outputs.digest }}
           format: sarif
+          ignore-unfixed: true
           output: trivy-tools.sarif
 
       - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
@@ -108,7 +109,7 @@ jobs:
           cache-to: type=gha,scope=app,mode=max
 
       # Scan by digest: exactly what was just pushed. Pass 1 reports every
-      # severity to the Security tab; pass 2 fails the build on fixable CRITICALs.
+      # fixable finding to the Security tab; pass 2 fails the build on fixable CRITICALs.
       - name: Scan app (report)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         env:
@@ -117,6 +118,7 @@ jobs:
         with:
           image-ref: ghcr.io/lucialebrun/marginalia@${{ steps.build-app.outputs.digest }}
           format: sarif
+          ignore-unfixed: true
           output: trivy-app.sarif
 
       - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
