@@ -8,7 +8,8 @@ infrastructure.
 
 ## Status
 
-Phase 1–2 (foundation and data layer). No UI yet.
+In use at https://marginalia.dpdns.org: search, book pages, diary, reviews,
+profiles and invite-only sign-up.
 
 ## Getting started
 
@@ -31,11 +32,15 @@ You need a Postgres database and a Google OAuth client. See
 | `pnpm typecheck` | `next typegen` then `tsc --noEmit` |
 | `pnpm test` | Vitest, against fixtures |
 | `pnpm test:coverage` | Vitest with coverage for Sonar |
+| `pnpm test:integration` | Suites that need a real `DATABASE_URL` |
+| `pnpm e2e` | Playwright, desktop and mobile |
 | `pnpm build` | Production build |
 | `pnpm smoke:books` | Live check against the real Open Library API |
 | `pnpm db:generate` | Write a migration from `src/db/schema.ts` |
 | `pnpm db:migrate` | Apply migrations |
 | `pnpm db:studio` | Browse the database |
+| `pnpm seed:dev` | One local reader, real books, three invite codes |
+| `pnpm shot /dev/shelf` | Screenshot a route at 360/768/1440 (needs `pnpm dev`) |
 
 ## Stack
 
@@ -43,7 +48,10 @@ Next.js 16 (App Router, RSC) · TypeScript · Tailwind v4 · Drizzle ORM ·
 PostgreSQL · Better Auth · Zod · Vitest.
 
 Book data from [Open Library](https://openlibrary.org), enriched by Google
-Books. Self-hosted on a free Google Cloud VM with Docker Compose. CI on GitHub Actions with SonarQube Cloud.
+Books. Self-hosted on a free Google Cloud VM with Docker Compose, deployed by
+hand with `deploy/deploy.sh <tag>`. CI on GitHub Actions with SonarQube Cloud.
+Images are built to GHCR and scanned with Trivy. The Security tab lists only
+findings that have a fix, and a fixable CRITICAL fails the build.
 
 ## Documentation
 
