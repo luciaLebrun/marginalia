@@ -9,7 +9,9 @@
 
 FROM mirror.gcr.io/library/node:22-bookworm-slim AS deps
 WORKDIR /app
-RUN corepack enable
+# pnpm comes through corepack; the bundled npm is never used and carries most
+# of the fixable CVEs Trivy finds in the tools image.
+RUN corepack enable && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
