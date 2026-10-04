@@ -36,3 +36,35 @@ export function bookPath(sourceKey: string): string {
 export function publishedLabel(sourceKey: string): string {
   return sourceKey.startsWith("gb:") ? "Published" : "First published";
 }
+
+/** Strip case, accents and punctuation, so "Piranèse" and "piranese" meet. */
+export function fold(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replaceAll(/[̀-ͯ]/g, "")
+    .replaceAll(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+/**
+ * Whether a book answers to what the reader typed into the to-read filter:
+ * every word of it found, folded, in the title or an author. A blank filter
+ * matches everything.
+ */
+export function matchesFilter(
+  book: Readonly<{ title: string; authors: readonly string[] }>,
+  filter: string,
+): boolean {
+  const words = fold(filter).split(" ").filter(Boolean);
+  const haystack = fold(`${book.title} ${book.authors.join(" ")}`);
+  return words.every((word) => haystack.includes(word));
+}
+
+/** The to-read filter earns its place from this many books waiting. */
+export const TO_READ_FILTER_MIN = 8;
+
+/** Judged on the whole list, never the filtered one; never hidden while it holds text. */
+export function showsFilter(total: number, filter: string): boolean {
+  return total >= TO_READ_FILTER_MIN || filter !== "";
+}

@@ -21,6 +21,26 @@ test.describe("the bedside stack", () => {
     await expect(page.getByRole("list", { name: /newest saved first/ })).toBeVisible();
   });
 
+  test("shows no filter on a short list", async ({ page }) => {
+    await page.goto("/dev/to-read", { waitUntil: "networkidle" });
+    await expect(page.getByRole("searchbox")).toHaveCount(0);
+  });
+
+  test("filters a long pile, folded, and clearing a no-match returns focus to the field", async ({ page }) => {
+    await page.goto("/dev/to-read?state=long", { waitUntil: "networkidle" });
+    const field = page.getByRole("searchbox", { name: "Find in your list" });
+    await expect(spines(page)).toHaveCount(10);
+    await field.fill("FREAKONOMICS");
+    await expect(spines(page)).toHaveCount(2);
+    await field.fill("zzzz");
+    await expect(spines(page)).toHaveCount(0);
+    await expect(page.getByText("Nothing on your list matches “zzzz”.").first()).toBeVisible();
+    await page.getByRole("button", { name: "Clear the filter" }).click();
+    await expect(field).toBeFocused();
+    await expect(field).toHaveValue("");
+    await expect(spines(page)).toHaveCount(10);
+  });
+
   test("sets a thick book thicker in the pile than a thin one", async ({ page }) => {
     await page.goto("/dev/to-read", { waitUntil: "networkidle" });
     // 256 pages against 604. Matched on the whole title: "Dune" alone is in
