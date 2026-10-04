@@ -48,11 +48,12 @@ export function ToReadStack({
     if (state.saved !== false || handled.current === state) return;
     if (books.some((book) => book.bookId === state.bookId)) return; // not yet re-rendered
     handled.current = state;
+    // Unless the reader has already moved on to something else.
+    const at = document.activeElement;
+    if (at && at !== document.body) return;
     const next = stackRef.current?.querySelector<HTMLElement>(`[data-take-off="${successor.current}"]`);
     if (next) return next.focus();
-    const heading = document.querySelector("h1");
-    heading?.setAttribute("tabindex", "-1");
-    heading?.focus();
+    document.querySelector("h1")?.focus();
   }, [state, books]);
 
   return (
@@ -62,10 +63,9 @@ export function ToReadStack({
       ) : (
         <ol
           ref={stackRef}
-          tabIndex={-1}
           aria-label="Books waiting to be read, newest saved first"
           // The paper between spines is the pile's hairline.
-          className="flex max-w-[48rem] flex-col gap-px outline-none"
+          className="flex max-w-[48rem] flex-col gap-px"
         >
           {books.map((book) => (
             <Spine

@@ -57,6 +57,8 @@ export default async function DevToReadPage({ searchParams }: PageProps<"/dev/to
   if (process.env.NODE_ENV === "production") notFound();
 
   const { state, stub } = await searchParams;
-  const books = state === "empty" ? [] : state === "one" ? STACK.slice(0, 1) : STACK;
+  let books = STACK;
+  if (state === "empty") books = [];
+  else if (state === "one") books = STACK.slice(0, 1);
   return stub ? <RemovableToRead books={books} /> : <ToReadView books={books} />;
 }

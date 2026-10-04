@@ -90,6 +90,18 @@ test.describe("the bedside stack", () => {
     await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
   });
 
+  test("leaves focus alone when the reader has moved on while a spine is taken off", async ({ page }) => {
+    await page.goto("/dev/to-read?stub=1", { waitUntil: "networkidle" });
+    const buttons = page.locator("[data-take-off]");
+    await buttons.nth(0).focus();
+    await page.keyboard.press("Enter");
+    const elsewhere = buttons.nth(2);
+    const label = await elsewhere.getAttribute("aria-label");
+    await elsewhere.focus();
+    await expect(buttons).toHaveCount(4);
+    await expect(page.getByRole("button", { name: label! })).toBeFocused();
+  });
+
   test("says nothing is waiting, and how to put a book here", async ({ page }) => {
     await page.goto("/dev/to-read?state=empty", { waitUntil: "networkidle" });
     await expect(page.getByText("Nothing waiting")).toBeVisible();

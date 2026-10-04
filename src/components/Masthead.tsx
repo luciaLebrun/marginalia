@@ -61,7 +61,7 @@ export function Masthead({
           below the bio, where it reads as a stray line. */}
       <div className="px-4 py-6 sm:px-6 sm:py-8">
         <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-          <h1 className="min-w-0 text-[2.25rem] leading-[0.95] font-semibold tracking-[-0.02em] break-words sm:text-[3.5rem]">
+          <h1 tabIndex={-1} className="min-w-0 text-[2.25rem] leading-[0.95] font-semibold tracking-[-0.02em] break-words sm:text-[3.5rem]">
             {name ?? "Your reading"}
           </h1>
           <p className="text-[1rem] font-medium text-ink-soft tabular-nums sm:text-[1.375rem]">
