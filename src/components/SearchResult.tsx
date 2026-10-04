@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Cover } from "./Cover";
 import type { BookSummary } from "@/lib/books";
 import { bookPath, publishedLabel } from "@/lib/client-safe";
+import { fromSearchParams, type BookQuery } from "@/lib/search";
 
 /**
  * One search result: the entry's tri-band frame with the colour withheld.
@@ -17,7 +18,10 @@ import { bookPath, publishedLabel } from "@/lib/client-safe";
  * Rule: the hairlines go to solid ink, and nothing is filled — sunk paper
  * means "awaiting the next keystroke" in this world, not "pointed at".
  */
-export function SearchResult({ book }: Readonly<{ book: BookSummary }>) {
+export function SearchResult({
+  book,
+  query,
+}: Readonly<{ book: BookSummary; query: BookQuery }>) {
   const author = book.authors[0];
   const year = book.firstPublishYear;
 
@@ -36,7 +40,8 @@ export function SearchResult({ book }: Readonly<{ book: BookSummary }>) {
     // where one title runs to two lines.
     <li className="self-stretch">
       <Link
-        href={bookPath(book.sourceKey)}
+        // The search rides along so the book page can offer the way back (MRG-086).
+        href={`${bookPath(book.sourceKey)}?${fromSearchParams(query)}`}
         aria-label={label}
         // Opening a book copies it into our database (MRG-014). Prefetching
         // would do that for every result in view, not the one the reader chose.

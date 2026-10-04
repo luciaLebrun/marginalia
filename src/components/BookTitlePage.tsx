@@ -32,6 +32,7 @@ export function BookTitlePage({
   favourite = { isFavourite: false, full: false, position: -1, count: 0 },
   username,
   diaryHref = "/",
+  searchHref,
   toReadAction,
   favouriteAction,
   favouriteMoveAction,
@@ -46,6 +47,8 @@ export function BookTitlePage({
   username: string;
   /** The dev harness points this at its own shelf. */
   diaryHref?: string;
+  /** The search this book was opened from, when it was (MRG-086). */
+  searchHref?: string;
   /** The dev harness's session-free stand-ins for the to-read action… */
   toReadAction?: (previous: ToReadState, form: FormData) => Promise<ToReadState>;
   /** …the favourite action… */
@@ -59,7 +62,7 @@ export function BookTitlePage({
 
   return (
     <article>
-      <AuthorBand text={authorLine(book.authors)} band={band} diaryHref={diaryHref} />
+      <AuthorBand text={authorLine(book.authors)} band={band} diaryHref={diaryHref} searchHref={searchHref} />
 
       {/* The jacket's column is sized to the jacket, so the title page faces
           it across one gap rather than across the dead half of a third. */}
@@ -166,10 +169,12 @@ function AuthorBand({
   text,
   band,
   diaryHref,
+  searchHref,
 }: Readonly<{
   text: string;
   band: { background: string; color: string };
   diaryHref: string;
+  searchHref?: string;
 }>) {
   return (
     <div
@@ -188,12 +193,19 @@ function AuthorBand({
       {/* A two-author line wraps at 390, so it takes real leading and balanced
           lines rather than the band voice's line-height of 1. */}
       <p className="band-label leading-[1.4]! text-balance">{text}</p>
-      <Link
-        href={diaryHref}
-        className="band-label shrink-0 underline underline-offset-4 transition-colors [text-decoration-color:color-mix(in_srgb,var(--band-tone)_40%,transparent)] hover:[text-decoration-color:var(--band-tone)] focus-visible:[outline-color:var(--band-tone)]"
+<nav
+        aria-label="Ways back"
+        className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:gap-4"
       >
-        Your diary
-      </Link>
+        {searchHref && (
+          <Link href={searchHref} className="band-label shrink-0 underline underline-offset-4 transition-colors [text-decoration-color:color-mix(in_srgb,var(--band-tone)_40%,transparent)] hover:[text-decoration-color:var(--band-tone)] focus-visible:[outline-color:var(--band-tone)]">
+            Your search
+          </Link>
+        )}
+        <Link href={diaryHref} className="band-label shrink-0 underline underline-offset-4 transition-colors [text-decoration-color:color-mix(in_srgb,var(--band-tone)_40%,transparent)] hover:[text-decoration-color:var(--band-tone)] focus-visible:[outline-color:var(--band-tone)]">
+          Your diary
+        </Link>
+      </nav>
     </div>
   );
 }

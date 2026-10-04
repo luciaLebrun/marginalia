@@ -67,7 +67,8 @@ test.describe("search", () => {
         .evaluateAll((links) => links.map((a) => a.getAttribute("href")));
       expect(hrefs.length).toBeGreaterThan(0);
       for (const href of hrefs) {
-        expect(href).toMatch(/^\/book\/OL\d+W$/);
+        // The search rides along so the book page can lead back (MRG-086).
+        expect(href).toMatch(/^\/book\/OL\d+W\?from=search&title=dune&author=herbert$/);
       }
     });
 

@@ -7,8 +7,10 @@ import {
   MAX_QUERY_LENGTH,
   MAX_SHOWN,
   SEARCH_LIMIT,
+  backToSearchHref,
   bandText,
   endLine,
+  fromSearchParams,
   isBlank,
   noMatch,
   parseQuery,
@@ -291,5 +293,26 @@ describe("noMatch", () => {
       expect(lead).not.toMatch(/add (the author|a title)/i);
       expect(lead).toMatch(/try (fewer words|the surname alone)/i);
     }
+  });
+});
+
+describe("the way back to a search (MRG-086)", () => {
+  it("round-trips both fields, encoded", () => {
+    const query = q("Du côté des fantômes", "Anne-Fleur & Multon");
+    const params = Object.fromEntries(new URLSearchParams(fromSearchParams(query)));
+    expect(backToSearchHref(params)).toBe(
+      "/search?title=Du+c%C3%B4t%C3%A9+des+fant%C3%B4mes&author=Anne-Fleur+%26+Multon",
+    );
+  });
+
+  it("is absent unless the book was opened from a search", () => {
+    expect(backToSearchHref({ title: "dune" })).toBeUndefined();
+    expect(backToSearchHref({ from: "search" })).toBeUndefined();
+  });
+
+  it("only ever produces an internal /search address", () => {
+    const href = backToSearchHref({ from: "https://evil.example", title: "x" });
+    expect(href).toBeUndefined();
+    expect(backToSearchHref({ from: "search", title: "//evil.example" })).toMatch(/^\/search\?/);
   });
 });

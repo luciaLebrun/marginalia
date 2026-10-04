@@ -555,3 +555,20 @@ test.describe("book page", () => {
     }
   });
 });
+
+/* MRG-086: opened from a search, the book leads back to that same search. */
+test("a book opened from a search leads back to it, both fields kept", async ({ page }) => {
+  await page.goto("/dev/book?from=search&title=dune&author=herbert", { waitUntil: "networkidle" });
+
+  await page.getByRole("link", { name: "Your search" }).click();
+
+  await expect(page).toHaveURL(/\/dev\/search\?/);
+  await expect(page.getByRole("searchbox", { name: "Title" })).toHaveValue("dune");
+  await expect(page.getByRole("searchbox", { name: "Author" })).toHaveValue("herbert");
+});
+
+test("a book opened any other way offers no way back to a search", async ({ page }) => {
+  await page.goto("/dev/book", { waitUntil: "networkidle" });
+  await expect(page.getByRole("link", { name: "Your diary" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Your search" })).toHaveCount(0);
+});
