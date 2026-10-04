@@ -137,7 +137,7 @@ describe("openBook", () => {
     const sources: BookSources = {
       fetchBook: vi.fn(),
       enrich: vi.fn(),
-      bandColor: vi.fn(),
+      cover: vi.fn(),
     };
 
     await expect(openBook("../search", sources)).resolves.toEqual({ kind: "not-found" });
