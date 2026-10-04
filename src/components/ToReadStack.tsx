@@ -21,19 +21,44 @@ const INITIAL: ToReadState = { saved: null, bookId: null, error: null, signedOut
  * Taking a book off is owned here rather than by its spine, because the spine
  * goes with it: the announcement and the return of focus outlive the book.
  */
-export function ToReadStack({ books }: Readonly<{ books: ToReadBook[] }>) {
-  const [state, takeOff] = useActionState<ToReadState, FormData>(toggleToReadAction, INITIAL);
+export function ToReadStack({
+  books,
+  action = toggleToReadAction,
+}: Readonly<{
+  books: ToReadBook[];
+  /** The dev harness's session-free stand-in for the take-off action (MRG-079). */
+  action?: (previous: ToReadState, form: FormData) => Promise<ToReadState>;
+}>) {
+  const [state, submit] = useActionState<ToReadState, FormData>(action, INITIAL);
   const stackRef = useRef<HTMLOListElement>(null);
-  const emptyRef = useRef<HTMLDivElement>(null);
+  const successor = useRef<string | null>(null);
+  const handled = useRef<ToReadState>(INITIAL);
 
+  // The spine goes with the book, so note who sits next to it before it does:
+  // the one below, or the one above if it was last.
+  const takeOff = (formData: FormData) => {
+    const at = books.findIndex((book) => book.bookId === formData.get("bookId"));
+    successor.current = (books[at + 1] ?? books[at - 1])?.bookId ?? null;
+    submit(formData);
+  };
+
+  // Once the spine is gone, focus goes to its successor's control, or the
+  // heading when the list is empty (MRG-079).
   useEffect(() => {
-    if (state.saved === false) (stackRef.current ?? emptyRef.current)?.focus();
-  }, [state]);
+    if (state.saved !== false || handled.current === state) return;
+    if (books.some((book) => book.bookId === state.bookId)) return; // not yet re-rendered
+    handled.current = state;
+    const next = stackRef.current?.querySelector<HTMLElement>(`[data-take-off="${successor.current}"]`);
+    if (next) return next.focus();
+    const heading = document.querySelector("h1");
+    heading?.setAttribute("tabindex", "-1");
+    heading?.focus();
+  }, [state, books]);
 
   return (
     <div className="px-4 py-6 sm:px-6 sm:py-8">
       {books.length === 0 ? (
-        <EmptyStack ref={emptyRef} />
+        <EmptyStack />
       ) : (
         <ol
           ref={stackRef}
@@ -99,7 +124,7 @@ function Spine({
         <form action={takeOff} className="flex shrink-0 items-center px-3">
           <input type="hidden" name="bookId" value={book.bookId} />
           <input type="hidden" name="intent" value="remove" />
-          <TakeOffButton title={book.title} />
+          <TakeOffButton bookId={book.bookId} title={book.title} />
         </form>
 
         {/* The jacket at the spine's end, two-thirds of the spine's height
@@ -142,15 +167,21 @@ function Spine({
 }
 
 /** Its own component so only the spine being taken off says so. */
-function TakeOffButton({ title }: Readonly<{ title: string }>) {
+function TakeOffButton({ bookId, title }: Readonly<{ bookId: string; title: string }>) {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
-      disabled={pending}
+      data-take-off={bookId}
+      // aria-disabled, not disabled: disabling the focused control would throw
+      // keyboard focus to the page mid-removal (MRG-074).
+      aria-disabled={pending || undefined}
+      onClick={(event) => {
+        if (pending) event.preventDefault();
+      }}
       aria-label={`Take ${title} off your list`}
       // Words on the ink band: paper, underlined at 40%, the paper ring.
-      className="band-label text-paper underline decoration-paper/40 underline-offset-4 transition-colors hover:decoration-paper focus-visible:outline-paper disabled:cursor-progress"
+      className="band-label text-paper underline decoration-paper/40 underline-offset-4 transition-colors hover:decoration-paper focus-visible:outline-paper aria-disabled:cursor-progress"
     >
       {pending ? "Taking off…" : "Take it off"}
     </button>
@@ -162,9 +193,9 @@ function TakeOffButton({ title }: Readonly<{ title: string }>) {
  * jacket well drawn — and the way to put a book on it. The state most readers
  * meet first, so it shows what the pile will be and says what it is for.
  */
-function EmptyStack({ ref }: Readonly<{ ref: React.Ref<HTMLDivElement> }>) {
+function EmptyStack() {
   return (
-    <div ref={ref} tabIndex={-1} className="max-w-[48rem] outline-none">
+    <div className="max-w-[48rem]">
       <div className="flex min-h-[4.5rem] w-[calc(100%-0.5rem)] items-stretch border border-rule sm:w-[calc(100%-1.5rem)]">
         <p className="flex flex-1 items-center px-3 text-[1.375rem] leading-snug font-semibold tracking-[-0.01em] text-ink-soft sm:px-4">
           Nothing waiting
