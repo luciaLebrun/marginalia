@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import jpeg from "jpeg-js";
 
 import { conditionBand, rgbToHex, rgbToHsl } from "./color.ts";
@@ -84,31 +86,76 @@ export function dominantColor(
 }
 
 /**
- * Best-effort. Every failure path returns null so the caller falls back to a
- * category colour — a cover we cannot decode must never block saving a book.
+ * sha256 of Google's "image not available" jacket as served at `w=256`, the
+ * width `sampleUrl()` asks for. Measured live (MRG-076): the same bytes come
+ * back for every volume without a scan, but the bytes change with `w`, so this
+ * is only valid for that width. If Google redraws the placeholder this goes
+ * stale and the placeholder returns — re-measure and replace it.
  */
-export async function bandColorFromCover(
+const GOOGLE_PLACEHOLDER_SHA256 =
+  "343c97d84bc081919c5c0aceec60123513419c1a9f4812097c56508fa93d4d73";
+
+/** Pure. Google's "image not available" jacket, byte for byte. */
+export function isPlaceholder(buffer: Buffer): boolean {
+  return createHash("sha256").update(buffer).digest("hex") === GOOGLE_PLACEHOLDER_SHA256;
+}
+
+/**
+ * Pure. Some volumes serve an 800x128 sliver instead of a jacket; no jacket is
+ * twice as wide as it is tall. An image either way, so it would beat the
+ * coverless type jacket for nothing.
+ */
+export function isStrip(width: number, height: number): boolean {
+  return width > height * 2;
+}
+
+export interface CoverInspection {
+  color: string | null;
+  /** False when the jacket is a placeholder or strip and should not be stored. */
+  usable: boolean;
+}
+
+/**
+ * Best-effort. Every failure path returns no colour and a usable jacket, so
+ * the caller falls back to a category colour — a cover we cannot decode must
+ * never block saving a book, nor be thrown away on a guess.
+ */
+export async function inspectCover(
   url: string | null | undefined,
-): Promise<string | null> {
-  if (!url) return null;
+): Promise<CoverInspection> {
+  const fallback = { color: null, usable: true };
+  if (!url) return fallback;
 
   try {
     const res = await fetch(url, {
       redirect: "follow",
       next: { revalidate: 60 * 60 * 24 * 30 },
     });
-    if (!res.ok) return null;
+    if (!res.ok) return fallback;
 
     const buffer = Buffer.from(await res.arrayBuffer());
-    // Open Library serves a 1x1 placeholder for a missing cover, and Google a
-    // "no image" gif; either way, nothing that small carries a band colour.
-    if (buffer.length < 1024) return null;
+    // The placeholder is a PNG, so it must be caught before the JPEG decode.
+    if (isPlaceholder(buffer)) return { color: null, usable: false };
 
     const decoded = jpeg.decode(buffer, { useTArray: true });
-    return dominantColor(decoded.data, decoded.width, decoded.height);
+    if (isStrip(decoded.width, decoded.height)) return { color: null, usable: false };
+    // Open Library serves a 1x1 placeholder for a missing cover, and Google a
+    // "no image" gif; either way, nothing that small carries a band colour.
+    if (buffer.length < 1024) return fallback;
+
+    return {
+      color: dominantColor(decoded.data, decoded.width, decoded.height),
+      usable: true,
+    };
   } catch {
-    return null;
+    return fallback;
   }
+}
+
+export async function bandColorFromCover(
+  url: string | null | undefined,
+): Promise<string | null> {
+  return (await inspectCover(url)).color;
 }
 
 export { CATEGORY_BANDS } from "./color.ts";
