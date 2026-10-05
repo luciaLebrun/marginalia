@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { unstable_cache } from "next/cache.js";
 
 import { categoryFromBisac } from "./category.ts";
 import { fold } from "../client-safe.ts";
