@@ -53,6 +53,55 @@ test.describe("the bedside stack", () => {
     await expect(spines(page)).toHaveCount(5);
   });
 
+  /* Pending, the button keeps focus; once the spine is gone focus goes to the
+     next spine's control, the previous one's if it was last, else the heading
+     (MRG-079). */
+  test("keeps focus while taking a book off, then hands it to a neighbour or the heading", async ({ page }) => {
+    await page.goto("/dev/to-read?stub=1", { waitUntil: "networkidle" });
+    const buttons = page.locator("[data-take-off]");
+    const labels = () => buttons.evaluateAll((n) => n.map((b) => b.getAttribute("aria-label")!));
+    const press = async (at: number) => {
+      await buttons.nth(at).focus();
+      await page.keyboard.press("Enter");
+    };
+
+    // A middle spine: the button keeps focus through the wait, then focus
+    // goes to the spine that was below it.
+    const before = await labels();
+    await press(2);
+    await expect(buttons.nth(2)).toHaveAttribute("aria-disabled", "true");
+    await expect(buttons.nth(2)).toBeFocused();
+    await expect(buttons).toHaveCount(4);
+    await expect(page.getByRole("button", { name: before[3] })).toBeFocused();
+
+    // The last spine: focus goes to the one above it.
+    const now = await labels();
+    await press(3);
+    await expect(buttons).toHaveCount(3);
+    await expect(page.getByRole("button", { name: now[2] })).toBeFocused();
+
+    // Down to the only spine, whose removal leaves the heading.
+    await press(0);
+    await expect(buttons).toHaveCount(2);
+    await press(0);
+    await expect(buttons).toHaveCount(1);
+    await press(0);
+    await expect(page.getByText("Nothing waiting")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
+  });
+
+  test("leaves focus alone when the reader has moved on while a spine is taken off", async ({ page }) => {
+    await page.goto("/dev/to-read?stub=1", { waitUntil: "networkidle" });
+    const buttons = page.locator("[data-take-off]");
+    await buttons.nth(0).focus();
+    await page.keyboard.press("Enter");
+    const elsewhere = buttons.nth(2);
+    const label = await elsewhere.getAttribute("aria-label");
+    await elsewhere.focus();
+    await expect(buttons).toHaveCount(4);
+    await expect(page.getByRole("button", { name: label! })).toBeFocused();
+  });
+
   test("says nothing is waiting, and how to put a book here", async ({ page }) => {
     await page.goto("/dev/to-read?state=empty", { waitUntil: "networkidle" });
     await expect(page.getByText("Nothing waiting")).toBeVisible();

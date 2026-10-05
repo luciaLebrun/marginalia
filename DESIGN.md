@@ -848,7 +848,9 @@ bedside stack, not a row in a list.
 - **Links and focus:** the words are the link to the book's page; the jacket is a
   second link to the same page, `tabIndex -1` and `aria-hidden`, so the ring bounds the
   words while the whole spine is clickable. That ring is the paper inset exception of
-  the Browser-Surface Rule.
+  the Browser-Surface Rule. After a spine is taken off, focus goes to the next spine's
+  "Take it off", else the previous one's, else the page heading, unless the reader has
+  moved elsewhere.
 - **Refusal:** printed under the spine it happened to, on that spine's own offset,
   never once under the whole stack: the sentence at the body step in alarm, its "Sign
   in again" link underlined in alarm at 40% and in full alarm under the pointer.
