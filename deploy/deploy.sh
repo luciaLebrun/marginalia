@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Roll the VM to a prebuilt GHCR image tag (MRG-081). Run from the compose dir:
 #   deploy/deploy.sh [tag]      # default: develop
-# The migrate job runs on `up`, so a bad migration stops the app from swapping.
+# Migrate runs first, on its own: `up` alone recreates the app before migrate
+# finishes, so a failing migrate took the site down (v1.8.0). Run first,
+# set -e stops here and the old app keeps serving.
 set -euo pipefail
 
 tag="${1:-develop}"
@@ -11,6 +13,7 @@ export TOOLS_IMAGE="ghcr.io/lucialebrun/marginalia-tools:${tag}"
 dc() { docker compose --env-file .env.selfhost --profile tunnel "$@"; }
 
 dc pull
+dc run --rm migrate
 dc up -d --no-build --remove-orphans
 
 # Any HTTP answer counts: the app is up, whatever the route returns.
