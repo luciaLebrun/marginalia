@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import googleFixture from "../../../tests/fixtures/google-books-dune.json";
 import searchFixture from "../../../tests/fixtures/google-books-search-dune.json";
 import {
+  isDegradedSearch,
   buildQuery,
   buildSearchQuery,
+  matchesQuery,
   jacketFromImageLinks,
   mergeGoogleVolume,
   withJacketWidth,
@@ -14,7 +16,7 @@ import {
   pickIsbn13,
   publishYear,
 } from "./google-books";
-import type { BookDetail } from "./types";
+import type { BookDetail, BookSummary } from "./types";
 
 const base: BookDetail = {
   sourceKey: "OL893415W",
@@ -278,40 +280,90 @@ describe("normalizeSearchResponse", () => {
 });
 
 describe("buildSearchQuery", () => {
-  /*
-   * Measured live 2026-09-19: the free-text `the dispossessed` returns no Le
-   * Guin in twenty results, while the scoped form returns her novel first.
-   * That gap is the whole of MRG-068.
-   */
-  it("scopes each field to its own operator", () => {
-    expect(buildSearchQuery({ title: "dune", author: "herbert" })).toBe(
-      'intitle:"dune" inauthor:"herbert"',
+  // MRG-088: Google's field operators return totalItems 0 since 2026-10-04.
+  it("sends plain words, never an operator or a quote", () => {
+    const q = buildSearchQuery({ title: 'the "dispossessed"', author: "le guin" });
+    expect(q).toBe("the dispossessed guin");
+    expect(q).not.toMatch(/intitle|inauthor|"/);
+  });
+
+  it("sends only the author's last word beside a title", () => {
+    // "du côté des fantômes anne-fleur multon" returns 0 live; with "multon" it
+    // returns the book first. The filter still checks every author word.
+    expect(buildSearchQuery({ title: "Du côté des fantômes", author: "Anne-Fleur Multon" })).toBe(
+      "Du côté des fantômes Multon",
     );
   });
 
-  it("quotes a multi-word term so it stays one phrase", () => {
-    // Unquoted this means "the" in the title AND "dispossessed" anywhere.
-    expect(buildSearchQuery({ title: "the dispossessed", author: "" })).toBe(
-      'intitle:"the dispossessed"',
-    );
+  it("sends the whole author when there is no title, hyphen kept", () => {
+    expect(buildSearchQuery({ title: "", author: "Anne-Fleur Multon" })).toBe("Anne-Fleur Multon");
   });
 
   it("sends only the field the reader filled", () => {
-    expect(buildSearchQuery({ title: "", author: "le guin" })).toBe('inauthor:"le guin"');
+    expect(buildSearchQuery({ title: "dune", author: " " })).toBe("dune");
+  });
+
+  it("defuses operators and NOT in reader input", () => {
+    expect(buildSearchQuery({ title: "intitle:dune -sand", author: "" })).toBe("intitle dune sand");
   });
 
   it("is empty for an empty query, so no request is made", () => {
     expect(buildSearchQuery({ title: "", author: "" })).toBe("");
     expect(buildSearchQuery({ title: "  ", author: "\t" })).toBe("");
   });
+});
 
-  /*
-   * Google has no escape inside a phrase, so an interior quote would end the
-   * phrase early and leak the rest of the title into the free-text part.
-   */
-  it("drops interior quotes rather than letting them close the phrase", () => {
-    const q = buildSearchQuery({ title: 'a "good" book', author: "" });
-    expect(q).toBe('intitle:"a good book"');
-    expect(q.match(/"/g)).toHaveLength(2);
+describe("matchesQuery", () => {
+  const book = (title: string, ...authors: string[]) =>
+    ({ title, authors }) as BookSummary;
+
+  it("needs every title word and every author word", () => {
+    const b = book("The Dispossessed", "Ursula K. Le Guin");
+    expect(matchesQuery(b, { title: "the dispossessed", author: "le guin" })).toBe(true);
+    expect(matchesQuery(b, { title: "the dispossessed", author: "herbert" })).toBe(false);
+    expect(matchesQuery(b, { title: "the lathe", author: "" })).toBe(false);
+  });
+
+  it("ignores case, accents and punctuation, and splits hyphens", () => {
+    const b = book("Du côté des fantômes", "Anne-Fleur Multon");
+    expect(matchesQuery(b, { title: "DU COTE DES FANTOMES!", author: "anne fleur multon" })).toBe(true);
+    expect(matchesQuery(b, { title: "", author: "Anne-Fleur" })).toBe(true);
+  });
+
+  it("matches whole words, not substrings", () => {
+    expect(matchesQuery(book("Coastal Dunes", "A"), { title: "dune", author: "" })).toBe(false);
+    expect(matchesQuery(book("Dune Messiah", "A"), { title: "dune", author: "" })).toBe(true);
+  });
+
+  it("checks only the field that was filled", () => {
+    expect(matchesQuery(book("Anything", "Frank Herbert"), { title: "", author: "herbert" })).toBe(true);
+    expect(matchesQuery(book("Dune"), { title: "dune", author: "" })).toBe(true);
+    expect(matchesQuery(book("Dune"), { title: "", author: "herbert" })).toBe(false);
+  });
+});
+
+describe("isDegradedSearch (MRG-088)", () => {
+  // Shape recorded from Google on 2026-10-05: id and title only.
+  const degraded = {
+    items: [
+      { id: "0zrbEQAAQBAJ", volumeInfo: { title: "Du côté des fantômes" } },
+      { id: "abcdef123456", volumeInfo: { title: "Fant&ocirc;mes &amp; co" } },
+    ],
+  };
+
+  it("flags a page where no item has authors or imageLinks", () => {
+    expect(isDegradedSearch(degraded)).toBe(true);
+  });
+
+  it("accepts a healthy page, even when some items are bare", () => {
+    const healthy = { items: [...degraded.items, searchFixture.items[0]] };
+    expect(isDegradedSearch(healthy)).toBe(false);
+    expect(isDegradedSearch(searchFixture)).toBe(false);
+  });
+
+  it("does not flag an empty or missing page", () => {
+    expect(isDegradedSearch({})).toBe(false);
+    expect(isDegradedSearch({ items: [] })).toBe(false);
+    expect(isDegradedSearch(null)).toBe(false);
   });
 });

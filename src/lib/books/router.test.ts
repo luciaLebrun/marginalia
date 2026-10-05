@@ -5,6 +5,9 @@ import openLibrarySearch from "../../../tests/fixtures/openlibrary-search-dune.j
 import { fetchBook, searchBooks } from "./index";
 import type { BookQuery } from "./types";
 
+// unstable_cache needs Next's runtime; here it just calls through.
+vi.mock("next/cache", () => ({ unstable_cache: (fn: unknown) => fn }));
+
 /**
  * How the two sources combine, which is the whole of MRG-063 and MRG-067:
  * both are asked every time, and Google holds the top of the grid while Open
@@ -71,8 +74,9 @@ describe("searchBooks", () => {
     await searchBooks(DUNE, 5);
 
     const [url] = fetchMock.mock.calls[0];
-    // Scoped since MRG-068: intitle:"dune" inauthor:"herbert", URL-encoded.
-    expect(decodeURIComponent(url)).toContain('q=intitle:"dune" inauthor:"herbert"');
+    // Plain words since MRG-088: Google's field operators return nothing.
+    expect(decodeURIComponent(url)).toContain("q=dune herbert&");
+    expect(url).not.toContain("intitle");
     expect(url).toContain("maxResults=5");
     expect(url).toContain("printType=books");
     // relevance is the documented default; passing it is noise.

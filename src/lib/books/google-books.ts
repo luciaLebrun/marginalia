@@ -1,4 +1,7 @@
+import { unstable_cache } from "next/cache";
+
 import { categoryFromBisac } from "./category.ts";
+import { fold } from "../client-safe.ts";
 import type { BookDetail, BookQuery, BookSummary } from "./types.ts";
 
 const ORIGIN = "https://www.googleapis.com/books/v1";
@@ -20,7 +23,7 @@ const ONE_DAY = 60 * 60 * 24;
  *    sees, "dune herbert" does not return Dune, and "the dispossessed" does
  *    not return Le Guin's. Not fixable from our side: measured with and
  *    without `langRestrict`, `printType`, `orderBy`, and with `intitle:` /
- *    `inauthor:` shaping. The Books API ranks quite differently from the
+ *    `inauthor:` shaping (since broken, MRG-088). The Books API ranks quite differently from the
  *    books.google.com website. Tracked as MRG-067.
  * 2. **A Google key identifies an *edition*** (a volume), where an Open
  *    Library work key identifies a *work*, so two readers can log two volumes
@@ -261,52 +264,111 @@ export function normalizeSearchResponse(body: unknown): BookSummary[] {
  * on the fallback path, which would have put the key in Vercel's runtime logs
  * on every Google outage. Google accepts `X-Goog-Api-Key` for exactly this.
  */
-async function fetchJson(url: string, revalidate: number): Promise<unknown> {
+async function fetchJson(
+  url: string,
+  revalidate: number | false,
+): Promise<unknown> {
   const key = apiKey();
   const res = await fetch(url, {
     headers: {
       Accept: "application/json",
       ...(key ? { "X-Goog-Api-Key": key } : {}),
     },
-    next: { revalidate },
+    ...(revalidate === false ? { cache: "no-store" as const } : { next: { revalidate } }),
   });
   if (!res.ok) throw new GoogleBooksError(res.status, url);
   return res.json();
 }
 
 /**
- * Pure. A term as a Google phrase: quoted, so a multi-word title stays one
- * scoped phrase.
- *
- * Unquoted, `intitle:the dispossessed` means "the" in the title AND
- * "dispossessed" anywhere — which is how a search for Le Guin's novel returned
- * no Le Guin. Interior quotes are dropped rather than escaped: Google has no
- * escape inside a phrase, so a stray one would end the phrase early and leak
- * the rest of the title into the free-text part of the query.
+ * Pure. Whether a search page is Google's degraded answer (MRG-088): a 200
+ * whose items carry only `id` and `title`, no authors and no imageLinks, with
+ * the `fields` mask ignored. Measured 2026-10-05 on eight queries, a healthy
+ * page of 11-20 items always has at least one of the two on some item.
+ * ponytail: a one-item page of a genuinely bare book also trips this and falls
+ * back to Open Library; tighten if that ever shows up.
  */
-function phrase(term: string): string {
-  return `"${term.replaceAll('"', " ").replaceAll(/\s+/g, " ").trim()}"`;
+export function isDegradedSearch(body: unknown): boolean {
+  const items = (body as { items?: unknown })?.items;
+  if (!Array.isArray(items) || items.length === 0) return false;
+  return items.every((item) => {
+    const info = (item as { volumeInfo?: RawVolumeInfo })?.volumeInfo;
+    return !info?.authors && !info?.imageLinks;
+  });
 }
 
 /**
- * Pure. The `q` for a scoped search, or "" when the reader typed nothing.
+ * One search page, cached for a day by us rather than by fetch. The fetch
+ * cache stores a body before we can look at it, so a degraded 200 stayed for a
+ * day (MRG-088). Fetched `no-store`, and `unstable_cache` only stores what
+ * returns: a throw, like a 503, is never cached. Same one request and one-day
+ * lifetime as before when Google is healthy. The url is the cache key.
+ */
+const fetchSearchPage = unstable_cache(
+  async (url: string) => {
+    const body = await fetchJson(url, false);
+    if (isDegradedSearch(body)) throw new Error("Google Books degraded response");
+    return body;
+  },
+  ["google-books-search"],
+  { revalidate: ONE_DAY },
+);
+
+/**
+ * Pure. A term as plain words: no phrase quotes, no `field:` operator, no
+ * leading `-` (Google's NOT). Interior hyphens stay: "anne-fleur" works,
+ * "anne fleur" returns nothing (measured 2026-10-05).
+ */
+function plainWords(term: string): string {
+  return term
+    .replaceAll(/["':]|(?<=^|\s)-+/g, " ")
+    .replaceAll(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Pure. The `q` for a search, or "" when the reader typed nothing (MRG-088).
  *
- * Measured live against both APIs on 2026-09-19, which is the whole reason
- * MRG-068 exists: `intitle:"the dispossessed" inauthor:"le guin"` returns Le
- * Guin's novel first, where the free-text `the dispossessed` returned no Le
- * Guin at all in twenty results, and `intitle:"dune" inauthor:"herbert"`
- * returns Dune novels where `dune herbert` returned a book about soil, Forbes
- * 1984 and a Soul Catcher study guide.
+ * Plain words, no operators. Since at least 2026-10-04 Google's `intitle:`,
+ * `inauthor:`, `isbn:`, `subject:` and `inpublisher:` return totalItems 0 on
+ * their own (`intitle:hobbit` 0, `hobbit` 348), so the scoping MRG-068 relied
+ * on is enforced by `matchesQuery` after the fact instead.
+ *
+ * With a title, only the author's last word is sent: plain Google ANDs every
+ * word, and "du côté des fantômes anne-fleur multon" returns 0 where "du côté
+ * des fantômes multon" returns the book first. The filter still demands every
+ * author word. An author-only search sends the whole name ("anne-fleur multon"
+ * returns 14 of her books in 20, "multon" alone returns none).
+ *
+ * Unquoted titles: a quoted phrase ranked the real book lower on both
+ * "the dispossessed" (2nd, 1 survivor vs 1st, 4) and "the hobbit" (3rd vs 1st).
  */
 export function buildSearchQuery({ title, author }: BookQuery): string {
-  const terms: string[] = [];
-  if (title.trim()) terms.push(`intitle:${phrase(title)}`);
-  if (author.trim()) terms.push(`inauthor:${phrase(author)}`);
-  return terms.join(" ");
+  const t = plainWords(title);
+  const a = plainWords(author);
+  if (t && a) return `${t} ${a.split(" ").at(-1)}`;
+  return t || a;
 }
 
 /**
- * Search volumes, title and author scoped separately (MRG-068). `printType=books`
+ * Pure. Whether a result honours the scoping the reader asked for: every
+ * title word in the title, every author word in an author (MRG-088).
+ *
+ * Whole words, not substrings: "dune" must not match "dunes" or "Dunedin",
+ * and the filter is the only thing keeping a scoped search strict now that
+ * Google no longer scopes for us. Folded, so accents, case and hyphens
+ * ("Anne-Fleur") do not matter. A field the reader left empty is not checked.
+ */
+export function matchesQuery(book: BookSummary, { title, author }: BookQuery): boolean {
+  const has = (haystack: string, needle: string) => {
+    const words = new Set(fold(haystack).split(" "));
+    return fold(needle).split(" ").every((w) => !w || words.has(w));
+  };
+  return has(book.title, title) && has(book.authors.join(" "), author);
+}
+
+/**
+ * Search volumes for a title and an author, scoped by `matchesQuery` (MRG-068, MRG-088). `printType=books`
  * asks Google to keep magazines out of a reading diary.
  *
  * Google serves **at most 20 per request, whatever `maxResults` says** — the
@@ -333,11 +395,10 @@ export async function searchVolumes(
 
   const fields = encodeURIComponent(`items(${VOLUME_FIELDS})`);
   const page = (start: number) =>
-    fetchJson(
+    fetchSearchPage(
       `${ORIGIN}/volumes?q=${encodeURIComponent(q)}` +
         `&maxResults=${Math.min(limit - start, GOOGLE_PAGE)}&startIndex=${start}` +
         `&printType=books&fields=${fields}`,
-      ONE_DAY,
     );
 
   const starts: number[] = [];
@@ -345,9 +406,11 @@ export async function searchVolumes(
   const [first, ...rest] = await Promise.allSettled(starts.map(page));
 
   if (first.status === "rejected") throw first.reason;
-  return [first, ...rest].flatMap((result) =>
-    result.status === "fulfilled" ? normalizeSearchResponse(result.value) : [],
-  );
+  return [first, ...rest]
+    .flatMap((result) =>
+      result.status === "fulfilled" ? normalizeSearchResponse(result.value) : [],
+    )
+    .filter((book) => matchesQuery(book, query));
 }
 
 /** What Google actually serves per request, not what it documents. */
