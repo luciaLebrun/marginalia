@@ -37,6 +37,17 @@ export function ToReadStack({
   const [filter, setFilter] = useState("");
   const shown = books.filter((book) => matchesFilter(book, filter));
   const filterShown = showsFilter(books.length, filter);
+  // Spoken at the event that causes it, so the latest one wins: a take-off
+  // state outlives its removal and would otherwise mute every later filter.
+  // The filter's line remembers the take-off state it was spoken after; a
+  // newer take-off is a different state object, and wins.
+  const [said, setSaid] = useState<{ text: string; after: ToReadState }>({ text: "", after: INITIAL });
+  const announcement = state.saved === false && said.after !== state ? "Taken off your to-read list." : said.text;
+
+  const refilter = (value: string) => {
+    setFilter(value);
+    setSaid({ text: filterSaid(books, value), after: state });
+  };
 
   // The spine goes with the book, so note who sits next to it before it does:
   // the one below, or the one above if it was last.
@@ -67,13 +78,15 @@ export function ToReadStack({
         <EmptyStack />
       ) : (
         <>
-          {filterShown && <Filter ref={filterRef} value={filter} onChange={setFilter} />}
+          {filterShown && <Filter ref={filterRef} value={filter} onChange={refilter} />}
           {shown.length === 0 ? (
             <NoMatch
               filter={filter}
               clear={() => {
-                setFilter("");
-                filterRef.current?.focus(); // the button unmounts with the message
+                refilter("");
+                // The button unmounts with the message. The field may too, if
+                // a take-off left the list too short to need it.
+                (showsFilter(books.length, "") ? filterRef.current : document.querySelector("h1"))?.focus();
               }}
             />
           ) : (
@@ -97,7 +110,7 @@ export function ToReadStack({
       )}
 
       <output className="sr-only">
-        {announcement(state, books.length, shown.length, filter)}
+        {announcement}
       </output>
     </div>
   );
@@ -234,12 +247,12 @@ function EmptyStack() {
   );
 }
 
-/** What the always-mounted output says: a take-off outranks a filter count. */
-function announcement(state: ToReadState, total: number, shown: number, filter: string): string {
-  if (state.saved === false) return "Taken off your to-read list.";
+/** What the always-mounted output says of a filter: the count, or nothing found. */
+function filterSaid(books: ToReadBook[], filter: string): string {
   if (filter.trim() === "") return "";
-  if (shown === 0) return `Nothing on your list matches “${filter.trim()}”.`;
-  return `${shown} of ${total} ${total === 1 ? "book matches" : "books match"}`;
+  const n = books.filter((book) => matchesFilter(book, filter)).length;
+  if (n === 0) return `Nothing on your list matches “${filter.trim()}”.`;
+  return `${n} of ${books.length} ${books.length === 1 ? "book matches" : "books match"}`;
 }
 
 /** A native search field on the page's ruled line, labelled in the band voice. */
