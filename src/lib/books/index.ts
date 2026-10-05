@@ -19,6 +19,7 @@ import {
   searchVolumes,
 } from "./google-books.ts";
 import { fetchWork, searchWorks, stripWorkPrefix } from "./openlibrary.ts";
+import { fold } from "../client-safe.ts";
 import type { BookDetail, BookQuery, BookSummary } from "./types.ts";
 
 export { coverUrl, jacket, sampleUrl, type CoverSize, type Jacket } from "./covers.ts";
@@ -94,16 +95,6 @@ const GOOGLE_SLOTS = 12;
 
 /** The page `GOOGLE_SLOTS` is a share of, and the step "show more" adds. */
 export const PAGE_SIZE = 20;
-
-/** Strip case, accents and punctuation, so "Piranèse" and "piranese" meet. */
-function fold(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replaceAll(/[̀-ͯ]/g, "")
-    .replaceAll(/[^a-z0-9]+/g, " ")
-    .trim();
-}
 
 /**
  * Pure. The identities a book answers to, for de-duplication.

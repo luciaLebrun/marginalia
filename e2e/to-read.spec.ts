@@ -21,6 +21,26 @@ test.describe("the bedside stack", () => {
     await expect(page.getByRole("list", { name: /newest saved first/ })).toBeVisible();
   });
 
+  test("shows no filter on a short list", async ({ page }) => {
+    await page.goto("/dev/to-read", { waitUntil: "networkidle" });
+    await expect(page.getByRole("searchbox")).toHaveCount(0);
+  });
+
+  test("filters a long pile, folded, and clearing a no-match returns focus to the field", async ({ page }) => {
+    await page.goto("/dev/to-read?state=long", { waitUntil: "networkidle" });
+    const field = page.getByRole("searchbox", { name: "Find in your list" });
+    await expect(spines(page)).toHaveCount(10);
+    await field.fill("FREAKONOMICS");
+    await expect(spines(page)).toHaveCount(2);
+    await field.fill("zzzz");
+    await expect(spines(page)).toHaveCount(0);
+    await expect(page.getByText("Nothing on your list matches “zzzz”.").first()).toBeVisible();
+    await page.getByRole("button", { name: "Clear the filter" }).click();
+    await expect(field).toBeFocused();
+    await expect(field).toHaveValue("");
+    await expect(spines(page)).toHaveCount(10);
+  });
+
   test("sets a thick book thicker in the pile than a thin one", async ({ page }) => {
     await page.goto("/dev/to-read", { waitUntil: "networkidle" });
     // 256 pages against 604. Matched on the whole title: "Dune" alone is in
@@ -87,6 +107,34 @@ test.describe("the bedside stack", () => {
     await expect(buttons).toHaveCount(1);
     await press(0);
     await expect(page.getByText("Nothing waiting")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
+  });
+
+  test("still announces a filter's count after a book has been taken off", async ({ page }) => {
+    await page.goto("/dev/to-read?state=long&stub=1", { waitUntil: "networkidle" });
+    const buttons = page.locator("[data-take-off]");
+    await buttons.nth(0).focus();
+    await page.keyboard.press("Enter");
+    await expect(buttons).toHaveCount(9);
+    await page.getByRole("searchbox", { name: "Find in your list" }).fill("zzzz");
+    await expect(page.locator("output")).toHaveText("Nothing on your list matches “zzzz”.");
+    await page.getByRole("button", { name: "Clear the filter" }).click();
+    await page.getByRole("searchbox", { name: "Find in your list" }).fill("dune");
+    await expect(page.locator("output")).toHaveText(/^\d+ of 9 books match$/);
+  });
+
+  test("hands focus to the heading when clearing leaves a list too short for the field", async ({ page }) => {
+    await page.goto("/dev/to-read?state=eight&stub=1", { waitUntil: "networkidle" });
+    const field = page.getByRole("searchbox", { name: "Find in your list" });
+    const title = (await page.locator("ol > li > div > a:not([aria-hidden]) span").first().textContent())!;
+    await field.fill(title);
+    const buttons = page.locator("[data-take-off]");
+    await buttons.nth(0).focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator("ol > li")).toHaveCount(1);
+    await field.fill("zzzz");
+    await page.getByRole("button", { name: "Clear the filter" }).click();
+    await expect(field).toHaveCount(0);
     await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
   });
 

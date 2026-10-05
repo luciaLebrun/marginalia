@@ -14,6 +14,8 @@ import type { ToReadBook } from "@/lib/to-read";
  *
  * - `stack` (default) — five books, newest saved first, one without a cover.
  * - `one` — a single book.
+ * - `long` — ten books, enough for the filter field.
+ * - `eight` — exactly the filter's threshold.
  * - `empty` — nothing waiting.
  *
  * `&stub=1` swaps the refusing action for one that succeeds after a pause and
@@ -59,6 +61,10 @@ export default async function DevToReadPage({ searchParams }: PageProps<"/dev/to
   const { state, stub } = await searchParams;
   let books = STACK;
   if (state === "empty") books = [];
+  else if (state === "long")
+    books = [...STACK, ...STACK].map((book, i) => ({ ...book, bookId: `${book.bookId}-${i}` }));
+  else if (state === "eight")
+    books = [...STACK, ...STACK].slice(0, 8).map((book, i) => ({ ...book, bookId: `${book.bookId}-${i}` }));
   else if (state === "one") books = STACK.slice(0, 1);
   return stub ? <RemovableToRead books={books} /> : <ToReadView books={books} />;
 }
