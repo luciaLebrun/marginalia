@@ -30,6 +30,7 @@ jobs:
       - name: Scan (report)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
+          version: v0.75.0  # the action defaults to v0.70.0; Dependabot cannot bump this input
           image-ref: ${{ matrix.image }}
           format: sarif
           ignore-unfixed: true
@@ -43,6 +44,7 @@ jobs:
       - name: Scan (gate)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
+          version: v0.75.0  # the action defaults to v0.70.0; Dependabot cannot bump this input
           image-ref: ${{ matrix.image }}
           severity: CRITICAL
           ignore-unfixed: true
