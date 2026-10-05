@@ -226,7 +226,8 @@ function AuthorBand({
         ) : (
           <>
             {shown.map((name, i) => (
-              <Fragment key={i}>
+              // A name can repeat in the data, so it carries its occurrence.
+              <Fragment key={`${name}#${shown.slice(0, i).filter((n) => n === name).length}`}>
                 {i > 0 && (i === shown.length - 1 && names.length <= 3 ? " and " : ", ")}
                 {link(name)}
               </Fragment>
