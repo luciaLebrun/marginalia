@@ -527,7 +527,8 @@ of the system, and it is what makes a second typeface unnecessary.
   hold a full-width band. Where band-voice text has to wrap — a state line beside a
   link in a record band at 390px, a two-author line in a book page's author band, the
   author at the foot of a type-only jacket — it takes 1.4 leading and balanced lines instead of
-  its resting line-height of 1. A spine's "Take it off", a to-read masthead's record
+  its resting line-height of 1 (the book page's author band takes 1.75, so a focus ring on a
+  wrapped author link clears the line above — MRG-090). A spine's "Take it off", a to-read masthead's record
   line and its "To read" link, and the saved line's "On your to-read list" are this
   voice as well.
 - **Meta** (500, 0.6875rem, soft ink, tabular): dates, "Unrated", counts, the
@@ -848,7 +849,9 @@ bedside stack, not a row in a list.
 - **Links and focus:** the words are the link to the book's page; the jacket is a
   second link to the same page, `tabIndex -1` and `aria-hidden`, so the ring bounds the
   words while the whole spine is clickable. That ring is the paper inset exception of
-  the Browser-Surface Rule.
+  the Browser-Surface Rule. After a spine is taken off, focus goes to the next spine's
+  "Take it off", else the previous one's, else the page heading, unless the reader has
+  moved elsewhere.
 - **Refusal:** printed under the spine it happened to, on that spine's own offset,
   never once under the whole stack: the sentence at the body step in alarm, its "Sign
   in again" link underlined in alarm at 40% and in full alarm under the pointer.
@@ -1027,8 +1030,13 @@ Character: a paperback's title page facing its frontispiece, not a store's produ
 page.
 
 - **Band one, author:** full width, 12px vertical inside the page padding. The author
-  line in band voice at 1.4 leading with balanced lines ("Author unknown" when there
-  is none; past three names, two and a count) left, "Your diary" right. Its ground
+  line in band voice at 1.75 leading with balanced lines ("Author unknown" when there
+  is none; past three names, two and a count) left, "Your diary" right. When the
+  book was opened from a search, "Your search" stands before "Your diary" (same
+  link style, 16px apart) and leads back to that search with both fields and the
+  "show more" count kept. The two links stay on one row at 390 — stacked they fail
+  2.5.8 spacing and crowd each other's focus ring — so the author line wraps
+  instead. Its ground
   follows the Earned Colour Rule, and its foreground, its link underline (40% of the
   foreground at rest, full under the pointer) and its focus ring all come from
   `readableOn()`. A 2px solid ink rule parts it from the wordmark band, which a
@@ -1186,7 +1194,7 @@ rating-first product block with a comment under it, and not a blog post with a b
 header over an article.
 
 - **Band one, colour:** full width on a 2px solid ink top rule, 12px vertical inside
-  the page padding. The author line in band voice at 1.4 leading with balanced lines,
+  the page padding. The author line in band voice at 1.75 leading with balanced lines,
   on the book's earned jacket colour — `bookBand(book, true)`, the Earned Colour Rule
   with the flag already earned — and its `readableOn()` foreground. The author is
   named here and nowhere else on the card.

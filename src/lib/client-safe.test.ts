@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { bookPath, publishedLabel } from "./client-safe";
+import { bookPath, matchesFilter, publishedLabel, showsFilter } from "./client-safe";
 
 describe("bookPath", () => {
   it("addresses the book page by bare work key", () => {
@@ -31,5 +31,32 @@ describe("publishedLabel", () => {
       expect(source).not.toMatch(/First published \{/);
       expect(source).toContain("publishedLabel");
     }
+  });
+});
+
+describe("matchesFilter", () => {
+  const book = { title: "Le Piranèse", authors: ["Susanna Clarke", "Émile Zola"] };
+
+  it("folds case and accents on both sides", () => {
+    expect(matchesFilter(book, "PIRANESE")).toBe(true);
+    expect(matchesFilter(book, "emile")).toBe(true);
+    expect(matchesFilter({ title: "Piranesi", authors: [] }, "Piranèse".slice(0, 6))).toBe(true);
+  });
+
+  it("needs every word, found in the title or an author", () => {
+    expect(matchesFilter(book, "clarke piranese")).toBe(true);
+    expect(matchesFilter(book, "clarke dune")).toBe(false);
+  });
+
+  it("matches everything when blank", () => {
+    expect(matchesFilter(book, "  ")).toBe(true);
+  });
+});
+
+describe("showsFilter", () => {
+  it("appears from eight books, and never leaves while it holds text", () => {
+    expect(showsFilter(7, "")).toBe(false);
+    expect(showsFilter(8, "")).toBe(true);
+    expect(showsFilter(3, "dune")).toBe(true);
   });
 });

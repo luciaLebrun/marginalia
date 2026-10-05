@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import search from "../../../../tests/fixtures/openlibrary-search-dune.json";
 import freakonomics from "../../../../tests/fixtures/openlibrary-search-freakonomics.json";
 import subtitled from "../../../../tests/fixtures/openlibrary-search-subtitled.json";
+import { RemovableToRead } from "./RemovableToRead";
 import { ToReadView } from "@/components/ToReadView";
 import { normalizeSearchResponse } from "@/lib/books/openlibrary";
 import type { ToReadBook } from "@/lib/to-read";
@@ -13,7 +14,12 @@ import type { ToReadBook } from "@/lib/to-read";
  *
  * - `stack` (default) — five books, newest saved first, one without a cover.
  * - `one` — a single book.
+ * - `long` — ten books, enough for the filter field.
+ * - `eight` — exactly the filter's threshold.
  * - `empty` — nothing waiting.
+ *
+ * `&stub=1` swaps the refusing action for one that succeeds after a pause and
+ * drops the spine, so the pending and focus-after states can be driven.
  *
  * The books are real recorded data. Which ones are saved, and when, is
  * invented, as `/dev/book` invents reads. Page counts other than Dune's (from
@@ -52,8 +58,13 @@ const STACK: ToReadBook[] = summaries
 export default async function DevToReadPage({ searchParams }: PageProps<"/dev/to-read">) {
   if (process.env.NODE_ENV === "production") notFound();
 
-  const { state } = await searchParams;
-  if (state === "empty") return <ToReadView books={[]} />;
-  if (state === "one") return <ToReadView books={STACK.slice(0, 1)} />;
-  return <ToReadView books={STACK} />;
+  const { state, stub } = await searchParams;
+  let books = STACK;
+  if (state === "empty") books = [];
+  else if (state === "long")
+    books = [...STACK, ...STACK].map((book, i) => ({ ...book, bookId: `${book.bookId}-${i}` }));
+  else if (state === "eight")
+    books = [...STACK, ...STACK].slice(0, 8).map((book, i) => ({ ...book, bookId: `${book.bookId}-${i}` }));
+  else if (state === "one") books = STACK.slice(0, 1);
+  return stub ? <RemovableToRead books={books} /> : <ToReadView books={books} />;
 }

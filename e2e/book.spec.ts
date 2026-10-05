@@ -545,13 +545,52 @@ test.describe("book page", () => {
     });
   });
 
-  test("keeps the way back to the diary on every state", async ({ page }) => {
-    for (const state of ["new", "shelf", "opening", "down", "missing"]) {
-      await page.goto(`/dev/book?state=${state}`, { waitUntil: "networkidle" });
+  // Server-rendered markup, so wait for `load`, not `networkidle` (MRG-078).
+  for (const state of ["new", "shelf", "opening", "down", "missing"]) {
+    test(`keeps the way back to the diary on the ${state} state`, async ({ page }) => {
+      await page.goto(`/dev/book?state=${state}`);
       await expect(page.getByRole("link", { name: "Your diary" })).toHaveAttribute(
         "href",
         "/dev/shelf",
       );
-    }
-  });
+    });
+  }
+});
+
+/* MRG-086: opened from a search, the book leads back to that same search. */
+test("a book opened from a search leads back to it, both fields kept", async ({ page }) => {
+  await page.goto("/dev/book?from=search&title=dune&author=herbert", { waitUntil: "networkidle" });
+
+  await page.getByRole("link", { name: "Your search" }).click();
+
+  await expect(page).toHaveURL(/\/dev\/search\?/);
+  await expect(page.getByRole("searchbox", { name: "Title" })).toHaveValue("dune");
+  await expect(page.getByRole("searchbox", { name: "Author" })).toHaveValue("herbert");
+});
+
+test("a book opened any other way offers no way back to a search", async ({ page }) => {
+  await page.goto("/dev/book", { waitUntil: "networkidle" });
+  await expect(page.getByRole("link", { name: "Your diary" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Your search" })).toHaveCount(0);
+});
+
+/* MRG-090: the author's name searches that author, and only that author. */
+test("each author's name links to a search scoped by that author", async ({ page }) => {
+  await page.goto("/dev/book", { waitUntil: "networkidle" });
+  const link = page.locator("article a[href^='/dev/search?author=']");
+  await expect(link).toHaveAttribute("href", "/dev/search?author=Frank+Herbert");
+  await link.click();
+  await expect(page.getByRole("searchbox", { name: "Author" })).toHaveValue("Frank Herbert");
+  await expect(page.getByRole("searchbox", { name: "Title" })).toHaveValue("");
+
+  await page.goto("/dev/book?state=authors", { waitUntil: "networkidle" });
+  await expect(page.locator("article a[href^='/dev/search?author=']")).toHaveCount(3);
+});
+
+test("past three authors, two are linked and the count is plain text", async ({ page }) => {
+  await page.goto("/dev/book?state=many-authors", { waitUntil: "networkidle" });
+  const band = page.locator("article > div").first().locator("p");
+  await expect(band.locator("a")).toHaveCount(2);
+  await expect(band).toHaveText(/ and 3 others$/);
+  await expect(band.getByRole("link", { name: /others/ })).toHaveCount(0);
 });

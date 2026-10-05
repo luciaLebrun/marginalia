@@ -46,7 +46,7 @@ export async function SearchResults({
         <div className="px-4 py-6 sm:px-6">
           <ol className="shelf-grid">
             {outcome.books.map((book) => (
-              <SearchResult key={book.sourceKey} book={book} />
+              <SearchResult key={book.sourceKey} book={book} query={query} shown={shown} />
             ))}
           </ol>
           {/* One element in both states, so the control stays mounted across

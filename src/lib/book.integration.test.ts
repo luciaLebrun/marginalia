@@ -44,7 +44,7 @@ function sources(found: BookDetail | null): BookSources {
       pageCount: 604,
       source: "openlibrary+google" as const,
     })),
-    bandColor: vi.fn(async () => "#8a4b2f"),
+    cover: vi.fn(async () => ({ color: "#8a4b2f", usable: true })),
   };
 }
 
@@ -53,7 +53,7 @@ function down(): BookSources {
   const fail = async () => {
     throw new TypeError("fetch failed");
   };
-  return { fetchBook: vi.fn(fail), enrich: vi.fn(fail), bandColor: vi.fn(fail) };
+  return { fetchBook: vi.fn(fail), enrich: vi.fn(fail), cover: vi.fn(fail) };
 }
 
 async function rowsFor(...keys: string[]) {
@@ -91,6 +91,16 @@ describe.skipIf(!hasRealDb)("opening a book (integration)", () => {
     expect(rows[0].id).toBe(outcome.book.id);
   });
 
+  it("stores no cover when the jacket is a placeholder (MRG-076)", async () => {
+    const src = sources({ ...detail(FRESH), coverUrl: "https://books.google.com/x?w=256" });
+    src.cover = vi.fn(async () => ({ color: null, usable: false }));
+    const outcome = await openBook(FRESH, src);
+
+    expect(outcome.kind).toBe("found");
+    if (outcome.kind !== "found") return;
+    expect(outcome.book).toMatchObject({ coverUrl: null, coverId: null, coverColor: null });
+  });
+
   /*
    * The invariant the table exists for: once a book is ours, Open Library
    * being down changes nothing about opening it.
@@ -103,7 +113,7 @@ describe.skipIf(!hasRealDb)("opening a book (integration)", () => {
 
     expect(again).toEqual(first);
     expect(outage.fetchBook).not.toHaveBeenCalled();
-    expect(outage.bandColor).not.toHaveBeenCalled();
+    expect(outage.cover).not.toHaveBeenCalled();
   });
 
   it("says unavailable, not not-found, when Open Library is down on a first open", async () => {
@@ -122,7 +132,7 @@ describe.skipIf(!hasRealDb)("opening a book (integration)", () => {
 
     await expect(openBook(MISSING, none)).resolves.toEqual({ kind: "not-found" });
 
-    expect(none.bandColor).not.toHaveBeenCalled();
+    expect(none.cover).not.toHaveBeenCalled();
     expect(await rowsFor(MISSING)).toHaveLength(0);
   });
 
@@ -143,7 +153,7 @@ describe.skipIf(!hasRealDb)("opening a book (integration)", () => {
     expect(outcome).toEqual(held);
     // Already ours, so no enrichment and no cover decode on the way.
     expect(viaStub.enrich).not.toHaveBeenCalled();
-    expect(viaStub.bandColor).not.toHaveBeenCalled();
+    expect(viaStub.cover).not.toHaveBeenCalled();
     expect(await rowsFor(STUB, SURVIVOR)).toHaveLength(1);
   });
 

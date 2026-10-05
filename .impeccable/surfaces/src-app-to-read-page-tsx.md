@@ -43,7 +43,9 @@ to log it, or take one off the pile.
 
 FIRST VIEWPORT: 1440 — wordmark band; masthead name field "To read" at display
 scale with the count at its right edge; ink record band "Newest saved on top"
-with "Your diary" at its right. Below, the stack on a 48rem measure: spines at
+with "Your diary" at its right. From 8 books (judged on the whole list, and kept while it holds text), a
+"Find in your list" field — a band-voice label over a ruled line, as the search
+page's fields — sits between the record band and the stack. Below, the stack on a 48rem measure: spines at
 least 3.5–6rem tall by page count (200–700 pages span the range), each offset
 0–1.5rem, "Take it off" in paper band voice inside the spine's footprint
 before the jacket, outside the link. 390 — the same stack across the gutter,
@@ -78,6 +80,10 @@ Empty · one book · many (tens) · a book with no cover (typographic jacket) ·
 no page count (the median spine height) · no author ("Author unknown") · a long
 title (wraps; the spine grows) · taking one off (pending) · taken off · signed
 out → `/` · no handle → `/claim`.
+
+Filtered · no match (a plain line naming the filter, "Clear the filter" below
+it, which returns focus to the field; a screen reader hears "N of M books
+match" or the no-match line through the page's output).
 
 ## Unresolved
 

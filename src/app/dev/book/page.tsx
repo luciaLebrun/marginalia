@@ -17,6 +17,7 @@ import { toggleDevFavouriteAction, toggleDevToReadAction } from "./actions";
 import { WordmarkBand } from "@/components/WordmarkBand";
 import type { Book } from "@/db/schema";
 import { toBookRow } from "@/lib/book";
+import { backToSearchHref } from "@/lib/search";
 import type { Read } from "@/lib/book-view";
 import { mergeGoogleVolume, normalizeVolume } from "@/lib/books/google-books";
 import { normalizeSearchResponse, normalizeWorkResponse } from "@/lib/books/openlibrary";
@@ -29,6 +30,8 @@ import { normalizeSearchResponse, normalizeWorkResponse } from "@/lib/books/open
  * `?state=`:
  *
  * - `new` (default) — Dune, not on the shelf: ink band, an empty slip.
+ *   Given `?from=search&title=…&author=…` it also offers the way back to that
+ *   search (MRG-086).
  * - `shelf` — Dune read twice: its jacket colour on the band, a reread.
  * - `fallback` — the same, with no extracted colour: the stable fallback band,
  *   which for this key is the wordmark's own orange.
@@ -41,6 +44,7 @@ import { normalizeSearchResponse, normalizeWorkResponse } from "@/lib/books/open
  * - `nocover` — a real coverless result: the type-only jacket.
  * - `subtitle` — a real book whose record carries a subtitle.
  * - `authors` — a real book with three names, to wrap the author band.
+ * - `many-authors` — five names, one repeated: two linked, then "and 3 others".
  * - `saved` — Dune on the to-read list, taken off and saved again by a
  *   stand-in action, so its pending and focus-after states can be driven.
  * - `favourite` — Dune read, and one of the reader's favourites, 2 of 3 (MRG-071).
@@ -131,6 +135,13 @@ const MANY_AUTHORS = stored(
   "dev-authors",
 );
 
+// Five names, to take the band past three: two linked, then "and 3 others".
+const FIVE_AUTHORS: Book = {
+  ...MANY_AUTHORS,
+  id: "dev-five-authors",
+  authors: ["Frank Herbert", "Brian Herbert", "Kevin J. Anderson", "Ursula K. Le Guin", "Frank Herbert"],
+};
+
 /*
  * Real-shaped ids: a slip line addresses its read's permalink, so a harness id
  * that is not a UUID would build a link the real route refuses.
@@ -170,17 +181,21 @@ const DIARY = "/dev/shelf";
 export default async function DevBookPage({ searchParams }: PageProps<"/dev/book">) {
   if (process.env.NODE_ENV === "production") notFound();
 
-  const { state } = await searchParams;
+  const params = await searchParams;
+  const { state } = params;
 
   return (
     <main className="flex-1">
       <WordmarkBand />
-      <State state={typeof state === "string" ? state : "new"} />
+      <State
+        state={typeof state === "string" ? state : "new"}
+        searchHref={backToSearchHref(params, "/dev/search", { source: "fixture" })}
+      />
     </main>
   );
 }
 
-function State({ state }: Readonly<{ state: string }>) {
+function State({ state, searchHref }: Readonly<{ state: string; searchHref?: string }>) {
   switch (state) {
     case "opening":
       return <BookOpening diaryHref={DIARY} />;
@@ -197,7 +212,27 @@ function State({ state }: Readonly<{ state: string }>) {
     case "subtitle":
       return <BookTitlePage book={SUBTITLED} reads={[]} username="lucia" diaryHref={DIARY} />;
     case "authors":
-      return <BookTitlePage book={MANY_AUTHORS} reads={[]} username="lucia" diaryHref={DIARY} />;
+      return (
+        <BookTitlePage
+          book={MANY_AUTHORS}
+          reads={[]}
+          username="lucia"
+          diaryHref={DIARY}
+          searchAction="/dev/search"
+          searchHref={searchHref}
+        />
+      );
+    case "many-authors":
+      return (
+        <BookTitlePage
+          book={FIVE_AUTHORS}
+          reads={[]}
+          username="lucia"
+          diaryHref={DIARY}
+          searchAction="/dev/search"
+          searchHref={searchHref}
+        />
+      );
     case "saved":
       return (
         <BookTitlePage
@@ -256,6 +291,15 @@ function State({ state }: Readonly<{ state: string }>) {
     case "undated":
       return <BookTitlePage book={DUNE} reads={UNDATED_READS} username="lucia" diaryHref={DIARY} />;
     default:
-      return <BookTitlePage book={DUNE} reads={[]} username="lucia" diaryHref={DIARY} />;
+      return (
+        <BookTitlePage
+          book={DUNE}
+          reads={[]}
+          username="lucia"
+          diaryHref={DIARY}
+          searchAction="/dev/search"
+          searchHref={searchHref}
+        />
+      );
   }
 }

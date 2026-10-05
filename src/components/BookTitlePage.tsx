@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Fragment } from "react";
 
 import { Cover } from "./Cover";
 import { DateSlip } from "./DateSlip";
@@ -14,6 +15,7 @@ import {
   imprintRows,
   type Read,
 } from "@/lib/book-view";
+import { authorSearchHref } from "@/lib/search";
 
 /**
  * A book, opened: its title page, and the slip of this reader's reads.
@@ -32,6 +34,8 @@ export function BookTitlePage({
   favourite = { isFavourite: false, full: false, position: -1, count: 0 },
   username,
   diaryHref = "/",
+  searchHref,
+  searchAction = "/search",
   toReadAction,
   favouriteAction,
   favouriteMoveAction,
@@ -46,6 +50,10 @@ export function BookTitlePage({
   username: string;
   /** The dev harness points this at its own shelf. */
   diaryHref?: string;
+  /** The search this book was opened from, when it was (MRG-086). */
+  searchHref?: string;
+  /** Where an author's name searches; the dev harness points it at its own. */
+  searchAction?: string;
   /** The dev harness's session-free stand-ins for the to-read action… */
   toReadAction?: (previous: ToReadState, form: FormData) => Promise<ToReadState>;
   /** …the favourite action… */
@@ -59,7 +67,13 @@ export function BookTitlePage({
 
   return (
     <article>
-      <AuthorBand text={authorLine(book.authors)} band={band} diaryHref={diaryHref} />
+      <AuthorBand
+        authors={book.authors}
+        band={band}
+        diaryHref={diaryHref}
+        searchAction={searchAction}
+        searchHref={searchHref}
+      />
 
       {/* The jacket's column is sized to the jacket, so the title page faces
           it across one gap rather than across the dead half of a third. */}
@@ -163,14 +177,31 @@ export function BookTitlePage({
  * vanishes on ink, and a fixed paper ring would vanish on a pale jacket.
  */
 function AuthorBand({
-  text,
+  authors,
   band,
   diaryHref,
+  searchHref,
+  searchAction,
 }: Readonly<{
-  text: string;
+  authors: readonly string[];
   band: { background: string; color: string };
   diaryHref: string;
+  searchHref?: string;
+  searchAction: string;
 }>) {
+  const names = authors.map((name) => name.trim()).filter(Boolean);
+  // authorLine's wording, with each named author a link (MRG-090): the author
+  // line of the split search, so the scoped search stays strict.
+  const link = (name: string) => (
+    <Link
+      href={authorSearchHref(name, searchAction)}
+      className="inline-block leading-none underline underline-offset-4 transition-colors [text-decoration-color:color-mix(in_srgb,var(--band-tone)_40%,transparent)] hover:[text-decoration-color:var(--band-tone)] focus-visible:[outline-color:var(--band-tone)]"
+    >
+      {name}
+    </Link>
+  );
+  const shown = names.length > 3 ? names.slice(0, 2) : names;
+  const text = authorLine(authors);
   return (
     <div
       // A 2px ink rule — the world's ruled-line weight — between this band and
@@ -186,14 +217,35 @@ function AuthorBand({
       }
     >
       {/* A two-author line wraps at 390, so it takes real leading and balanced
-          lines rather than the band voice's line-height of 1. */}
-      <p className="band-label leading-[1.4]! text-balance">{text}</p>
-      <Link
-        href={diaryHref}
-        className="band-label shrink-0 underline underline-offset-4 transition-colors [text-decoration-color:color-mix(in_srgb,var(--band-tone)_40%,transparent)] hover:[text-decoration-color:var(--band-tone)] focus-visible:[outline-color:var(--band-tone)]"
-      >
-        Your diary
-      </Link>
+          lines rather than the band voice's line-height of 1. 1.75, not 1.4,
+          and leading-none on each link: the 2px ring sits 2px out, so on a
+          wrapped second line it must clear the first line's underline. */}
+      <p className="band-label leading-[1.75]! text-balance">
+        {names.length === 0 ? (
+          text
+        ) : (
+          <>
+            {shown.map((name, i) => (
+              // A name can repeat in the data, so it carries its occurrence.
+              <Fragment key={`${name}#${shown.slice(0, i).filter((n) => n === name).length}`}>
+                {i > 0 && (i === shown.length - 1 && names.length <= 3 ? " and " : ", ")}
+                {link(name)}
+              </Fragment>
+            ))}
+            {names.length > 3 && ` and ${names.length - 2} others`}
+          </>
+        )}
+      </p>
+      <nav aria-label="Ways back" className="flex shrink-0 flex-row gap-4">
+        {searchHref && (
+          <Link href={searchHref} className="band-label shrink-0 underline underline-offset-4 transition-colors [text-decoration-color:color-mix(in_srgb,var(--band-tone)_40%,transparent)] hover:[text-decoration-color:var(--band-tone)] focus-visible:[outline-color:var(--band-tone)]">
+            Your search
+          </Link>
+        )}
+        <Link href={diaryHref} className="band-label shrink-0 underline underline-offset-4 transition-colors [text-decoration-color:color-mix(in_srgb,var(--band-tone)_40%,transparent)] hover:[text-decoration-color:var(--band-tone)] focus-visible:[outline-color:var(--band-tone)]">
+          Your diary
+        </Link>
+      </nav>
     </div>
   );
 }
