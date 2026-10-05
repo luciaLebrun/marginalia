@@ -49,7 +49,7 @@ test.describe("the door", () => {
 
     // Scoped to the form's own error: Next's route announcer is also role=alert.
     await expect(page.locator("#code-error")).toContainText(/not valid|already used/i);
-    await expect(page).toHaveURL(/localhost:3000\/$/);
+    await expect(page).toHaveURL(/^https?:\/\/[^/]+\/$/);
   });
 });
 
