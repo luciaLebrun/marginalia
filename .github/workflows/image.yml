@@ -72,6 +72,7 @@ jobs:
           TRIVY_USERNAME: ${{ github.actor }}
           TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         with:
+          version: v0.75.0  # the action defaults to v0.70.0; Dependabot cannot bump this input
           image-ref: ghcr.io/lucialebrun/marginalia-tools@${{ steps.build-tools.outputs.digest }}
           format: sarif
           ignore-unfixed: true
@@ -88,6 +89,7 @@ jobs:
           TRIVY_USERNAME: ${{ github.actor }}
           TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         with:
+          version: v0.75.0  # the action defaults to v0.70.0; Dependabot cannot bump this input
           image-ref: ghcr.io/lucialebrun/marginalia-tools@${{ steps.build-tools.outputs.digest }}
           severity: CRITICAL
           ignore-unfixed: true
@@ -116,6 +118,7 @@ jobs:
           TRIVY_USERNAME: ${{ github.actor }}
           TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         with:
+          version: v0.75.0  # the action defaults to v0.70.0; Dependabot cannot bump this input
           image-ref: ghcr.io/lucialebrun/marginalia@${{ steps.build-app.outputs.digest }}
           format: sarif
           ignore-unfixed: true
@@ -132,6 +135,7 @@ jobs:
           TRIVY_USERNAME: ${{ github.actor }}
           TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         with:
+          version: v0.75.0  # the action defaults to v0.70.0; Dependabot cannot bump this input
           image-ref: ghcr.io/lucialebrun/marginalia@${{ steps.build-app.outputs.digest }}
           severity: CRITICAL
           ignore-unfixed: true
