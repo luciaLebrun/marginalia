@@ -8,6 +8,7 @@ import {
   MAX_SHOWN,
   SEARCH_LIMIT,
   backToSearchHref,
+  authorSearchHref,
   bandText,
   endLine,
   fromSearchParams,
@@ -320,5 +321,16 @@ describe("the way back to a search (MRG-086)", () => {
     const href = backToSearchHref({ from: "https://evil.example", title: "x" });
     expect(href).toBeUndefined();
     expect(backToSearchHref({ from: "search", title: "//evil.example" })).toMatch(/^\/search\?/);
+  });
+});
+
+describe("authorSearchHref (MRG-090)", () => {
+  it("scopes the search by author alone, and encodes it", () => {
+    expect(authorSearchHref("Frank Herbert")).toBe("/search?author=Frank+Herbert");
+    expect(authorSearchHref("Anne-Fleur Multon")).toBe("/search?author=Anne-Fleur+Multon");
+    expect(authorSearchHref("Gaël Faye")).toBe("/search?author=Ga%C3%ABl+Faye");
+    expect(authorSearchHref("Strunk & White", "/dev/search")).toBe(
+      "/dev/search?author=Strunk+%26+White",
+    );
   });
 });

@@ -573,3 +573,24 @@ test("a book opened any other way offers no way back to a search", async ({ page
   await expect(page.getByRole("link", { name: "Your diary" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Your search" })).toHaveCount(0);
 });
+
+/* MRG-090: the author's name searches that author, and only that author. */
+test("each author's name links to a search scoped by that author", async ({ page }) => {
+  await page.goto("/dev/book", { waitUntil: "networkidle" });
+  const link = page.locator("article a[href^='/dev/search?author=']");
+  await expect(link).toHaveAttribute("href", "/dev/search?author=Frank+Herbert");
+  await link.click();
+  await expect(page.getByRole("searchbox", { name: "Author" })).toHaveValue("Frank Herbert");
+  await expect(page.getByRole("searchbox", { name: "Title" })).toHaveValue("");
+
+  await page.goto("/dev/book?state=authors", { waitUntil: "networkidle" });
+  await expect(page.locator("article a[href^='/dev/search?author=']")).toHaveCount(3);
+});
+
+test("past three authors, two are linked and the count is plain text", async ({ page }) => {
+  await page.goto("/dev/book?state=many-authors", { waitUntil: "networkidle" });
+  const band = page.locator("article > div").first().locator("p");
+  await expect(band.locator("a")).toHaveCount(2);
+  await expect(band).toHaveText(/ and 3 others$/);
+  await expect(band.getByRole("link", { name: /others/ })).toHaveCount(0);
+});

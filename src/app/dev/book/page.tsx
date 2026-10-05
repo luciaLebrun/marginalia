@@ -44,6 +44,7 @@ import { normalizeSearchResponse, normalizeWorkResponse } from "@/lib/books/open
  * - `nocover` — a real coverless result: the type-only jacket.
  * - `subtitle` — a real book whose record carries a subtitle.
  * - `authors` — a real book with three names, to wrap the author band.
+ * - `many-authors` — five names, one repeated: two linked, then "and 3 others".
  * - `saved` — Dune on the to-read list, taken off and saved again by a
  *   stand-in action, so its pending and focus-after states can be driven.
  * - `favourite` — Dune read, and one of the reader's favourites, 2 of 3 (MRG-071).
@@ -134,6 +135,13 @@ const MANY_AUTHORS = stored(
   "dev-authors",
 );
 
+// Five names, to take the band past three: two linked, then "and 3 others".
+const FIVE_AUTHORS: Book = {
+  ...MANY_AUTHORS,
+  id: "dev-five-authors",
+  authors: ["Frank Herbert", "Brian Herbert", "Kevin J. Anderson", "Ursula K. Le Guin", "Frank Herbert"],
+};
+
 /*
  * Real-shaped ids: a slip line addresses its read's permalink, so a harness id
  * that is not a UUID would build a link the real route refuses.
@@ -205,7 +213,25 @@ function State({ state, searchHref }: Readonly<{ state: string; searchHref?: str
       return <BookTitlePage book={SUBTITLED} reads={[]} username="lucia" diaryHref={DIARY} />;
     case "authors":
       return (
-        <BookTitlePage book={MANY_AUTHORS} reads={[]} username="lucia" diaryHref={DIARY} searchHref={searchHref} />
+        <BookTitlePage
+          book={MANY_AUTHORS}
+          reads={[]}
+          username="lucia"
+          diaryHref={DIARY}
+          searchAction="/dev/search"
+          searchHref={searchHref}
+        />
+      );
+    case "many-authors":
+      return (
+        <BookTitlePage
+          book={FIVE_AUTHORS}
+          reads={[]}
+          username="lucia"
+          diaryHref={DIARY}
+          searchAction="/dev/search"
+          searchHref={searchHref}
+        />
       );
     case "saved":
       return (
@@ -271,6 +297,7 @@ function State({ state, searchHref }: Readonly<{ state: string; searchHref?: str
           reads={[]}
           username="lucia"
           diaryHref={DIARY}
+          searchAction="/dev/search"
           searchHref={searchHref}
         />
       );

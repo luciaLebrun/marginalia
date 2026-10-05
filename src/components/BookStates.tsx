@@ -38,7 +38,7 @@ export function BookOpening({ diaryHref }: Readonly<{ diaryHref?: string }>) {
   return (
     <div>
       <StateBand diaryHref={diaryHref}>
-        <output className="band-label leading-[1.4]!">Opening this book…</output>
+        <output className="band-label leading-[1.75]!">Opening this book…</output>
       </StateBand>
       <div
         aria-hidden="true"
@@ -69,7 +69,7 @@ export function BookUnavailable({ diaryHref }: Readonly<{ diaryHref?: string }>)
   return (
     <div>
       <StateBand diaryHref={diaryHref}>
-        <h1 className="band-label leading-[1.4]!">Book unavailable</h1>
+        <h1 className="band-label leading-[1.75]!">Book unavailable</h1>
       </StateBand>
       <div className="border-b border-rule bg-paper-sunk px-4 py-6 sm:px-6">
         <p className="max-w-[38rem] text-[0.9375rem] leading-relaxed text-ink-soft">
@@ -87,7 +87,7 @@ export function BookNotFound({ diaryHref }: Readonly<{ diaryHref?: string }>) {
   return (
     <div>
       <StateBand diaryHref={diaryHref}>
-        <h1 className="band-label leading-[1.4]!">Book not found</h1>
+        <h1 className="band-label leading-[1.75]!">Book not found</h1>
       </StateBand>
       <div className="px-4 py-6 sm:px-6">
         <p className="max-w-[38rem] text-[0.9375rem] leading-relaxed text-ink-soft">

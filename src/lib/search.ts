@@ -65,6 +65,11 @@ export function parseQuery(params: {
   return { title: parseTerm(params.title), author: parseTerm(params.author) };
 }
 
+/** A search scoped by this author alone (MRG-090): the author line, strict. */
+export function authorSearchHref(author: string, action = "/search"): string {
+  return `${action}?${new URLSearchParams({ author })}`;
+}
+
 /**
  * The search a book was opened from (MRG-086), carried on the book's address:
  * `?from=search&title=…&author=…`. Only ever the two terms, re-parsed and
