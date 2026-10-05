@@ -21,7 +21,8 @@ import { fromSearchParams, type BookQuery } from "@/lib/search";
 export function SearchResult({
   book,
   query,
-}: Readonly<{ book: BookSummary; query: BookQuery }>) {
+  shown,
+}: Readonly<{ book: BookSummary; query: BookQuery; shown?: number }>) {
   const author = book.authors[0];
   const year = book.firstPublishYear;
 
@@ -41,7 +42,7 @@ export function SearchResult({
     <li className="self-stretch">
       <Link
         // The search rides along so the book page can offer the way back (MRG-086).
-        href={`${bookPath(book.sourceKey)}?${fromSearchParams(query)}`}
+        href={`${bookPath(book.sourceKey)}?${fromSearchParams(query, shown)}`}
         aria-label={label}
         // Opening a book copies it into our database (MRG-014). Prefetching
         // would do that for every result in view, not the one the reader chose.

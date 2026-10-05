@@ -305,6 +305,12 @@ describe("the way back to a search (MRG-086)", () => {
     );
   });
 
+  it("keeps the reader's place in show more, and ignores a count it cannot honour", () => {
+    const params = Object.fromEntries(new URLSearchParams(fromSearchParams(q("dune"), 40)));
+    expect(backToSearchHref(params)).toBe("/search?title=dune&shown=40");
+    expect(backToSearchHref({ from: "search", title: "dune", shown: "41" })).toBe("/search?title=dune");
+  });
+
   it("is absent unless the book was opened from a search", () => {
     expect(backToSearchHref({ title: "dune" })).toBeUndefined();
     expect(backToSearchHref({ from: "search" })).toBeUndefined();

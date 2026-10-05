@@ -213,7 +213,10 @@ test.describe("show more", () => {
   }) => {
     await page.goto("/dev/search?title=dune&source=full", { waitUntil: "networkidle" });
     await expect(cells(page)).toHaveCount(20);
-    const firstKey = await cells(page).first().locator("a").getAttribute("href");
+    // The book's path; the query after it carries the show-more count (MRG-086).
+    const firstPath = async () =>
+      (await cells(page).first().locator("a").getAttribute("href"))?.split("?")[0];
+    const firstKey = await firstPath();
 
     await more(page).scrollIntoViewIfNeeded();
     const before = await page.evaluate(() => window.scrollY);
@@ -224,7 +227,7 @@ test.describe("show more", () => {
     await expect(page).toHaveURL(/[?&]source=full(&|$)/);
     // The reader stays where they were; the new books are below them.
     expect(await page.evaluate(() => window.scrollY)).toBe(before);
-    expect(await cells(page).first().locator("a").getAttribute("href")).toBe(firstKey);
+    expect(await firstPath()).toBe(firstKey);
     await expect(page.getByRole("status")).toHaveText(/^First 40/);
 
     await more(page).click();

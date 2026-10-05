@@ -12,7 +12,7 @@ import { getReads } from "@/lib/book-view";
 import { isOnToRead } from "@/lib/to-read";
 import { getFavouriteState } from "@/lib/favourites";
 import { bookPath } from "@/lib/client-safe";
-import { backToSearchHref, fromSearchParams, parseQuery } from "@/lib/search";
+import { backToSearchHref, fromSearchParams, parseQuery, parseShown } from "@/lib/search";
 
 /**
  * One book, opened.
@@ -44,7 +44,7 @@ export default async function BookPage({ params, searchParams }: PageProps<"/boo
           userId={session.user.id}
           username={session.user.username}
           searchHref={backToSearchHref(from)}
-          fromSearch={fromSearchParams(parseQuery(from))}
+          fromSearch={fromSearchParams(parseQuery(from), parseShown(from.shown))}
         />
       </Suspense>
     </main>

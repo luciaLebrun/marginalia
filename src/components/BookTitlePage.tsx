@@ -193,10 +193,7 @@ function AuthorBand({
       {/* A two-author line wraps at 390, so it takes real leading and balanced
           lines rather than the band voice's line-height of 1. */}
       <p className="band-label leading-[1.4]! text-balance">{text}</p>
-<nav
-        aria-label="Ways back"
-        className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:gap-4"
-      >
+      <nav aria-label="Ways back" className="flex shrink-0 flex-row gap-4">
         {searchHref && (
           <Link href={searchHref} className="band-label shrink-0 underline underline-offset-4 transition-colors [text-decoration-color:color-mix(in_srgb,var(--band-tone)_40%,transparent)] hover:[text-decoration-color:var(--band-tone)] focus-visible:[outline-color:var(--band-tone)]">
             Your search
