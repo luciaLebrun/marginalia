@@ -1,7 +1,9 @@
 import jpeg from "jpeg-js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { bandColorFromCover, dominantColor } from "./cover-color";
+import { readFileSync } from "node:fs";
+
+import { bandColorFromCover, dominantColor, inspectCover, isStrip } from "./cover-color";
 import { hexToRgb, rgbToHsl } from "./color";
 
 /** Build an RGBA buffer from a function of (x, y). */
@@ -181,5 +183,36 @@ describe("bandColorFromCover", () => {
       arrayBuffer: async () => new Uint8Array(4096).fill(0x41).buffer,
     });
     await expect(bandColorFromCover("https://covers.openlibrary.org/b/id/1-M.jpg")).resolves.toBeNull();
+  });
+});
+
+describe("unusable Google jackets (MRG-076)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("flags the real 'image not available' placeholder, as served at w=256", async () => {
+    const bytes = readFileSync("tests/fixtures/google-books-placeholder-w256.png");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, arrayBuffer: async () => bytes }),
+    );
+    await expect(inspectCover("https://books.google.com/books/content?id=x&w=256")).resolves.toEqual({
+      color: null,
+      usable: false,
+    });
+  });
+
+  it("flags a strip, not a portrait jacket", () => {
+    expect(isStrip(256, 41)).toBe(true);
+    expect(isStrip(256, 366)).toBe(false);
+  });
+
+  it("keeps a real jacket and an undecodable fetch usable", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, arrayBuffer: async () => jpegOf(30, 90, 200) }),
+    );
+    await expect(inspectCover("https://books.google.com/x")).resolves.toMatchObject({ usable: true });
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("down")));
+    await expect(inspectCover("https://books.google.com/x")).resolves.toEqual({ color: null, usable: true });
   });
 });
