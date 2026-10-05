@@ -1030,7 +1030,12 @@ page.
 
 - **Band one, author:** full width, 12px vertical inside the page padding. The author
   line in band voice at 1.4 leading with balanced lines ("Author unknown" when there
-  is none; past three names, two and a count) left, "Your diary" right. Its ground
+  is none; past three names, two and a count) left, "Your diary" right. When the
+  book was opened from a search, "Your search" stands before "Your diary" (same
+  link style, 16px apart) and leads back to that search with both fields and the
+  "show more" count kept. The two links stay on one row at 390 — stacked they fail
+  2.5.8 spacing and crowd each other's focus ring — so the author line wraps
+  instead. Its ground
   follows the Earned Colour Rule, and its foreground, its link underline (40% of the
   foreground at rest, full under the pointer) and its focus ring all come from
   `readableOn()`. A 2px solid ink rule parts it from the wordmark band, which a

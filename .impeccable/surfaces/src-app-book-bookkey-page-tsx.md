@@ -32,6 +32,10 @@ facing the title page — title at display scale, subtitle, imprint rows split b
 hairlines. Record: the date slip, ruled lines of reads — date, drawn rating,
 Reread — closed by one ruled blank line. Paper, ink, soft ink, sunk paper; no
 new tone, type step or motion.
+Opened from a search result (`?from=search&title&author&shown`), band one also
+carries "Your search" before "Your diary", leading back to that same search at the
+same "show more" count; one row at every width, the author line wraps instead.
+Opened any other way, it is absent.
 
 STORY: The reader recognises the jacket and the title set large beside it,
 reads who wrote it and when, and sees on the slip whether and when they read it

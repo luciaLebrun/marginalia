@@ -12,6 +12,7 @@ import { getReads } from "@/lib/book-view";
 import { isOnToRead } from "@/lib/to-read";
 import { getFavouriteState } from "@/lib/favourites";
 import { bookPath } from "@/lib/client-safe";
+import { backToSearchHref, fromSearchParams, parseQuery, parseShown } from "@/lib/search";
 
 /**
  * One book, opened.
@@ -20,12 +21,13 @@ import { bookPath } from "@/lib/client-safe";
  * before writes it into the database, so a signed-out crawler walking book keys
  * could fill the free-tier `book` table.
  */
-export default async function BookPage({ params }: PageProps<"/book/[bookKey]">) {
+export default async function BookPage({ params, searchParams }: PageProps<"/book/[bookKey]">) {
   const session = await getAuth().api.getSession({ headers: await headers() });
   if (!session) redirect("/");
   if (!session.user.username) redirect("/claim");
 
   const { bookKey } = await params;
+  const from = await searchParams;
   // Before the stream starts, so a malformed address is a real 404 status.
   if (!parseBookKey(bookKey)) notFound();
 
@@ -41,6 +43,8 @@ export default async function BookPage({ params }: PageProps<"/book/[bookKey]">)
           bookKey={bookKey}
           userId={session.user.id}
           username={session.user.username}
+          searchHref={backToSearchHref(from)}
+          fromSearch={fromSearchParams(parseQuery(from), parseShown(from.shown))}
         />
       </Suspense>
     </main>
@@ -51,7 +55,15 @@ async function OpenedBook({
   bookKey,
   userId,
   username,
-}: Readonly<{ bookKey: string; userId: string; username: string }>) {
+  searchHref,
+  fromSearch,
+}: Readonly<{
+  bookKey: string;
+  userId: string;
+  username: string;
+  searchHref?: string;
+  fromSearch: string;
+}>) {
   const outcome = await openBook(bookKey);
 
   if (outcome.kind === "not-found") notFound();
@@ -60,7 +72,9 @@ async function OpenedBook({
   const { book } = outcome;
   // A redirect stub resolves to the surviving work, which is stored under its
   // own key. One address per book.
-  if (book.sourceKey !== parseBookKey(bookKey)) redirect(bookPath(book.sourceKey));
+  if (book.sourceKey !== parseBookKey(bookKey)) {
+    redirect(searchHref ? `${bookPath(book.sourceKey)}?${fromSearch}` : bookPath(book.sourceKey));
+  }
 
   const [reads, onToRead, favourite] = await Promise.all([
     getReads(userId, book.id),
@@ -74,6 +88,7 @@ async function OpenedBook({
       onToRead={onToRead}
       favourite={favourite}
       username={username}
+      searchHref={searchHref}
     />
   );
 }

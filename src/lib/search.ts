@@ -66,6 +66,40 @@ export function parseQuery(params: {
 }
 
 /**
+ * The search a book was opened from (MRG-086), carried on the book's address:
+ * `?from=search&title=…&author=…`. Only ever the two terms, re-parsed and
+ * re-encoded, and only ever rebuilt into a path on this site — the address is
+ * never followed as given, so it cannot become an open redirect.
+ */
+export function fromSearchParams(query: BookQuery, shown = SEARCH_LIMIT): string {
+  return new URLSearchParams({
+    from: "search",
+    ...(query.title && { title: query.title }),
+    ...(query.author && { author: query.author }),
+    // The reader's place in "show more", so the way back lands where they were.
+    ...(shown > SEARCH_LIMIT && { shown: String(shown) }),
+  }).toString();
+}
+
+/** The way back to the search a book was opened from; none for any other way in. */
+export function backToSearchHref(
+  params: { from?: unknown; title?: unknown; author?: unknown; shown?: unknown },
+  action = "/search",
+  extra?: Record<string, string>,
+): string | undefined {
+  if (params.from !== "search") return undefined;
+  const query = parseQuery(params);
+  if (isBlank(query)) return undefined;
+  const shown = parseShown(params.shown);
+  return `${action}?${new URLSearchParams({
+    ...extra,
+    ...(query.title && { title: query.title }),
+    ...(query.author && { author: query.author }),
+    ...(shown > SEARCH_LIMIT && { shown: String(shown) }),
+  })}`;
+}
+
+/**
  * How many results the URL asks for: `?shown=40`. Only a whole number of
  * pages up to `MAX_SHOWN` counts; anything else is the first page, because a
  * hand-edited URL deserves the ordinary search, not an error.
