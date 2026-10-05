@@ -32,6 +32,9 @@ facing the title page — title at display scale, subtitle, imprint rows split b
 hairlines. Record: the date slip, ruled lines of reads — date, drawn rating,
 Reread — closed by one ruled blank line. Paper, ink, soft ink, sunk paper; no
 new tone, type step or motion.
+Each named author links to `/search?author=<name>` (the author line of the split
+search, strict). With more than three authors the two named are links and
+"and N others" stays plain text.
 Opened from a search result (`?from=search&title&author&shown`), band one also
 carries "Your search" before "Your diary", leading back to that same search at the
 same "show more" count; one row at every width, the author line wraps instead.
@@ -72,7 +75,7 @@ frontispiece and title frame; no skeleton cards) · unavailable
 (soft ink on sunk paper; the diary is unaffected) · not found (a 404 in the
 world's voice; may stream as a soft 404 with noindex) · redirect stub →
 canonical `/book/[key]` · signed out → `/` · no handle → `/claim` · no cover →
-typographic jacket · no author → "Author unknown" · an absent imprint value →
+typographic jacket · no author → "Author unknown" · more than three authors → two linked names and a plain "and N others" · an absent imprint value →
 its row omitted.
 
 ## Log sheet (MRG-016) — extension, confirmed with the user
