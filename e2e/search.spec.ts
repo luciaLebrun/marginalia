@@ -183,7 +183,7 @@ test.describe("search", () => {
 
 test("the real route sends a signed-out visitor to the door", async ({ page }) => {
   await page.goto("/search?title=dune");
-  await expect(page).toHaveURL(/localhost:3000\/$/);
+  await expect(page).toHaveURL(/^https?:\/\/[^/]+\/$/);
 });
 
 /*

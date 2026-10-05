@@ -10,7 +10,7 @@ import {
   sampleUrl,
   type BookDetail,
 } from "@/lib/books";
-import { bandColorFromCover } from "@/lib/cover-color";
+import { inspectCover, type CoverInspection } from "@/lib/cover-color";
 
 /**
  * Opening a book: the one place a book enters our database.
@@ -34,7 +34,7 @@ export type BookOutcome =
 export interface BookSources {
   fetchBook: (sourceKey: string) => Promise<BookDetail | null>;
   enrich: (detail: BookDetail) => Promise<BookDetail>;
-  bandColor: (detail: BookDetail) => Promise<string | null>;
+  cover: (detail: BookDetail) => Promise<CoverInspection>;
 }
 
 const live: BookSources = {
@@ -42,7 +42,7 @@ const live: BookSources = {
   // Google first for the description and page count, then Open Library for a
   // category Google did not give. Both best-effort, neither throws.
   enrich: (detail) => enrich(detail).then(fillCategory),
-  bandColor: (detail) => bandColorFromCover(sampleUrl(detail)),
+  cover: (detail) => inspectCover(sampleUrl(detail)),
 };
 
 export { parseBookKey } from "@/lib/books";
@@ -134,17 +134,23 @@ export async function openBook(
   }
 
   // Both are best-effort and never throw; neither depends on the other.
-  const [enriched, coverColor] = await Promise.all([
+  const [enriched, cover] = await Promise.all([
     sources.enrich(detail),
-    sources.bandColor(detail),
+    sources.cover(detail),
   ]);
+  // A placeholder is an image, so it would beat the coverless jacket (MRG-064).
+  // Dropped here, the one door a book enters by, rather than at each source.
+  if (!cover.usable) {
+    enriched.coverUrl = undefined;
+    enriched.coverId = undefined;
+  }
 
   // Two readers opening the same new book race here. The unique index on
   // ol_work_key decides, and the loser reads the winner's row rather than
   // failing — a check-then-insert would let both through.
   const [inserted] = await getDb()
     .insert(schema.book)
-    .values({ id: crypto.randomUUID(), ...toBookRow(enriched, coverColor) })
+    .values({ id: crypto.randomUUID(), ...toBookRow(enriched, cover.color) })
     .onConflictDoNothing({ target: schema.book.sourceKey })
     .returning();
 

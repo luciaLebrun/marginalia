@@ -545,15 +545,16 @@ test.describe("book page", () => {
     });
   });
 
-  test("keeps the way back to the diary on every state", async ({ page }) => {
-    for (const state of ["new", "shelf", "opening", "down", "missing"]) {
-      await page.goto(`/dev/book?state=${state}`, { waitUntil: "networkidle" });
+  // Server-rendered markup, so wait for `load`, not `networkidle` (MRG-078).
+  for (const state of ["new", "shelf", "opening", "down", "missing"]) {
+    test(`keeps the way back to the diary on the ${state} state`, async ({ page }) => {
+      await page.goto(`/dev/book?state=${state}`);
       await expect(page.getByRole("link", { name: "Your diary" })).toHaveAttribute(
         "href",
         "/dev/shelf",
       );
-    }
-  });
+    });
+  }
 });
 
 /* MRG-086: opened from a search, the book leads back to that same search. */
