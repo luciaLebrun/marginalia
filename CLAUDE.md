@@ -178,7 +178,7 @@ the same reason `getDb()` is.
   Library works. Either source failing leaves the other standing.
   **A query is a title and an author, kept apart all the way down** (MRG-068):
   `searchBooks()` takes a `BookQuery`, and each source scopes the two itself —
-  Google as `intitle:"…" inauthor:"…"`, Open Library as its `title` / `author`
+  Google as plain words filtered by `matchesQuery` (its `intitle:`/`inauthor:` operators broke 2026-10-04, MRG-088), Open Library as its `title` / `author`
   parameters. Never join them back into one free-text string: measured live,
   that is what made "the dispossessed" return no Le Guin and "dune herbert"
   return a book about soil. Either field alone is a valid search; both empty is

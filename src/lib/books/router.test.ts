@@ -71,8 +71,9 @@ describe("searchBooks", () => {
     await searchBooks(DUNE, 5);
 
     const [url] = fetchMock.mock.calls[0];
-    // Scoped since MRG-068: intitle:"dune" inauthor:"herbert", URL-encoded.
-    expect(decodeURIComponent(url)).toContain('q=intitle:"dune" inauthor:"herbert"');
+    // Plain words since MRG-088: Google's field operators return nothing.
+    expect(decodeURIComponent(url)).toContain("q=dune herbert&");
+    expect(url).not.toContain("intitle");
     expect(url).toContain("maxResults=5");
     expect(url).toContain("printType=books");
     // relevance is the documented default; passing it is noise.

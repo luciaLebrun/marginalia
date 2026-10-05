@@ -11,6 +11,7 @@
  * Library answers when Google is unconfigured, erroring, or has nothing, and
  * it stays the source of every book opened before the swap.
  */
+import { fold } from "./fold.ts";
 import {
   GOOGLE_KEY_PREFIX,
   apiKey,

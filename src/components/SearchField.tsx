@@ -9,7 +9,7 @@ import { MAX_QUERY_LENGTH, isBlank, type BookQuery } from "@/lib/search";
  * chrome input.
  *
  * Two lines rather than one box since MRG-068. Both sources take a title and
- * an author apart — Google as `intitle:`/`inauthor:`, Open Library as its own
+ * an author apart — Google as plain words filtered afterwards, Open Library as its own
  * parameters — and rank far better when they are not left to guess which word
  * was which. Either line alone is a search.
  *
