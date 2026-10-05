@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import googleFixture from "../../../tests/fixtures/google-books-dune.json";
 import searchFixture from "../../../tests/fixtures/google-books-search-dune.json";
 import {
+  isDegradedSearch,
   buildQuery,
   buildSearchQuery,
   matchesQuery,
@@ -338,5 +339,31 @@ describe("matchesQuery", () => {
     expect(matchesQuery(book("Anything", "Frank Herbert"), { title: "", author: "herbert" })).toBe(true);
     expect(matchesQuery(book("Dune"), { title: "dune", author: "" })).toBe(true);
     expect(matchesQuery(book("Dune"), { title: "", author: "herbert" })).toBe(false);
+  });
+});
+
+describe("isDegradedSearch (MRG-088)", () => {
+  // Shape recorded from Google on 2026-10-05: id and title only.
+  const degraded = {
+    items: [
+      { id: "0zrbEQAAQBAJ", volumeInfo: { title: "Du côté des fantômes" } },
+      { id: "abcdef123456", volumeInfo: { title: "Fant&ocirc;mes &amp; co" } },
+    ],
+  };
+
+  it("flags a page where no item has authors or imageLinks", () => {
+    expect(isDegradedSearch(degraded)).toBe(true);
+  });
+
+  it("accepts a healthy page, even when some items are bare", () => {
+    const healthy = { items: [...degraded.items, searchFixture.items[0]] };
+    expect(isDegradedSearch(healthy)).toBe(false);
+    expect(isDegradedSearch(searchFixture)).toBe(false);
+  });
+
+  it("does not flag an empty or missing page", () => {
+    expect(isDegradedSearch({})).toBe(false);
+    expect(isDegradedSearch({ items: [] })).toBe(false);
+    expect(isDegradedSearch(null)).toBe(false);
   });
 });

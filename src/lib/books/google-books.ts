@@ -1,3 +1,5 @@
+import { unstable_cache } from "next/cache";
+
 import { categoryFromBisac } from "./category.ts";
 import { fold } from "./fold.ts";
 import type { BookDetail, BookQuery, BookSummary } from "./types.ts";
@@ -262,18 +264,55 @@ export function normalizeSearchResponse(body: unknown): BookSummary[] {
  * on the fallback path, which would have put the key in Vercel's runtime logs
  * on every Google outage. Google accepts `X-Goog-Api-Key` for exactly this.
  */
-async function fetchJson(url: string, revalidate: number): Promise<unknown> {
+async function fetchJson(
+  url: string,
+  revalidate: number | false,
+): Promise<unknown> {
   const key = apiKey();
   const res = await fetch(url, {
     headers: {
       Accept: "application/json",
       ...(key ? { "X-Goog-Api-Key": key } : {}),
     },
-    next: { revalidate },
+    ...(revalidate === false ? { cache: "no-store" as const } : { next: { revalidate } }),
   });
   if (!res.ok) throw new GoogleBooksError(res.status, url);
   return res.json();
 }
+
+/**
+ * Pure. Whether a search page is Google's degraded answer (MRG-088): a 200
+ * whose items carry only `id` and `title`, no authors and no imageLinks, with
+ * the `fields` mask ignored. Measured 2026-10-05 on eight queries, a healthy
+ * page of 11-20 items always has at least one of the two on some item.
+ * ponytail: a one-item page of a genuinely bare book also trips this and falls
+ * back to Open Library; tighten if that ever shows up.
+ */
+export function isDegradedSearch(body: unknown): boolean {
+  const items = (body as { items?: unknown })?.items;
+  if (!Array.isArray(items) || items.length === 0) return false;
+  return items.every((item) => {
+    const info = (item as { volumeInfo?: RawVolumeInfo })?.volumeInfo;
+    return !info?.authors && !info?.imageLinks;
+  });
+}
+
+/**
+ * One search page, cached for a day by us rather than by fetch. The fetch
+ * cache stores a body before we can look at it, so a degraded 200 stayed for a
+ * day (MRG-088). Fetched `no-store`, and `unstable_cache` only stores what
+ * returns: a throw, like a 503, is never cached. Same one request and one-day
+ * lifetime as before when Google is healthy. The url is the cache key.
+ */
+const fetchSearchPage = unstable_cache(
+  async (url: string) => {
+    const body = await fetchJson(url, false);
+    if (isDegradedSearch(body)) throw new Error("Google Books degraded response");
+    return body;
+  },
+  ["google-books-search"],
+  { revalidate: ONE_DAY },
+);
 
 /**
  * Pure. A term as plain words: no phrase quotes, no `field:` operator, no
@@ -356,11 +395,10 @@ export async function searchVolumes(
 
   const fields = encodeURIComponent(`items(${VOLUME_FIELDS})`);
   const page = (start: number) =>
-    fetchJson(
+    fetchSearchPage(
       `${ORIGIN}/volumes?q=${encodeURIComponent(q)}` +
         `&maxResults=${Math.min(limit - start, GOOGLE_PAGE)}&startIndex=${start}` +
         `&printType=books&fields=${fields}`,
-      ONE_DAY,
     );
 
   const starts: number[] = [];

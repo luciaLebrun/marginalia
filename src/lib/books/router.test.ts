@@ -5,6 +5,9 @@ import openLibrarySearch from "../../../tests/fixtures/openlibrary-search-dune.j
 import { fetchBook, searchBooks } from "./index";
 import type { BookQuery } from "./types";
 
+// unstable_cache needs Next's runtime; here it just calls through.
+vi.mock("next/cache", () => ({ unstable_cache: (fn: unknown) => fn }));
+
 /**
  * How the two sources combine, which is the whole of MRG-063 and MRG-067:
  * both are asked every time, and Google holds the top of the grid while Open
