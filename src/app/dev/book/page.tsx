@@ -204,7 +204,9 @@ function State({ state, searchHref }: Readonly<{ state: string; searchHref?: str
     case "subtitle":
       return <BookTitlePage book={SUBTITLED} reads={[]} username="lucia" diaryHref={DIARY} />;
     case "authors":
-      return <BookTitlePage book={MANY_AUTHORS} reads={[]} username="lucia" diaryHref={DIARY} />;
+      return (
+        <BookTitlePage book={MANY_AUTHORS} reads={[]} username="lucia" diaryHref={DIARY} searchHref={searchHref} />
+      );
     case "saved":
       return (
         <BookTitlePage
