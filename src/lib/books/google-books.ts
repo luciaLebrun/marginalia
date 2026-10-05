@@ -1,7 +1,7 @@
 import { unstable_cache } from "next/cache";
 
 import { categoryFromBisac } from "./category.ts";
-import { fold } from "./fold.ts";
+import { fold } from "../client-safe.ts";
 import type { BookDetail, BookQuery, BookSummary } from "./types.ts";
 
 const ORIGIN = "https://www.googleapis.com/books/v1";
