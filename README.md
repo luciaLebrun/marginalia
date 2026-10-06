@@ -66,6 +66,9 @@ findings that have a fix, and a fixable CRITICAL fails the build.
 Git flow without release branches: `feature/MRG-###-slug` → `develop` → `main`.
 See `.claude/skills/gitflow/SKILL.md`.
 
+`pnpm install` sets up git hooks (husky): staged files are linted on commit and
+messages must be `type(scope): subject (MRG-###)`. Skip with `--no-verify`.
+
 ## Acknowledgements
 
 Book metadata and cover images courtesy of
