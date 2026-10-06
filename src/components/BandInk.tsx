@@ -42,7 +42,7 @@ export function BandInk({
 
     const observer = new IntersectionObserver(
       ([entry], self) => {
-        if (!entry.isIntersecting) return;
+        if (!entry?.isIntersecting) return;
         node.classList.add("band-ink");
         self.disconnect();
       },

@@ -22,8 +22,9 @@ export interface Rgb {
 
 export function hexToRgb(hex: string): Rgb | null {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
-  if (!m) return null;
-  const n = Number.parseInt(m[1], 16);
+  const digits = m?.[1];
+  if (!digits) return null;
+  const n = Number.parseInt(digits, 16);
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
 }
 
@@ -43,7 +44,10 @@ export function luminance({ r, g, b }: Rgb): number {
 
 /** WCAG contrast ratio, 1 to 21. */
 export function contrastRatio(a: Rgb, b: Rgb): number {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  const la = luminance(a);
+  const lb = luminance(b);
+  const hi = Math.max(la, lb);
+  const lo = Math.min(la, lb);
   return (hi + 0.05) / (lo + 0.05);
 }
 
@@ -80,7 +84,7 @@ export function fallbackBand(sourceKey: string): string {
   for (let i = 0; i < sourceKey.length; i++) {
     hash = (hash * 31 + (sourceKey.codePointAt(i) ?? 0)) >>> 0;
   }
-  return CATEGORY_BANDS[hash % CATEGORY_BANDS.length];
+  return CATEGORY_BANDS[hash % CATEGORY_BANDS.length] ?? CATEGORY_BANDS[0];
 }
 
 /**

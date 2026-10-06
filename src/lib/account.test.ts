@@ -7,7 +7,7 @@ const valid = { name: "Lucia", username: "lucia", bio: "Mostly science fiction."
 /** The first issue's message, which is what the action surfaces. */
 function refusal(input: Record<string, unknown>): string | null {
   const parsed = accountSchema.safeParse(input);
-  return parsed.success ? null : parsed.error.issues[0].message;
+  return parsed.success ? null : parsed.error.issues[0]?.message ?? "no issue";
 }
 
 describe("accountSchema", () => {
@@ -75,6 +75,6 @@ describe("accountSchema", () => {
   it("reports the offending field so the error can land on its own row", () => {
     const parsed = accountSchema.safeParse({ ...valid, username: "settings" });
     expect(parsed.success).toBe(false);
-    if (!parsed.success) expect(parsed.error.issues[0].path[0]).toBe("username");
+    if (!parsed.success) expect(parsed.error.issues[0]?.path[0]).toBe("username");
   });
 });

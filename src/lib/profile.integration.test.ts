@@ -60,7 +60,7 @@ describe.skipIf(!hasRealDb)("username claim (integration)", () => {
       .select({ username: schema.user.username })
       .from(schema.user)
       .where(eq(schema.user.id, A));
-    expect(row.username).toBe(`itlucia${TAG}`);
+    expect(row?.username).toBe(`itlucia${TAG}`);
   });
 
   it("refuses an invalid username without touching the row", async () => {
@@ -77,7 +77,7 @@ describe.skipIf(!hasRealDb)("username claim (integration)", () => {
       .select({ username: schema.user.username })
       .from(schema.user)
       .where(eq(schema.user.id, A));
-    expect(row.username).toBeNull();
+    expect(row?.username).toBeNull();
   });
 
   it("refuses a name another reader already has", async () => {
@@ -99,7 +99,7 @@ describe.skipIf(!hasRealDb)("username claim (integration)", () => {
       .select({ username: schema.user.username })
       .from(schema.user)
       .where(eq(schema.user.id, A));
-    expect(row.username).toBe(`itfirst${TAG}`);
+    expect(row?.username).toBe(`itfirst${TAG}`);
   });
 
   it("lets exactly one of five concurrent claims on one name win", async () => {

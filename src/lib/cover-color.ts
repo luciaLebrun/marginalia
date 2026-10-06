@@ -50,7 +50,9 @@ export function dominantColor(
       const g = data[i + 1];
       const b = data[i + 2];
       const a = data[i + 3];
-      if (a < 200) continue;
+      if (r === undefined || g === undefined || b === undefined || a === undefined || a < 200) {
+        continue;
+      }
 
       const { h, s, l } = rgbToHsl({ r, g, b });
       // Paper borders, spine shadows and washed scans contribute nothing.

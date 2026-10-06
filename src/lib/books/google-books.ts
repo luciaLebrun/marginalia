@@ -403,10 +403,11 @@ export async function searchVolumes(
 
   const starts: number[] = [];
   for (let start = 0; start < limit; start += GOOGLE_PAGE) starts.push(start);
-  const [first, ...rest] = await Promise.allSettled(starts.map(page));
+  const results = await Promise.allSettled(starts.map(page));
 
-  if (first.status === "rejected") throw first.reason;
-  return [first, ...rest]
+  const first = results[0];
+  if (first?.status === "rejected") throw first.reason;
+  return results
     .flatMap((result) =>
       result.status === "fulfilled" ? normalizeSearchResponse(result.value) : [],
     )

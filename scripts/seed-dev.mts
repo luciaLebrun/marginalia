@@ -131,6 +131,7 @@ for (const [title, author, readAt, rating] of SHELF) {
       set: { coverColor, cachedAt: new Date() },
     })
     .returning({ id: schema.book.id });
+  if (!row) throw new Error(`upsert of ${book.sourceKey} returned no row`);
 
   await db.insert(schema.log).values({
     id: crypto.randomUUID(),

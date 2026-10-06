@@ -53,7 +53,8 @@ export function secureRandomInt(max: number): number {
 
   for (;;) {
     crypto.getRandomValues(buf);
-    if (buf[0] < limit) return buf[0] % max;
+    const [byte] = buf;
+    if (byte !== undefined && byte < limit) return byte % max;
   }
 }
 

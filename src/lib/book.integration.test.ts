@@ -88,7 +88,7 @@ describe.skipIf(!hasRealDb)("opening a book (integration)", () => {
 
     const rows = await rowsFor(FRESH);
     expect(rows).toHaveLength(1);
-    expect(rows[0].id).toBe(outcome.book.id);
+    expect(rows[0]?.id).toBe(outcome.book.id);
   });
 
   it("stores no cover when the jacket is a placeholder (MRG-076)", async () => {

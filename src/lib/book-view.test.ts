@@ -268,8 +268,8 @@ describe("imprintRows", () => {
 
   it("names the source for a reader and keeps the work key in the address", () => {
     const [source] = imprintRows({ firstPublishYear: null, pageCount: null, sourceKey: "OL1W" });
-    expect(source.value).not.toMatch(/OL\d+W/);
-    expect(source.href).toContain("OL1W");
+    expect(source?.value).not.toMatch(/OL\d+W/);
+    expect(source?.href).toContain("OL1W");
   });
 
   it("omits a value Open Library did not have instead of printing a dash", () => {

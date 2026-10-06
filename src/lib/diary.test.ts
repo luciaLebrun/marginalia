@@ -33,8 +33,8 @@ describe("groupShelf by year", () => {
       entry("c", "2025-12-28"),
     ]);
     expect(groups.map((g) => g.label)).toEqual(["2026", "2025"]);
-    expect(groups[0].entries.map((e) => e.id)).toEqual(["a", "b"]);
-    expect(groups[1].entries.map((e) => e.id)).toEqual(["c"]);
+    expect(groups[0]?.entries.map((e) => e.id)).toEqual(["a", "b"]);
+    expect(groups[1]?.entries.map((e) => e.id)).toEqual(["c"]);
   });
 
   it("orders years newest first regardless of input order", () => {
@@ -54,7 +54,7 @@ describe("groupShelf by year", () => {
       entry("second", "2026-05-01"),
       entry("third", "2026-01-01"),
     ]);
-    expect(groups[0].entries.map((e) => e.id)).toEqual([
+    expect(groups[0]?.entries.map((e) => e.id)).toEqual([
       "first",
       "second",
       "third",
@@ -76,15 +76,15 @@ describe("groupShelf by year", () => {
   it("handles a shelf that is entirely undated", () => {
     const groups = groupShelf([entry("a", null), entry("b", null)]);
     expect(groups).toHaveLength(1);
-    expect(groups[0].label).toBe("Undated");
-    expect(groups[0].entries).toHaveLength(2);
+    expect(groups[0]?.label).toBe("Undated");
+    expect(groups[0]?.entries).toHaveLength(2);
   });
 
   it("uses UTC, so a January 1st entry does not slip into the previous year", () => {
     // A date column has no timezone; reading it in local time would move
     // year boundaries for anyone west of UTC.
     const groups = groupShelf([entry("newyear", "2026-01-01")]);
-    expect(groups[0].label).toBe("2026");
+    expect(groups[0]?.label).toBe("2026");
   });
 
   it("loses no entries", () => {
@@ -181,7 +181,7 @@ describe("groupShelf by author", () => {
       "Ursula K. Le Guin",
       "Unknown author",
     ]);
-    expect(groups[2].entries.map((e) => e.id)).toEqual(["b", "e"]);
+    expect(groups[2]?.entries.map((e) => e.id)).toEqual(["b", "e"]);
   });
 });
 

@@ -57,7 +57,14 @@ import { normalizeSearchResponse, normalizeWorkResponse } from "@/lib/books/open
  * `pnpm seed:dev` invents who read what, and like it they never leave a
  * development server: this 404s in production. No session, no database.
  */
+function firstOf<T>(items: T[]): T {
+  const [first] = items;
+  if (first === undefined) throw new Error("fixture has no results");
+  return first;
+}
+
 const summaries = normalizeSearchResponse(search);
+const firstSummary = firstOf(summaries);
 
 function stored(
   detail: Parameters<typeof toBookRow>[0],
@@ -78,7 +85,7 @@ function stored(
  */
 const DUNE = stored(
   {
-    ...mergeGoogleVolume(normalizeWorkResponse(summaries[0], work), google),
+    ...mergeGoogleVolume(normalizeWorkResponse(firstSummary, work), google),
     sourceKey: "OL893414W",
   },
   "dev-dune",
@@ -126,12 +133,12 @@ const COVERLESS = coverless
   : DUNE;
 
 const SUBTITLED = stored(
-  { ...normalizeSearchResponse(subtitled)[0], source: "openlibrary" },
+  { ...firstOf(normalizeSearchResponse(subtitled)), source: "openlibrary" },
   "dev-subtitled",
 );
 
 const MANY_AUTHORS = stored(
-  { ...normalizeSearchResponse(freakonomics)[0], source: "openlibrary" },
+  { ...firstOf(normalizeSearchResponse(freakonomics)), source: "openlibrary" },
   "dev-authors",
 );
 
