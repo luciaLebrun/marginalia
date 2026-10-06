@@ -4,6 +4,8 @@ import googleFixture from "../../../tests/fixtures/google-books-dune.json";
 import searchFixture from "../../../tests/fixtures/google-books-search-dune.json";
 import {
   isDegradedSearch,
+  isDegradedVolume,
+  pickMatch,
   buildQuery,
   buildSearchQuery,
   matchesQuery,
@@ -58,19 +60,70 @@ describe("mergeGoogleVolume", () => {
   });
 });
 
-describe("buildQuery", () => {
-  it("prefers the ISBN, which is an exact match", () => {
-    expect(buildQuery({ ...base, isbn13: "9780441013593" })).toBe(
-      "isbn:9780441013593",
-    );
+describe("buildQuery (MRG-092)", () => {
+  it("sends the bare ISBN-13, no isbn: operator", () => {
+    expect(buildQuery({ ...base, isbn13: "9780441013593" })).toBe("9780441013593");
   });
 
-  it("falls back to title narrowed by the first author", () => {
-    expect(buildQuery(base)).toBe("intitle:Dune+inauthor:Frank Herbert");
+  it("falls back to plain title plus the author's last word", () => {
+    expect(buildQuery(base)).toBe("Dune Herbert");
   });
 
-  it("omits the author clause when there is no author", () => {
-    expect(buildQuery({ ...base, authors: [] })).toBe("intitle:Dune");
+  it("sends the title alone when there is no author", () => {
+    expect(buildQuery({ ...base, authors: [] })).toBe("Dune");
+  });
+
+  it("never emits a field operator", () => {
+    expect(buildQuery({ ...base, isbn13: undefined })).not.toMatch(/\w:/);
+  });
+});
+
+describe("pickMatch (MRG-092)", () => {
+  const vol = (id: string, title: string, authors: string[], isbn?: string) => ({
+    id,
+    volumeInfo: {
+      title,
+      authors,
+      industryIdentifiers: isbn ? [{ type: "ISBN_13", identifier: isbn }] : [],
+    },
+  });
+
+  it("accepts a title/author match", () => {
+    const body = { items: [vol("a", "Dune", ["Frank Herbert"])] };
+    expect(pickMatch(base, body)?.items).toHaveLength(1);
+  });
+
+  it("rejects the wrong book", () => {
+    const body = { items: [vol("a", "Sand Dunes", ["Someone Else"])] };
+    expect(pickMatch(base, body)).toBeNull();
+  });
+
+  it("takes only the whole title, not a longer one sharing its words", () => {
+    const body = { items: [vol("a", "Dune Messiah", ["Frank Herbert"])] };
+    expect(pickMatch(base, body)).toBeNull();
+  });
+
+  it("requires the ISBN to match when we searched by ISBN", () => {
+    const withIsbn = { ...base, isbn13: "9780441013593" };
+    const wrong = { items: [vol("a", "Dune", ["Frank Herbert"], "9781111111111")] };
+    const right = { items: [wrong.items[0], vol("b", "Dune", ["Frank Herbert"], "9780441013593")] };
+    expect(pickMatch(withIsbn, wrong)).toBeNull();
+    expect(pickMatch(withIsbn, right)?.items).toEqual([right.items[1]]);
+  });
+
+  it("returns null for a body with no items", () => {
+    expect(pickMatch(base, {})).toBeNull();
+  });
+});
+
+describe("isDegradedVolume (MRG-092)", () => {
+  it("flags a title-only volume", () => {
+    expect(isDegradedVolume({ id: "x", volumeInfo: { title: "Dune" } })).toBe(true);
+  });
+
+  it("accepts a volume with a description or page count", () => {
+    expect(isDegradedVolume(googleFixture.items[0])).toBe(false);
+    expect(isDegradedVolume({ volumeInfo: { title: "t", pageCount: 9 } })).toBe(false);
   });
 });
 
