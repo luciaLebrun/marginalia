@@ -24,6 +24,8 @@ import {
 } from "./search";
 
 const dune = normalizeSearchResponse(fixture);
+const [firstDune] = dune;
+if (!firstDune) throw new Error("fixture has no results");
 const q = (title: string, author = ""): BookQuery => ({ title, author });
 
 describe("parseTerm", () => {
@@ -140,7 +142,7 @@ describe("runSearch", () => {
 
   it("marks a full page as limited, so the reader knows to narrow it", async () => {
     const full = Array.from({ length: SEARCH_LIMIT }, (_, i) => ({
-      ...dune[0],
+      ...firstDune,
       sourceKey: `OL${i}W`,
     }));
     const outcome = await runSearch(q("dune"), vi.fn<Search>().mockResolvedValue(full));
@@ -150,7 +152,7 @@ describe("runSearch", () => {
   /* MRG-073: a full page is the only evidence there is more to show. */
   describe("show more", () => {
     const page = (n: number) =>
-      Array.from({ length: n }, (_, i) => ({ ...dune[0], sourceKey: `OL${i}W` }));
+      Array.from({ length: n }, (_, i) => ({ ...firstDune, sourceKey: `OL${i}W` }));
 
     it("offers the next page after a full one", async () => {
       const outcome = await runSearch(q("dune"), vi.fn<Search>().mockResolvedValue(page(20)));
@@ -194,7 +196,7 @@ describe("runSearch", () => {
    * The distinction the page exists to keep: an outage is not "no such book".
    */
   it("reports an Open Library error status as unavailable, not none", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
     const search = vi
       .fn<Search>()
       .mockRejectedValue(new OpenLibraryError(503, "https://openlibrary.org/search.json"));
@@ -206,7 +208,7 @@ describe("runSearch", () => {
   });
 
   it("reports a transport failure as unavailable", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
     const search = vi.fn<Search>().mockRejectedValue(new TypeError("fetch failed"));
     expect(await runSearch(q("dune"), search)).toMatchObject({ kind: "unavailable" });
   });

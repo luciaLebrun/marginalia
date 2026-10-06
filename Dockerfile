@@ -7,8 +7,14 @@
 # Base images come through mirror.gcr.io, Google's Docker Hub mirror: no Hub
 # login or pull-rate limit, and on Google Cloud it is the nearby registry.
 
+# Node major (22) must match .nvmrc; Docker cannot read it.
 FROM mirror.gcr.io/library/node:22-bookworm-slim AS deps
 WORKDIR /app
+# Debian's security fixes land before the node image is rebuilt (perl-base
+# CVE-2026-13221 et al., 2026-10-06), and the scan gate refuses a fixable
+# CRITICAL, so take them at build time.
+RUN apt-get update && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 # pnpm comes through corepack; the bundled npm is never used and carries most
 # of the fixable CVEs Trivy finds in the tools image.
 RUN corepack enable && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx

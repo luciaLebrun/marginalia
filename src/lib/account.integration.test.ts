@@ -86,7 +86,7 @@ describe.skipIf(!hasRealDb)("account deletion (integration)", () => {
    * through a second time.
    */
   it("leaves a code they consumed spent rather than reopening it", async () => {
-    const [code] = await createInviteCodes(OWNER, 1);
+    const code = (await createInviteCodes(OWNER, 1))[0] ?? "";
     await getDb()
       .update(schema.inviteCode)
       .set({ usedBy: GUEST, usedAt: new Date() })
@@ -95,7 +95,7 @@ describe.skipIf(!hasRealDb)("account deletion (integration)", () => {
     await deleteAccount(GUEST);
 
     const [row] = await listInvitesWithState(OWNER);
-    expect(row.state).toBe("spent");
-    expect(row.usedByName).toBeNull();
+    expect(row?.state).toBe("spent");
+    expect(row?.usedByName).toBeNull();
   });
 });

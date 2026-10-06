@@ -153,9 +153,9 @@ const SUFFIXES = new Set(["jr", "jr.", "sr", "sr.", "ii", "iii", "iv"]);
  */
 export function surnameKey(name: string): string {
   const parts = name.trim().split(/\s+/);
-  while (parts.length > 1 && SUFFIXES.has(parts.at(-1)!.toLowerCase())) parts.pop();
+  while (parts.length > 1 && SUFFIXES.has(parts.at(-1)?.toLowerCase() ?? "")) parts.pop();
   let start = parts.length - 1;
-  while (start > 1 && PARTICLES.has(parts[start - 1].toLowerCase())) start--;
+  while (start > 1 && PARTICLES.has(parts[start - 1]?.toLowerCase() ?? "")) start--;
   return parts.slice(start).join(" ").toLowerCase();
 }
 

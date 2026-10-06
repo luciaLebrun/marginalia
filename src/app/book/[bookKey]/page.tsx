@@ -8,7 +8,7 @@ import { BookTitlePage } from "@/components/BookTitlePage";
 import { WordmarkBand } from "@/components/WordmarkBand";
 import { getAuth } from "@/lib/auth";
 import { findStoredBook, openBook, parseBookKey } from "@/lib/book";
-import { getReads } from "@/lib/book-view";
+import { getOwnCopy, getReads } from "@/lib/book-view";
 import { isOnToRead } from "@/lib/to-read";
 import { getFavouriteState } from "@/lib/favourites";
 import { bookPath } from "@/lib/client-safe";
@@ -76,10 +76,11 @@ async function OpenedBook({
     redirect(searchHref ? `${bookPath(book.sourceKey)}?${fromSearch}` : bookPath(book.sourceKey));
   }
 
-  const [reads, onToRead, favourite] = await Promise.all([
+  const [reads, onToRead, favourite, ownCopy] = await Promise.all([
     getReads(userId, book.id),
     isOnToRead(userId, book.id),
     getFavouriteState(userId, book.id),
+    getOwnCopy(userId, book),
   ]);
   return (
     <BookTitlePage
@@ -87,6 +88,7 @@ async function OpenedBook({
       reads={reads}
       onToRead={onToRead}
       favourite={favourite}
+      ownCopy={ownCopy}
       username={username}
       searchHref={searchHref}
     />

@@ -22,7 +22,7 @@ describe("coverUrl", () => {
     ["negative", -1],
     ["non-integer", 12.5],
   ])("returns null for %s so callers must render a placeholder", (_label, input) => {
-    expect(coverUrl(input as number | null | undefined)).toBeNull();
+    expect(coverUrl(input)).toBeNull();
   });
 
   it("never emits an ISBN-addressed URL, which is rate limited to 100/IP/5min", () => {

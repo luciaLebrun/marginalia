@@ -50,7 +50,7 @@ async function retry<T>(label: string, fn: () => Promise<T>): Promise<T> {
       return await fn();
     } catch (error) {
       last = error;
-      const cause = (error as { cause?: { message?: string } })?.cause?.message;
+      const cause = (error as { cause?: { message?: string } } | null)?.cause?.message;
       console.warn(
         `  ${label} attempt ${attempt}/${ATTEMPTS} failed: ${cause ?? (error as Error).message}`,
       );
@@ -81,11 +81,12 @@ if (!apiKey()) {
   }
   // jacketFromImageLinks forces https, drops the page curl and raises the zoom.
   // If Google moves these images, this is where we find out.
-  if (!jacketed.coverUrl.startsWith("https://")) {
-    fail(`Google jacket was not https: ${jacketed.coverUrl}`);
+  const jacketUrl = jacketed.coverUrl;
+  if (!jacketUrl.startsWith("https://")) {
+    fail(`Google jacket was not https: ${jacketUrl}`);
   }
   const jres = await retry("google jacket", () =>
-    fetch(jacketed.coverUrl as string, { redirect: "follow" }),
+    fetch(jacketUrl, { redirect: "follow" }),
   ).catch((error: unknown) => fail(`Google jacket fetch failed: ${(error as Error).message}`));
   const jtype = jres.headers.get("content-type") ?? "";
   if (!jres.ok || !jtype.startsWith("image/")) {

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { must } from "../../tests/must";
 
 import {
   generateInviteCode,
@@ -25,7 +26,7 @@ describe("secureRandomInt", () => {
     const spy = vi
       .spyOn(globalThis.crypto, "getRandomValues")
       .mockImplementation(((buf: Uint8Array) => {
-        buf[0] = bytes[Math.min(call++, bytes.length - 1)];
+        buf[0] = bytes[Math.min(call++, bytes.length - 1)] ?? 0;
         return buf;
       }) as typeof crypto.getRandomValues);
 
@@ -116,7 +117,7 @@ describe("normalizeInviteCode", () => {
   it("is idempotent", () => {
     const once = normalizeInviteCode("k7qm3xpt");
     expect(once).not.toBeNull();
-    expect(normalizeInviteCode(once!)).toBe(once);
+    expect(normalizeInviteCode(must(once))).toBe(once);
   });
 });
 

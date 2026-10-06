@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { must } from "../../../tests/must";
 
 import googleSearch from "../../../tests/fixtures/google-books-search-dune.json";
 import openLibrarySearch from "../../../tests/fixtures/openlibrary-search-dune.json";
@@ -18,16 +19,18 @@ vi.mock("next/cache", () => ({ unstable_cache: (fn: unknown) => fn }));
  */
 
 function res(body: unknown, ok = true, status = 200) {
-  return { ok, status, json: async () => body } as unknown as Response;
+  return { ok, status, json: () => Promise.resolve(body) } as unknown as Response;
 }
 
-const fetchMock = vi.fn();
+const fetchMock = vi.fn<
+  (...args: [url: string, init: { headers: Record<string, string> }]) => Promise<unknown>
+>();
 
 const DUNE: BookQuery = { title: "dune", author: "herbert" };
 
 /** Which host each call went to, in order. */
 function hosts(): string[] {
-  return fetchMock.mock.calls.map(([url]) => new URL(url as string).hostname);
+  return fetchMock.mock.calls.map(([url]) => new URL(url).hostname);
 }
 
 beforeEach(() => {
@@ -63,7 +66,7 @@ describe("searchBooks", () => {
     const books = await searchBooks(DUNE, 20);
 
     expect(hosts().sort()).toEqual(["openlibrary.org", "www.googleapis.com"]);
-    expect(books[0].sourceKey).toBe("gb:B1hSG45JCX4C");
+    expect(books[0]?.sourceKey).toBe("gb:B1hSG45JCX4C");
     // Open Library's works are on the page too, not merely appended into space
     // that a full page of Google results would have left empty.
     expect(books.some((b) => /^OL\d+W$/.test(b.sourceKey))).toBe(true);
@@ -73,7 +76,7 @@ describe("searchBooks", () => {
     fetchMock.mockResolvedValue(res(googleSearch));
     await searchBooks(DUNE, 5);
 
-    const [url] = fetchMock.mock.calls[0];
+    const [url] = must(fetchMock.mock.calls[0]);
     // Plain words since MRG-088: Google's field operators return nothing.
     expect(decodeURIComponent(url)).toContain("q=dune herbert&");
     expect(url).not.toContain("intitle");
@@ -92,7 +95,7 @@ describe("searchBooks", () => {
     await searchBooks(DUNE, 60);
 
     const google = fetchMock.mock.calls
-      .map(([url]) => url as string)
+      .map(([url]) => url)
       .filter((url) => url.includes("googleapis.com"));
     expect(google.map((url) => new URL(url).searchParams.get("startIndex"))).toEqual([
       "0",
@@ -111,7 +114,7 @@ describe("searchBooks", () => {
     });
 
     const books = await searchBooks(DUNE, 40);
-    expect(books[0].sourceKey).toBe("gb:B1hSG45JCX4C");
+    expect(books[0]?.sourceKey).toBe("gb:B1hSG45JCX4C");
   });
 
   /*
@@ -124,14 +127,14 @@ describe("searchBooks", () => {
     fetchMock.mockResolvedValue(res(googleSearch));
     await searchBooks(DUNE, 5);
 
-    const [url, init] = fetchMock.mock.calls[0];
+    const [url, init] = must(fetchMock.mock.calls[0]);
     expect(url).not.toContain("test-key");
     expect(url).not.toContain("key=");
     expect(init.headers["X-Goog-Api-Key"]).toBe("test-key");
   });
 
   it("keeps the key out of the error a failure logs", async () => {
-    const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => undefined);
     fetchMock
       .mockResolvedValueOnce(res({}, false, 403))
       .mockResolvedValueOnce(res(openLibrarySearch));
@@ -159,7 +162,7 @@ describe("searchBooks", () => {
   });
 
   it("stands on Open Library alone when Google errors", async () => {
-    const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => undefined);
     fetchMock.mockImplementation((url: string) =>
       Promise.resolve(url.includes("googleapis.com") ? res({}, false, 429) : res(openLibrarySearch)),
     );
@@ -174,7 +177,7 @@ describe("searchBooks", () => {
   /* The mirror case: Open Library is the flakier of the two, and its outage
      must not take the reader's search down when Google answered fine. */
   it("stands on Google alone when Open Library errors", async () => {
-    const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => undefined);
     fetchMock.mockImplementation((url: string) =>
       Promise.resolve(url.includes("googleapis.com") ? res(googleSearch) : res({}, false, 503)),
     );
@@ -204,7 +207,7 @@ describe("searchBooks", () => {
    * `runSearch` needs the throw to show "unavailable" rather than "no matches".
    */
   it("throws only when BOTH sources fail, so an outage is not shown as no matches", async () => {
-    const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => undefined);
     fetchMock.mockResolvedValue(res({}, false, 503));
 
     await expect(searchBooks(DUNE, 20)).rejects.toThrow(/503/);
@@ -219,7 +222,7 @@ describe("fetchBook", () => {
     const book = await fetchBook("gb:B1hSG45JCX4C");
 
     expect(hosts()).toEqual(["www.googleapis.com"]);
-    expect(fetchMock.mock.calls[0][0]).toContain("/volumes/B1hSG45JCX4C");
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("/volumes/B1hSG45JCX4C");
     expect(book?.title).toBe("Dune");
   });
 
@@ -232,5 +235,61 @@ describe("fetchBook", () => {
 
     await expect(fetchBook("OL893414W")).resolves.toBeNull();
     expect(hosts()).toEqual(["openlibrary.org"]);
+  });
+});
+
+describe("searchBooks source time limit (MRG-091)", () => {
+  const never = () => new Promise<never>(() => undefined);
+  const isGoogle = (url: string) => url.includes("googleapis.com");
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it("returns the other source's results when Google hangs", async () => {
+    fetchMock.mockImplementation((url: string) =>
+      isGoogle(url) ? never() : Promise.resolve(res(openLibrarySearch)),
+    );
+    const pending = searchBooks(DUNE, 20);
+    await vi.advanceTimersByTimeAsync(3000);
+    const books = await pending;
+    expect(books.length).toBeGreaterThan(0);
+    expect(books.every((b) => /^OL\d+W$/.test(b.sourceKey))).toBe(true);
+    expect(console.error).toHaveBeenCalledWith(
+      "Google Books search failed",
+      new Error("Google Books search timed out after 3000ms"),
+    );
+  });
+
+  it("returns Google's results when Open Library hangs", async () => {
+    fetchMock.mockImplementation((url: string) =>
+      isGoogle(url) ? Promise.resolve(res(googleSearch)) : never(),
+    );
+    const pending = searchBooks(DUNE, 20);
+    await vi.advanceTimersByTimeAsync(3000);
+    expect((await pending)[0]?.sourceKey).toBe("gb:B1hSG45JCX4C");
+  });
+
+  it("throws, as both-failed does, when both hang", async () => {
+    fetchMock.mockImplementation(never);
+    const pending = searchBooks(DUNE, 20);
+    const assertion = expect(pending).rejects.toThrow(/timed out/);
+    await vi.advanceTimersByTimeAsync(3000);
+    await assertion;
+  });
+
+  it("does not wait on or time out fast sources", async () => {
+    fetchMock.mockImplementation((url: string) =>
+      Promise.resolve(isGoogle(url) ? res(googleSearch) : res(openLibrarySearch)),
+    );
+    const books = await searchBooks(DUNE, 20);
+    expect(books.length).toBeGreaterThan(0);
+    expect(console.error).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
   });
 });

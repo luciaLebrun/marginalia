@@ -7,6 +7,7 @@ import search from "../../../../tests/fixtures/openlibrary-search-dune.json";
 import freakonomics from "../../../../tests/fixtures/openlibrary-search-freakonomics.json";
 import subtitled from "../../../../tests/fixtures/openlibrary-search-subtitled.json";
 import work from "../../../../tests/fixtures/openlibrary-work-dune.json";
+import { must } from "../../../../tests/must";
 import {
   BookNotFound,
   BookOpening,
@@ -51,13 +52,23 @@ import { normalizeSearchResponse, normalizeWorkResponse } from "@/lib/books/open
  * - `favourite-first` — the same, first of three: Earlier ruled through.
  * - `full` — Dune read, not a favourite, with four already: the control
  *   ruled through beside its reason.
+ * - `own-copy` — Dune, not read here, while the reader already has it in the
+ *   diary from the other source (MRG-107): the notice after the imprint.
+ * - `own-copy-to-read` — the same, the other copy only on the to-read list.
  * - `opening` · `down` · `missing` — the three other states.
  *
  * Every book here is real recorded data. The reads are invented, the way
  * `pnpm seed:dev` invents who read what, and like it they never leave a
  * development server: this 404s in production. No session, no database.
  */
+function firstOf<T>(items: T[]): T {
+  const [first] = items;
+  if (first === undefined) throw new Error("fixture has no results");
+  return first;
+}
+
 const summaries = normalizeSearchResponse(search);
+const firstSummary = firstOf(summaries);
 
 function stored(
   detail: Parameters<typeof toBookRow>[0],
@@ -78,7 +89,7 @@ function stored(
  */
 const DUNE = stored(
   {
-    ...mergeGoogleVolume(normalizeWorkResponse(summaries[0], work), google),
+    ...mergeGoogleVolume(normalizeWorkResponse(firstSummary, work), google),
     sourceKey: "OL893414W",
   },
   "dev-dune",
@@ -106,7 +117,7 @@ const DUNE_WITHOUT_COLOUR: Book = { ...DUNE, coverColor: null };
  * 5.32:1 for the Open Library band).
  */
 const DUNE_GOOGLE = stored(
-  normalizeVolume(googleVolume)!,
+  must(normalizeVolume(googleVolume)),
   "dev-dune-google",
   "#DEC65E",
 );
@@ -118,7 +129,7 @@ const DUNE_GOOGLE = stored(
  * underscore rules of press quotes. Not on the shelf, so the band is ink and
  * no colour has to be invented for it.
  */
-const BANNERED = stored(normalizeVolume(googlePiranesi)!, "dev-bannered");
+const BANNERED = stored(must(normalizeVolume(googlePiranesi)), "dev-bannered");
 
 const coverless = summaries.find((summary) => summary.coverId === undefined);
 const COVERLESS = coverless
@@ -126,12 +137,12 @@ const COVERLESS = coverless
   : DUNE;
 
 const SUBTITLED = stored(
-  { ...normalizeSearchResponse(subtitled)[0], source: "openlibrary" },
+  { ...firstOf(normalizeSearchResponse(subtitled)), source: "openlibrary" },
   "dev-subtitled",
 );
 
 const MANY_AUTHORS = stored(
-  { ...normalizeSearchResponse(freakonomics)[0], source: "openlibrary" },
+  { ...firstOf(normalizeSearchResponse(freakonomics)), source: "openlibrary" },
   "dev-authors",
 );
 
@@ -231,6 +242,26 @@ function State({ state, searchHref }: Readonly<{ state: string; searchHref?: str
           diaryHref={DIARY}
           searchAction="/dev/search"
           searchHref={searchHref}
+        />
+      );
+    case "own-copy":
+      return (
+        <BookTitlePage
+          book={DUNE}
+          reads={[]}
+          ownCopy={{ sourceKey: "gb:B1hSG45JCX4C", kind: "read" }}
+          username="lucia"
+          diaryHref={DIARY}
+        />
+      );
+    case "own-copy-to-read":
+      return (
+        <BookTitlePage
+          book={DUNE}
+          reads={[]}
+          ownCopy={{ sourceKey: "gb:B1hSG45JCX4C", kind: "to-read" }}
+          username="lucia"
+          diaryHref={DIARY}
         />
       );
     case "saved":

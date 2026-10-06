@@ -5,7 +5,6 @@ import { fold } from "../client-safe.ts";
 import type { BookDetail, BookQuery, BookSummary } from "./types.ts";
 
 const ORIGIN = "https://www.googleapis.com/books/v1";
-const ONE_WEEK = 60 * 60 * 24 * 7;
 const ONE_DAY = 60 * 60 * 24;
 
 /**
@@ -188,7 +187,7 @@ export function jacketFromImageLinks(
 /** Pick the ISBN-13 out of Google's mixed identifier list. */
 export function pickIsbn13(identifiers: unknown): string | undefined {
   if (!Array.isArray(identifiers)) return undefined;
-  for (const entry of identifiers as { type?: unknown; identifier?: unknown }[]) {
+  for (const entry of identifiers as ({ type?: unknown; identifier?: unknown } | null)[]) {
     if (
       entry?.type === "ISBN_13" &&
       typeof entry.identifier === "string" &&
@@ -245,7 +244,7 @@ export function normalizeVolume(item: unknown): BookDetail | null {
 
 /** Pure. A /volumes search body as summaries, dropping what cannot be shown. */
 export function normalizeSearchResponse(body: unknown): BookSummary[] {
-  const items = (body as { items?: unknown })?.items;
+  const items = (body as { items?: unknown } | null)?.items;
   if (!Array.isArray(items)) return [];
 
   const out: BookSummary[] = [];
@@ -289,10 +288,10 @@ async function fetchJson(
  * back to Open Library; tighten if that ever shows up.
  */
 export function isDegradedSearch(body: unknown): boolean {
-  const items = (body as { items?: unknown })?.items;
+  const items = (body as { items?: unknown } | null)?.items;
   if (!Array.isArray(items) || items.length === 0) return false;
   return items.every((item) => {
-    const info = (item as { volumeInfo?: RawVolumeInfo })?.volumeInfo;
+    const info = (item as { volumeInfo?: RawVolumeInfo } | null)?.volumeInfo;
     return !info?.authors && !info?.imageLinks;
   });
 }
@@ -403,10 +402,11 @@ export async function searchVolumes(
 
   const starts: number[] = [];
   for (let start = 0; start < limit; start += GOOGLE_PAGE) starts.push(start);
-  const [first, ...rest] = await Promise.allSettled(starts.map(page));
+  const results = await Promise.allSettled(starts.map(page));
 
-  if (first.status === "rejected") throw first.reason;
-  return [first, ...rest]
+  const first = results[0];
+  if (first?.status === "rejected") throw first.reason;
+  return results
     .flatMap((result) =>
       result.status === "fulfilled" ? normalizeSearchResponse(result.value) : [],
     )
@@ -417,19 +417,52 @@ export async function searchVolumes(
 const GOOGLE_PAGE = 20;
 
 /**
- * Fetch one volume by its bare id.
+ * Pure. Whether a single-volume body is Google's degraded answer (MRG-092):
+ * the `fields` mask ignored and only a title left, so no authors, jacket,
+ * description or page count. Same failure as `isDegradedSearch`, same cost of
+ * caching it: a week-old title-only book.
+ * ponytail: a genuinely bare volume trips this too; it is then served, just
+ * not cached (see `fetchVolume`).
+ */
+export function isDegradedVolume(body: unknown): boolean {
+  const info = (body as { volumeInfo?: RawVolumeInfo } | null)?.volumeInfo;
+  return !info?.authors && !info?.imageLinks && !info?.description && !info?.pageCount;
+}
+
+const DEGRADED = "Google Books degraded response";
+
+/** One volume, cached a day by us, never a degraded body (see `fetchSearchPage`). */
+const fetchVolumePage = unstable_cache(
+  async (url: string) => {
+    const body = await fetchJson(url, false);
+    if (isDegradedVolume(body)) throw new Error(DEGRADED);
+    return body;
+  },
+  ["google-books-volume"],
+  { revalidate: ONE_DAY },
+);
+
+/**
+ * Fetch one volume by its bare id. This is a path lookup (`/volumes/<id>`),
+ * not a `q=` query, so the broken field operators never applied to it.
  *
  * Returns null when the volume does not exist (404, and Google answers 503 for
  * some withdrawn ids too, which we cannot tell from an outage — a 404 is the
  * only "gone" we trust). **Throws** otherwise, so the book page can say
- * "unavailable" rather than "not found".
+ * "unavailable" rather than "not found". A degraded 200 is shown as it is but
+ * not cached: asked again, uncached, and normalised.
  */
 export async function fetchVolume(id: string): Promise<BookDetail | null> {
   const url = `${ORIGIN}/volumes/${id}?fields=${encodeURIComponent(VOLUME_FIELDS)}`;
 
   let body: unknown;
   try {
-    body = await fetchJson(url, ONE_DAY);
+    try {
+      body = await fetchVolumePage(url);
+    } catch (error) {
+      if (!(error instanceof Error) || error.message !== DEGRADED) throw error;
+      body = await fetchJson(url, false);
+    }
   } catch (error) {
     if (error instanceof GoogleBooksError && error.status === 404) return null;
     throw error;
@@ -449,9 +482,9 @@ export function mergeGoogleVolume(
   detail: BookDetail,
   body: unknown,
 ): BookDetail {
-  const items = (body as { items?: unknown })?.items;
-  const volume = Array.isArray(items) ? items[0] : undefined;
-  const info = (volume as { volumeInfo?: unknown })?.volumeInfo as
+  const items = (body as { items?: unknown } | null)?.items;
+  const volume: unknown = Array.isArray(items) ? items[0] : undefined;
+  const info = (volume as { volumeInfo?: unknown } | null | undefined)?.volumeInfo as
     | { description?: unknown; pageCount?: unknown }
     | undefined;
 
@@ -477,21 +510,44 @@ export function mergeGoogleVolume(
 }
 
 /**
- * An ISBN is an exact match, so prefer it. Otherwise fall back to title,
- * narrowed by the first author when we have one.
+ * Pure. The plain-words `q` for enriching a book (MRG-092): the ISBN-13 when
+ * we have one, else the title and first author like a search. No `isbn:` or
+ * `intitle:`/`inauthor:` — Google returns totalItems 0 for them since
+ * 2026-10-04. The result is checked by `pickMatch`, not trusted.
  */
 export function buildQuery(detail: BookDetail): string {
-  if (detail.isbn13) return `isbn:${detail.isbn13}`;
+  return (
+    detail.isbn13 ??
+    buildSearchQuery({ title: detail.title, author: detail.authors[0] ?? "" })
+  );
+}
 
-  const author = detail.authors[0];
-  const byAuthor = author ? `+inauthor:${author}` : "";
-  return `intitle:${detail.title}${byAuthor}`;
+/**
+ * Pure. The first volume of a search body that is really this book, as a body
+ * `mergeGoogleVolume` takes, or null. An ISBN query must come back with that
+ * ISBN-13; a title query must pass `matchesQuery` (MRG-088's strict filter).
+ */
+export function pickMatch(detail: BookDetail, body: unknown): { items: unknown[] } | null {
+  const items = (body as { items?: unknown } | null)?.items;
+  if (!Array.isArray(items)) return null;
+  const query = { title: detail.title, author: detail.authors[0] ?? "" };
+  const found = (items as unknown[]).find((item) => {
+    const volume = normalizeVolume(item);
+    if (!volume) return false;
+    // Enrichment writes onto the stored book, so a title must be the whole
+    // title: search's word match would take "Dune Messiah" for "Dune".
+    return detail.isbn13
+      ? volume.isbn13 === detail.isbn13
+      : fold(volume.title) === fold(detail.title) && matchesQuery(volume, query);
+  });
+  return found ? { items: [found] } : null;
 }
 
 /**
  * Best-effort enrichment of an **Open Library** book. Google Books is a
  * nice-to-have on a free quota of ~1000 requests/day, so every failure path
  * returns the input unchanged — enrichment must never fail a book page.
+ * Goes through `fetchSearchPage`, so a degraded 200 is never cached.
  */
 export async function enrich(detail: BookDetail): Promise<BookDetail> {
   const key = apiKey();
@@ -504,14 +560,15 @@ export async function enrich(detail: BookDetail): Promise<BookDetail> {
   if (detail.description && detail.pageCount) return detail;
 
   const q = buildQuery(detail);
+  if (!q) return detail;
 
   try {
-    const res = await fetch(
-      `${ORIGIN}/volumes?q=${encodeURIComponent(q)}&maxResults=1`,
-      { headers: { "X-Goog-Api-Key": key }, next: { revalidate: ONE_WEEK } },
+    const fields = encodeURIComponent(`items(${VOLUME_FIELDS})`);
+    const body = await fetchSearchPage(
+      `${ORIGIN}/volumes?q=${encodeURIComponent(q)}&maxResults=10&printType=books&fields=${fields}`,
     );
-    if (!res.ok) return detail;
-    return mergeGoogleVolume(detail, await res.json());
+    const match = pickMatch(detail, body);
+    return match ? mergeGoogleVolume(detail, match) : detail;
   } catch {
     return detail;
   }

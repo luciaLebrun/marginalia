@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
+import { must } from "../../tests/must";
 
 /**
  * Nothing a client component imports may reach Zod, the database or Better
@@ -34,7 +35,7 @@ function resolve(from: string, specifier: string): string | null {
 /** Value imports only: `import type` and `export type` vanish at compile time. */
 function imports(source: string): string[] {
   const found = source.matchAll(/^(?:import|export)\s+(?!type\s)[^;]*?from\s+["']([^"']+)["']/gm);
-  return [...found].map((match) => match[1]);
+  return [...found].flatMap((match) => (match[1] ? [match[1]] : []));
 }
 
 function forbiddenReach(entry: string): string[] {
@@ -42,7 +43,7 @@ function forbiddenReach(entry: string): string[] {
   const hits: string[] = [];
   const queue = [entry];
   while (queue.length > 0) {
-    const file = queue.pop()!;
+    const file = must(queue.pop());
     if (seen.has(file)) continue;
     seen.add(file);
     const source = readFileSync(file, "utf8");

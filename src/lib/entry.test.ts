@@ -67,7 +67,7 @@ describe("shareDescription", () => {
    * word and say that it was cut.
    */
   it("cuts a long review on a word and marks the cut", () => {
-    const long = `${"Arrakis teaches the attitude of the knife. ".repeat(10)}`;
+    const long = "Arrakis teaches the attitude of the knife. ".repeat(10);
     const shared = shareDescription(entry(long));
 
     expect(shared.length).toBeLessThanOrEqual(161);

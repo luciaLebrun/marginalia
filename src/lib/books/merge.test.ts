@@ -48,7 +48,7 @@ describe("mergeResults", () => {
     const merged = mergeResults(many(20, google), many(20, ol), 20);
 
     expect(merged).toHaveLength(20);
-    expect(merged[0].sourceKey.startsWith("gb:")).toBe(true);
+    expect(merged[0]?.sourceKey.startsWith("gb:")).toBe(true);
     // The point of the reserved quota: a full page of Google results must not
     // squeeze Open Library off the page entirely, which is what appending did.
     expect(merged.filter((b) => b.sourceKey.startsWith("OL")).length).toBeGreaterThan(0);

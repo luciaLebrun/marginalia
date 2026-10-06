@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { must } from "../../tests/must";
 
 import { getDb, schema } from "@/db";
 import { RUN } from "../../tests/run";
@@ -19,7 +20,10 @@ const USER = `_it_diary_reader_${RUN}`;
 const OTHER = `_it_diary_other_${RUN}`;
 const BOOK_A = `_it_diary_book_a_${RUN}`;
 const BOOK_B = `_it_diary_book_b_${RUN}`;
-const [D1, D2, D3, D4] = [1, 2, 3, 4].map((n) => `_it_d${n}_${RUN}`);
+const D1 = `_it_d1_${RUN}`;
+const D2 = `_it_d2_${RUN}`;
+const D3 = `_it_d3_${RUN}`;
+const D4 = `_it_d4_${RUN}`;
 
 describe.skipIf(!hasRealDb)("diary (integration)", () => {
   beforeAll(async () => {
@@ -86,24 +90,24 @@ describe.skipIf(!hasRealDb)("diary (integration)", () => {
 
   it("converts the numeric rating to a number, not a string", async () => {
     const entries = await getDiary(USER);
-    const rated = entries.find((e) => e.id === D1)!;
+    const rated = must(entries.find((e) => e.id === D1));
     expect(rated.rating).toBe(3.5);
     expect(typeof rated.rating).toBe("number");
   });
 
   it("carries the book's stored band colour through, nulls included", async () => {
     const entries = await getDiary(USER);
-    expect(entries.find((e) => e.id === D1)!.coverColor).toBe("#2E776E");
-    expect(entries.find((e) => e.id === D2)!.coverColor).toBeNull();
+    expect(must(entries.find((e) => e.id === D1)).coverColor).toBe("#2E776E");
+    expect(must(entries.find((e) => e.id === D2)).coverColor).toBeNull();
   });
 
   it("treats a whitespace-only review as no review", async () => {
     const entries = await getDiary(USER);
-    expect(entries.find((e) => e.id === D3)!.hasReview).toBe(false);
+    expect(must(entries.find((e) => e.id === D3)).hasReview).toBe(false);
   });
 
   it("preserves the reread flag and a null read date", async () => {
-    const reread = (await getDiary(USER)).find((e) => e.id === D3)!;
+    const reread = must((await getDiary(USER)).find((e) => e.id === D3));
     expect(reread.isReread).toBe(true);
     expect(reread.readAt).toBeNull();
   });

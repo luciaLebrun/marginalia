@@ -13,6 +13,8 @@ profiles and invite-only sign-up.
 
 ## Getting started
 
+Use the Node version in `.nvmrc` (`nvm use`); pnpm refuses any other.
+
 ```bash
 pnpm install
 cp .env.example .env.local     # then fill it in
@@ -63,6 +65,9 @@ findings that have a fix, and a fixable CRITICAL fails the build.
 
 Git flow without release branches: `feature/MRG-###-slug` → `develop` → `main`.
 See `.claude/skills/gitflow/SKILL.md`.
+
+`pnpm install` sets up git hooks (husky): staged files are linted on commit and
+messages must be `type(scope): subject (MRG-###)`. Skip with `--no-verify`.
 
 ## Acknowledgements
 

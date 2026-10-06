@@ -42,7 +42,15 @@ export function ToReadStack({
   // The filter's line remembers the take-off state it was spoken after; a
   // newer take-off is a different state object, and wins.
   const [said, setSaid] = useState<{ text: string; after: ToReadState }>({ text: "", after: INITIAL });
-  const announcement = state.saved === false && said.after !== state ? "Taken off your to-read list." : said.text;
+  // The book is named so a second take-off reads differently from the first.
+  // Two books of one title would not, so every other line ends in a zero-width
+  // space: different text for the live region, silent in speech.
+  const [taken, setTaken] = useState({ title: "", count: 0 });
+  const marker = taken.count % 2 ? "\u200B" : "";
+  const announcement =
+    state.saved === false && said.after !== state
+      ? `${taken.title} taken off your to-read list.${marker}`
+      : said.text;
 
   const refilter = (value: string) => {
     setFilter(value);
@@ -54,6 +62,7 @@ export function ToReadStack({
   const takeOff = (formData: FormData) => {
     const at = shown.findIndex((book) => book.bookId === formData.get("bookId"));
     successor.current = (shown[at + 1] ?? shown[at - 1])?.bookId ?? null;
+    setTaken((was) => ({ title: shown[at]?.title ?? "That book", count: was.count + 1 }));
     submit(formData);
   };
 
@@ -67,7 +76,10 @@ export function ToReadStack({
     const at = document.activeElement;
     if (at && at !== document.body) return;
     const next = stackRef.current?.querySelector<HTMLElement>(`[data-take-off="${successor.current}"]`);
-    if (next) return next.focus();
+    if (next) {
+      next.focus();
+      return;
+    }
     // The only match gone while filtered: back to the field that filtered.
     (filterRef.current ?? document.querySelector("h1"))?.focus();
   }, [state, books]);

@@ -22,9 +22,17 @@ export interface Rgb {
 
 export function hexToRgb(hex: string): Rgb | null {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
-  if (!m) return null;
-  const n = Number.parseInt(m[1], 16);
+  const digits = m?.[1];
+  if (!digits) return null;
+  const n = Number.parseInt(digits, 16);
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+
+/** hexToRgb for a literal that is known to be valid; a typo should fail loudly. */
+function constRgb(hex: string): Rgb {
+  const rgb = hexToRgb(hex);
+  if (!rgb) throw new Error(`not a hex colour: ${hex}`);
+  return rgb;
 }
 
 export function rgbToHex({ r, g, b }: Rgb): string {
@@ -43,7 +51,10 @@ export function luminance({ r, g, b }: Rgb): number {
 
 /** WCAG contrast ratio, 1 to 21. */
 export function contrastRatio(a: Rgb, b: Rgb): number {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  const la = luminance(a);
+  const lb = luminance(b);
+  const hi = Math.max(la, lb);
+  const lo = Math.min(la, lb);
   return (hi + 0.05) / (lo + 0.05);
 }
 
@@ -55,8 +66,8 @@ export function contrastRatio(a: Rgb, b: Rgb): number {
 export function readableOn(background: string): typeof INK | typeof PAPER {
   const bg = hexToRgb(background);
   if (!bg) return INK;
-  const ink = hexToRgb(INK)!;
-  const paper = hexToRgb(PAPER)!;
+  const ink = constRgb(INK);
+  const paper = constRgb(PAPER);
   return contrastRatio(bg, ink) >= contrastRatio(bg, paper) ? INK : PAPER;
 }
 
@@ -80,7 +91,7 @@ export function fallbackBand(sourceKey: string): string {
   for (let i = 0; i < sourceKey.length; i++) {
     hash = (hash * 31 + (sourceKey.codePointAt(i) ?? 0)) >>> 0;
   }
-  return CATEGORY_BANDS[hash % CATEGORY_BANDS.length];
+  return CATEGORY_BANDS[hash % CATEGORY_BANDS.length] ?? CATEGORY_BANDS[0];
 }
 
 /**
@@ -94,7 +105,7 @@ export function bandColor(coverColor: string | null, sourceKey: string): string 
   return coverColor ? conditionBand(coverColor) : fallbackBand(sourceKey);
 }
 
-const ALARM_HSL = rgbToHsl(hexToRgb(ALARM)!);
+const ALARM_HSL = rgbToHsl(constRgb(ALARM));
 // ponytail: a box in HSL, not a perceptual ΔE. Widen or move to OKLab if a
 // jacket outside it still reads as alarm on the page.
 const ALARM_HUE_REACH = 15 / 360;

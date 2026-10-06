@@ -66,7 +66,7 @@ describe.skipIf(!hasRealDb)("writing a read (integration)", () => {
       reviewText: "Better the second time.",
       isReread: true,
     });
-    if (result.ok) expect(row.id).toBe(result.id);
+    if (result.ok) expect(row?.id).toBe(result.id);
   });
 
   it("stores a whole rating with its decimal, and nothing as null", async () => {
@@ -88,7 +88,7 @@ describe.skipIf(!hasRealDb)("writing a read (integration)", () => {
 
     const reads = await getReads(READER, BOOK_ID);
     expect(reads).toHaveLength(2);
-    expect(reads[0].readAt?.toISOString().slice(0, 10)).toBe("2026-08-14");
+    expect(reads[0]?.readAt?.toISOString().slice(0, 10)).toBe("2026-08-14");
   });
 
   it("refuses a book that is not in the database, and writes nothing", async () => {

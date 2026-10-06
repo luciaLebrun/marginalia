@@ -5,14 +5,34 @@ import { defineConfig } from "vitest/config";
 // ever has a placeholder — the integration suite skips itself there.
 config({ path: ".env.local" });
 
+const INTEGRATION = "src/**/*.integration.test.ts";
+
 export default defineConfig({
   resolve: { tsconfigPaths: true },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
-    // Integration tests hit one shared database; running them in parallel
-    // would make them race each other rather than the code under test.
-    fileParallelism: false,
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "unit",
+          include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
+          exclude: [INTEGRATION],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "integration",
+          include: [INTEGRATION],
+          // Integration tests hit one shared database; running them in
+          // parallel would make them race each other rather than the code
+          // under test. Unit tests share nothing, so only this project is
+          // serial (MRG-109).
+          fileParallelism: false,
+        },
+      },
+    ],
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
