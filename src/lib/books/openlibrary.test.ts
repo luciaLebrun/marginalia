@@ -60,11 +60,11 @@ describe("normalizeSearchResponse", () => {
   });
 
   it("preserves a subtitle when present", () => {
-    expect(results[1].subtitle).toBe("Book Two of the Dune Chronicles");
+    expect(results[1]?.subtitle).toBe("Book Two of the Dune Chronicles");
   });
 
   it("leaves coverId undefined when the work has no cover", () => {
-    expect(results[2].coverId).toBeUndefined();
+    expect(results[2]?.coverId).toBeUndefined();
   });
 
   it("returns [] for a malformed body instead of throwing", () => {
@@ -94,6 +94,7 @@ describe("normalizeDescription", () => {
 
 describe("normalizeWorkResponse", () => {
   const summary = normalizeSearchResponse(searchFixture)[0];
+  if (!summary) throw new Error("fixture has no results");
 
   it("merges the work description onto the search summary", () => {
     const detail = normalizeWorkResponse(summary, workFixture);

@@ -25,7 +25,7 @@ describe("secureRandomInt", () => {
     const spy = vi
       .spyOn(globalThis.crypto, "getRandomValues")
       .mockImplementation(((buf: Uint8Array) => {
-        buf[0] = bytes[Math.min(call++, bytes.length - 1)];
+        buf[0] = bytes[Math.min(call++, bytes.length - 1)] ?? 0;
         return buf;
       }) as typeof crypto.getRandomValues);
 

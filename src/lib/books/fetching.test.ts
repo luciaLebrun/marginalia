@@ -39,7 +39,7 @@ describe("searchWorks", () => {
     fetchMock.mockResolvedValue(res(searchFixture));
     await searchWorks({ title: "dune", author: "frank herbert" }, 5);
 
-    const [url, init] = fetchMock.mock.calls[0];
+    const [url, init] = fetchMock.mock.calls[0] ?? [];
     expect(url).toContain("https://openlibrary.org/search.json");
     expect(url).toContain("title=dune");
     expect(url).toContain("author=frank+herbert");
@@ -54,7 +54,7 @@ describe("searchWorks", () => {
   it("sends only the field the reader filled", async () => {
     fetchMock.mockResolvedValue(res(searchFixture));
     await searchWorks({ title: "", author: "le guin" });
-    const [url] = fetchMock.mock.calls[0];
+    const [url] = fetchMock.mock.calls[0] ?? [];
     expect(url).toContain("author=le+guin");
     expect(url).not.toContain("title=");
   });
@@ -62,14 +62,14 @@ describe("searchWorks", () => {
   it("asks Next to cache for 24h, as Open Library requests", async () => {
     fetchMock.mockResolvedValue(res(searchFixture));
     await searchWorks({ title: "dune", author: "" });
-    expect(fetchMock.mock.calls[0][1].next.revalidate).toBe(86400);
+    expect(fetchMock.mock.calls[0]?.[1].next.revalidate).toBe(86400);
   });
 
   it("returns normalized summaries", async () => {
     fetchMock.mockResolvedValue(res(searchFixture));
     const results = await searchWorks({ title: "dune", author: "" });
     expect(results).toHaveLength(3);
-    expect(results[0].sourceKey).toBe("OL893415W");
+    expect(results[0]?.sourceKey).toBe("OL893415W");
   });
 
   it("throws with the status code when Open Library errors", async () => {
@@ -204,7 +204,7 @@ describe("enrich", () => {
     fetchMock.mockResolvedValue(res(googleFixture));
 
     const enriched = await enrich(thin);
-    expect(fetchMock.mock.calls[0][0]).toContain("isbn%3A9780441013593");
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("isbn%3A9780441013593");
     expect(enriched.pageCount).toBe(604);
     expect(enriched.source).toBe("openlibrary+google");
   });
@@ -214,7 +214,7 @@ describe("enrich", () => {
     fetchMock.mockResolvedValue(res(googleFixture));
 
     await enrich({ ...thin, isbn13: undefined });
-    const url = fetchMock.mock.calls[0][0];
+    const url = fetchMock.mock.calls[0]?.[0];
     expect(url).toContain("intitle");
     expect(url).toContain("inauthor");
   });

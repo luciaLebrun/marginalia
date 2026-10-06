@@ -19,7 +19,12 @@ const READER = `_it_slip_reader_${RUN}`;
 const OTHER = `_it_slip_other_${RUN}`;
 const BOOK_ID = `_it_slip_book_${RUN}`;
 const BOOK_KEY = `OL99${KEY}0W`;
-const LOGS = [1, 2, 3, 4].map((n) => `_it_slip_${n}_${RUN}`);
+const LOGS = [
+  `_it_slip_1_${RUN}`,
+  `_it_slip_2_${RUN}`,
+  `_it_slip_3_${RUN}`,
+  `_it_slip_4_${RUN}`,
+] as const;
 
 describe.skipIf(!hasRealDb)("the date slip (integration)", () => {
   beforeAll(async () => {
@@ -66,8 +71,8 @@ describe.skipIf(!hasRealDb)("the date slip (integration)", () => {
     const [latest, earlier, undated] = await getReads(READER, BOOK_ID);
 
     expect(latest).toMatchObject({ isReread: true, hasReview: true, rating: null });
-    expect(latest.readAt?.toISOString().slice(0, 10)).toBe("2026-08-14");
-    expect(earlier.rating).toBe(4.5);
+    expect(latest?.readAt?.toISOString().slice(0, 10)).toBe("2026-08-14");
+    expect(earlier?.rating).toBe(4.5);
     // Whitespace is not a review.
     expect(undated).toMatchObject({ readAt: null, hasReview: false });
   });

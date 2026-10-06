@@ -50,7 +50,7 @@ const STACK: ToReadBook[] = summaries
     authors: summary.authors,
     coverId: summary.coverId ?? null,
     coverUrl: summary.coverUrl ?? null,
-    pageCount: PAGES[summary.title],
+    pageCount: PAGES[summary.title] ?? null,
     savedAt: new Date(Date.UTC(2026, 8, 14 - index)),
   }))
   .reverse();

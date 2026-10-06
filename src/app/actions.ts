@@ -206,9 +206,9 @@ export async function saveAccountAction(
 
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
-    const field = String(issue.path[0] ?? "");
+    const field = String(issue?.path[0] ?? "");
     return {
-      error: issue.message,
+      error: issue?.message ?? "Invalid input.",
       field: field === "name" || field === "username" || field === "bio" ? field : null,
       saved: false,
     };
@@ -363,10 +363,10 @@ export async function logReadAction(
 
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
-    const field = String(issue.path[0] ?? "");
+    const field = String(issue?.path[0] ?? "");
     return {
       ...previous,
-      error: issue.message,
+      error: issue?.message ?? "Invalid input.",
       field: isLogReadField(field) ? field : null,
       signedOut: false,
     };

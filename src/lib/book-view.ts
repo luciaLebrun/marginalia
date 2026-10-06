@@ -72,8 +72,9 @@ export function describeReads(count: number): string {
 export function authorLine(authors: readonly string[]): string {
   const names = authors.map((name) => name.trim()).filter(Boolean);
 
-  if (names.length === 0) return "Author unknown";
-  if (names.length === 1) return names[0];
+  const [only] = names;
+  if (only === undefined) return "Author unknown";
+  if (names.length === 1) return only;
   if (names.length <= 3) {
     return `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
   }

@@ -40,10 +40,9 @@ import { parseQuery, parseShown, type Search } from "@/lib/search";
  */
 const recorded = [...normalizeVolumes(googleDune), ...normalizeSearchResponse(dune)];
 const full: Search = async (_query, limit) =>
-  Array.from({ length: limit }, (_, i) => {
-    const book = recorded[i % recorded.length];
-    return { ...book, sourceKey: `${book.sourceKey}-${i}` };
-  });
+  Array.from({ length: limit }, (_, i) => recorded[i % recorded.length]).flatMap((book, i) =>
+    book ? [{ ...book, sourceKey: `${book.sourceKey}-${i}` }] : [],
+  );
 
 const SOURCES: Record<string, Search> = {
   fixture: async () => normalizeSearchResponse(dune),

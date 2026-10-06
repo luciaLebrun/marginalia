@@ -144,9 +144,9 @@ describe("bandColorFromCover", () => {
     // where that choice is made, in covers.test.ts.
     await bandColorFromCover("https://covers.openlibrary.org/b/id/11481354-M.jpg");
 
-    const [url, init] = fetchMock.mock.calls[0];
+    const [url, init] = fetchMock.mock.calls[0] ?? [];
     expect(url).toBe("https://covers.openlibrary.org/b/id/11481354-M.jpg");
-    expect(init.redirect).toBe("follow");
+    expect(init?.redirect).toBe("follow");
   });
 
   it("derives a band colour from a real JPEG", async () => {

@@ -33,9 +33,11 @@ import { normalizeSearchResponse, normalizeWorkResponse } from "@/lib/books/open
  * it, they never leave a development server: this 404s in production.
  */
 const summaries = normalizeSearchResponse(search);
+const [firstSummary] = summaries;
+if (!firstSummary) throw new Error("fixture has no results");
 
 const DUNE = {
-  ...mergeGoogleVolume(normalizeWorkResponse(summaries[0], work), google),
+  ...mergeGoogleVolume(normalizeWorkResponse(firstSummary, work), google),
   sourceKey: "OL893414W",
 };
 

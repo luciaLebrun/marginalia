@@ -63,7 +63,7 @@ describe("searchBooks", () => {
     const books = await searchBooks(DUNE, 20);
 
     expect(hosts().sort()).toEqual(["openlibrary.org", "www.googleapis.com"]);
-    expect(books[0].sourceKey).toBe("gb:B1hSG45JCX4C");
+    expect(books[0]?.sourceKey).toBe("gb:B1hSG45JCX4C");
     // Open Library's works are on the page too, not merely appended into space
     // that a full page of Google results would have left empty.
     expect(books.some((b) => /^OL\d+W$/.test(b.sourceKey))).toBe(true);
@@ -73,7 +73,7 @@ describe("searchBooks", () => {
     fetchMock.mockResolvedValue(res(googleSearch));
     await searchBooks(DUNE, 5);
 
-    const [url] = fetchMock.mock.calls[0];
+    const [url] = fetchMock.mock.calls[0] ?? [];
     // Plain words since MRG-088: Google's field operators return nothing.
     expect(decodeURIComponent(url)).toContain("q=dune herbert&");
     expect(url).not.toContain("intitle");
@@ -111,7 +111,7 @@ describe("searchBooks", () => {
     });
 
     const books = await searchBooks(DUNE, 40);
-    expect(books[0].sourceKey).toBe("gb:B1hSG45JCX4C");
+    expect(books[0]?.sourceKey).toBe("gb:B1hSG45JCX4C");
   });
 
   /*
@@ -124,7 +124,7 @@ describe("searchBooks", () => {
     fetchMock.mockResolvedValue(res(googleSearch));
     await searchBooks(DUNE, 5);
 
-    const [url, init] = fetchMock.mock.calls[0];
+    const [url, init] = fetchMock.mock.calls[0] ?? [];
     expect(url).not.toContain("test-key");
     expect(url).not.toContain("key=");
     expect(init.headers["X-Goog-Api-Key"]).toBe("test-key");
@@ -219,7 +219,7 @@ describe("fetchBook", () => {
     const book = await fetchBook("gb:B1hSG45JCX4C");
 
     expect(hosts()).toEqual(["www.googleapis.com"]);
-    expect(fetchMock.mock.calls[0][0]).toContain("/volumes/B1hSG45JCX4C");
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("/volumes/B1hSG45JCX4C");
     expect(book?.title).toBe("Dune");
   });
 

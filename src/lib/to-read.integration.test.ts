@@ -17,8 +17,8 @@ const KEY = runKey("toread");
 
 const READER = `_it_toread_reader_${RUN}`;
 const OTHER = `_it_toread_other_${RUN}`;
-const BOOKS = [`_it_toread_book_a_${RUN}`, `_it_toread_book_b_${RUN}`];
-const KEYS = [`OL99${KEY}0W`, `OL99${KEY}1W`];
+const BOOKS = [`_it_toread_book_a_${RUN}`, `_it_toread_book_b_${RUN}`] as const;
+const KEYS = [`OL99${KEY}0W`, `OL99${KEY}1W`] as const;
 
 describe.skipIf(!hasRealDb)("the to-read list (integration)", () => {
   beforeAll(async () => {
