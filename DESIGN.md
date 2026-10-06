@@ -382,6 +382,7 @@ populated shelf is nearly always derived from the jacket and conditioned before 
   no-review sentence, and the `@handle` and read date under its signature, the line
   beside an unavailable "Show 20 more" saying why, the line beside "Add to favourites" at
   four ("You have four already. Take one off from its own page to make room."), the
+  line after a book page's imprint saying the reader already has this book from the other source ("You’ve already logged this book from Google Books." and its link), the
   owner's hint under an empty favourites rule ("Up to four books you’ve read, in the
   order you choose. Open one from your shelf and add it from its page."), the line under
   the owner's favourites saying how to arrange them, and the scrollbar thumb. It is the only tonal step below ink; there is no third text grey.
@@ -1052,6 +1053,9 @@ page.
   Library did not have omits its row rather than printing a dash. The last row,
   "Source / Open Library", is always present and links out to the record, underlined
   in hairline tone and going to ink under the pointer.
+- **Own-copy notice:** when the reader already has this book as another row, one soft-ink
+  sentence (0.8125rem) after the imprint on the 34rem measure, with a link to that copy
+  named for its source. It warns and never refuses: no band, no alarm, and logging stays open.
 - **Band three, record:** the Date Slip, set in the title column straight under the
   imprint rather than as a third full-width band.
 - **States:** the page has none of its own; its two links and the date slip's "Log a
