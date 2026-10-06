@@ -188,7 +188,7 @@ export function jacketFromImageLinks(
 /** Pick the ISBN-13 out of Google's mixed identifier list. */
 export function pickIsbn13(identifiers: unknown): string | undefined {
   if (!Array.isArray(identifiers)) return undefined;
-  for (const entry of identifiers as { type?: unknown; identifier?: unknown }[]) {
+  for (const entry of identifiers as ({ type?: unknown; identifier?: unknown } | null)[]) {
     if (
       entry?.type === "ISBN_13" &&
       typeof entry.identifier === "string" &&
@@ -245,7 +245,7 @@ export function normalizeVolume(item: unknown): BookDetail | null {
 
 /** Pure. A /volumes search body as summaries, dropping what cannot be shown. */
 export function normalizeSearchResponse(body: unknown): BookSummary[] {
-  const items = (body as { items?: unknown })?.items;
+  const items = (body as { items?: unknown } | null)?.items;
   if (!Array.isArray(items)) return [];
 
   const out: BookSummary[] = [];
@@ -289,10 +289,10 @@ async function fetchJson(
  * back to Open Library; tighten if that ever shows up.
  */
 export function isDegradedSearch(body: unknown): boolean {
-  const items = (body as { items?: unknown })?.items;
+  const items = (body as { items?: unknown } | null)?.items;
   if (!Array.isArray(items) || items.length === 0) return false;
   return items.every((item) => {
-    const info = (item as { volumeInfo?: RawVolumeInfo })?.volumeInfo;
+    const info = (item as { volumeInfo?: RawVolumeInfo } | null)?.volumeInfo;
     return !info?.authors && !info?.imageLinks;
   });
 }
@@ -450,9 +450,9 @@ export function mergeGoogleVolume(
   detail: BookDetail,
   body: unknown,
 ): BookDetail {
-  const items = (body as { items?: unknown })?.items;
-  const volume = Array.isArray(items) ? items[0] : undefined;
-  const info = (volume as { volumeInfo?: unknown })?.volumeInfo as
+  const items = (body as { items?: unknown } | null)?.items;
+  const volume: unknown = Array.isArray(items) ? items[0] : undefined;
+  const info = (volume as { volumeInfo?: unknown } | null | undefined)?.volumeInfo as
     | { description?: unknown; pageCount?: unknown }
     | undefined;
 

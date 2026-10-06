@@ -70,7 +70,7 @@ export function generateInviteCode(
   const groups: string[] = [];
   for (let g = 0; g < GROUPS; g++) {
     let out = "";
-    for (let i = 0; i < GROUP; i++) out += ALPHABET[randomInt(ALPHABET.length)];
+    for (let i = 0; i < GROUP; i++) out += ALPHABET.charAt(randomInt(ALPHABET.length));
     groups.push(out);
   }
   return groups.join("-");
@@ -84,7 +84,7 @@ export function generateInviteCode(
 export function normalizeInviteCode(input: string): string | null {
   const stripped = input.toUpperCase().replace(/[^A-Z0-9]/g, "");
   if (stripped.length !== GROUP * GROUPS) return null;
-  if ([...stripped].some((c) => !ALPHABET.includes(c))) return null;
+  if (Array.from(stripped).some((c) => !ALPHABET.includes(c))) return null;
   return `${stripped.slice(0, GROUP)}-${stripped.slice(GROUP)}`;
 }
 

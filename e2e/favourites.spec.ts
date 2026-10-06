@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { must } from "../tests/must";
 
 /**
  * Favourites (MRG-071), in a real browser at both device classes, against the
@@ -20,7 +21,7 @@ test.describe("the favourites band", () => {
     // Above the first year of the shelf.
     const bandBox = await band(page).boundingBox();
     const yearBox = await page.locator("main h2").nth(1).boundingBox();
-    expect(bandBox!.y).toBeLessThan(yearBox!.y);
+    expect(must(bandBox).y).toBeLessThan(must(yearBox).y);
   });
 
   test("says how to arrange them, and names no buttons for it", async ({ page }) => {
@@ -44,8 +45,8 @@ test.describe("the favourites band", () => {
     const before = await titles();
 
     const drag = async (from: number, to: number) => {
-      const a = (await cells(page).nth(from).boundingBox())!;
-      const b = (await cells(page).nth(to).boundingBox())!;
+      const a = must(await cells(page).nth(from).boundingBox());
+      const b = must(await cells(page).nth(to).boundingBox());
       await page.mouse.move(a.x + a.width / 2, a.y + a.height / 3);
       await page.mouse.down();
       await page.mouse.move(a.x + a.width / 2 + 20, a.y + a.height / 3, { steps: 4 });
@@ -63,8 +64,8 @@ test.describe("the favourites band", () => {
     await expect.poll(titles).toEqual(before);
 
     // Carried away and brought back: its own position means "put it back".
-    const a = (await cells(page).nth(0).boundingBox())!;
-    const b = (await cells(page).nth(2).boundingBox())!;
+    const a = must(await cells(page).nth(0).boundingBox());
+    const b = must(await cells(page).nth(2).boundingBox());
     await page.mouse.move(a.x + a.width / 2, a.y + a.height / 3);
     await page.mouse.down();
     await page.mouse.move(b.x + b.width / 2, b.y + b.height / 3, { steps: 8 });
@@ -96,7 +97,7 @@ test.describe("the favourites band", () => {
   test("a plain click still opens the book", async ({ page }) => {
     await page.goto("/dev/shelf", { waitUntil: "networkidle" });
     const link = cells(page).first().getByRole("link");
-    const href = (await link.getAttribute("href"))!;
+    const href = must(await link.getAttribute("href"));
     // The real book route sends a signed-out harness on to the door, so what
     // is asserted is that the click set off for the book at all.
     const request = page.waitForRequest((r) => new URL(r.url()).pathname === href);

@@ -1,5 +1,6 @@
 import jpeg from "jpeg-js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { must } from "../../tests/must";
 
 import { readFileSync } from "node:fs";
 
@@ -26,7 +27,7 @@ function image(
   return data;
 }
 
-const hueOf = (hex: string) => rgbToHsl(hexToRgb(hex)!).h;
+const hueOf = (hex: string) => rgbToHsl(must(hexToRgb(hex))).h;
 
 /**
  * A real encoded JPEG, so the decoder is exercised rather than mocked.
@@ -56,7 +57,7 @@ describe("dominantColor", () => {
   it("finds the hue of a solid cover", () => {
     const red = dominantColor(image(64, 64, () => [200, 40, 40]), 64, 64);
     expect(red).not.toBeNull();
-    expect(hueOf(red!)).toBeCloseTo(hueOf("#C82828"), 1);
+    expect(hueOf(must(red))).toBeCloseTo(hueOf("#C82828"), 1);
   });
 
   it("ignores the paper border that dominates most jackets", () => {
@@ -67,7 +68,7 @@ describe("dominantColor", () => {
     );
     const hex = dominantColor(data, 100, 100);
     expect(hex).not.toBeNull();
-    expect(hueOf(hex!)).toBeCloseTo(hueOf("#1E5AC8"), 1);
+    expect(hueOf(must(hex))).toBeCloseTo(hueOf("#1E5AC8"), 1);
   });
 
   it("ignores a near-black spine", () => {
@@ -75,7 +76,7 @@ describe("dominantColor", () => {
       x < 15 ? [8, 8, 10] : [220, 150, 20],
     );
     const hex = dominantColor(data, 100, 100);
-    expect(hueOf(hex!)).toBeCloseTo(hueOf("#DC9614"), 1);
+    expect(hueOf(must(hex))).toBeCloseTo(hueOf("#DC9614"), 1);
   });
 
   it("returns null for a monochrome jacket rather than inventing a hue", () => {
@@ -96,21 +97,21 @@ describe("dominantColor", () => {
 
   it("picks the larger of two colour fields", () => {
     const data = image(100, 100, (x) => (x < 70 ? [40, 160, 90] : [200, 60, 30]));
-    expect(hueOf(dominantColor(data, 100, 100)!)).toBeCloseTo(hueOf("#28A05A"), 1);
+    expect(hueOf(must(dominantColor(data, 100, 100)))).toBeCloseTo(hueOf("#28A05A"), 1);
   });
 
   it("skips transparent pixels", () => {
     const data = image(100, 100, (x) =>
       x < 60 ? [200, 30, 30, 0] : [40, 90, 200, 255],
     );
-    expect(hueOf(dominantColor(data, 100, 100)!)).toBeCloseTo(hueOf("#285AC8"), 1);
+    expect(hueOf(must(dominantColor(data, 100, 100)))).toBeCloseTo(hueOf("#285AC8"), 1);
   });
 
   it("always returns a conditioned band, never a raw pixel value", () => {
     // A washed-out cover must still yield a usable field.
     const hex = dominantColor(image(64, 64, () => [216, 205, 198]), 64, 64);
     if (hex) {
-      const { s, l } = rgbToHsl(hexToRgb(hex)!);
+      const { s, l } = rgbToHsl(must(hexToRgb(hex)));
       expect(s).toBeGreaterThanOrEqual(0.34);
       expect(l).toBeLessThanOrEqual(0.63);
     }
@@ -118,7 +119,7 @@ describe("dominantColor", () => {
 });
 
 describe("bandColorFromCover", () => {
-  const fetchMock = vi.fn();
+  const fetchMock = vi.fn<(...args: [url: string, init: { redirect: string }]) => Promise<unknown>>();
 
   beforeEach(() => {
     fetchMock.mockReset();
@@ -137,33 +138,33 @@ describe("bandColorFromCover", () => {
   it("fetches the jacket it is handed, following redirects", async () => {
     fetchMock.mockResolvedValue({
       ok: true,
-      arrayBuffer: async () => jpegOf(200, 40, 40),
+      arrayBuffer: () => Promise.resolve(jpegOf(200, 40, 40)),
     });
 
     // sampleUrl() is what picks this; the CoverID-never-ISBN rule is tested
     // where that choice is made, in covers.test.ts.
     await bandColorFromCover("https://covers.openlibrary.org/b/id/11481354-M.jpg");
 
-    const [url, init] = fetchMock.mock.calls[0] ?? [];
+    const [url, init] = must(fetchMock.mock.calls[0]);
     expect(url).toBe("https://covers.openlibrary.org/b/id/11481354-M.jpg");
-    expect(init?.redirect).toBe("follow");
+    expect(init.redirect).toBe("follow");
   });
 
   it("derives a band colour from a real JPEG", async () => {
     fetchMock.mockResolvedValue({
       ok: true,
-      arrayBuffer: async () => jpegOf(30, 90, 200),
+      arrayBuffer: () => Promise.resolve(jpegOf(30, 90, 200)),
     });
 
     const hex = await bandColorFromCover("https://covers.openlibrary.org/b/id/1-M.jpg");
     expect(hex).toMatch(/^#[0-9A-F]{6}$/);
-    expect(hueOf(hex!)).toBeCloseTo(hueOf("#1E5AC8"), 1);
+    expect(hueOf(must(hex))).toBeCloseTo(hueOf("#1E5AC8"), 1);
   });
 
   it("returns null for the 1x1 placeholder Open Library serves for missing covers", async () => {
     fetchMock.mockResolvedValue({
       ok: true,
-      arrayBuffer: async () => new ArrayBuffer(120),
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(120)),
     });
     await expect(bandColorFromCover("https://covers.openlibrary.org/b/id/1-M.jpg")).resolves.toBeNull();
   });
@@ -180,7 +181,7 @@ describe("bandColorFromCover", () => {
     // A cover we cannot decode must never block saving a book.
     fetchMock.mockResolvedValue({
       ok: true,
-      arrayBuffer: async () => new Uint8Array(4096).fill(0x41).buffer,
+      arrayBuffer: () => Promise.resolve(new Uint8Array(4096).fill(0x41).buffer),
     });
     await expect(bandColorFromCover("https://covers.openlibrary.org/b/id/1-M.jpg")).resolves.toBeNull();
   });
@@ -193,7 +194,7 @@ describe("unusable Google jackets (MRG-076)", () => {
     const bytes = readFileSync("tests/fixtures/google-books-placeholder-w256.png");
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: true, arrayBuffer: async () => bytes }),
+      vi.fn().mockResolvedValue({ ok: true, arrayBuffer: () => Promise.resolve(bytes) }),
     );
     await expect(inspectCover("https://books.google.com/books/content?id=x&w=256")).resolves.toEqual({
       color: null,
@@ -209,7 +210,7 @@ describe("unusable Google jackets (MRG-076)", () => {
   it("keeps a real jacket and an undecodable fetch usable", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: true, arrayBuffer: async () => jpegOf(30, 90, 200) }),
+      vi.fn().mockResolvedValue({ ok: true, arrayBuffer: () => Promise.resolve(jpegOf(30, 90, 200)) }),
     );
     await expect(inspectCover("https://books.google.com/x")).resolves.toMatchObject({ usable: true });
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("down")));

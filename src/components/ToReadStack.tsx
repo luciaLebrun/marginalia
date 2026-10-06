@@ -67,7 +67,10 @@ export function ToReadStack({
     const at = document.activeElement;
     if (at && at !== document.body) return;
     const next = stackRef.current?.querySelector<HTMLElement>(`[data-take-off="${successor.current}"]`);
-    if (next) return next.focus();
+    if (next) {
+      next.focus();
+      return;
+    }
     // The only match gone while filtered: back to the field that filtered.
     (filterRef.current ?? document.querySelector("h1"))?.focus();
   }, [state, books]);

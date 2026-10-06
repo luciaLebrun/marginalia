@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { must } from "../../../tests/must";
 
 import searchFixture from "../../../tests/fixtures/openlibrary-search-dune.json";
 import workFixture from "../../../tests/fixtures/openlibrary-work-dune.json";
@@ -10,10 +11,12 @@ import type { BookDetail } from "./types";
 
 /** Minimal stand-in for the bits of Response our code touches. */
 function res(body: unknown, ok = true, status = 200) {
-  return { ok, status, json: async () => body } as unknown as Response;
+  return { ok, status, json: () => Promise.resolve(body) } as unknown as Response;
 }
 
-const fetchMock = vi.fn();
+const fetchMock = vi.fn<
+  (...args: [url: string, init: { headers: Record<string, string>; next: { revalidate: number } }]) => Promise<unknown>
+>();
 
 beforeEach(() => {
   fetchMock.mockReset();
@@ -39,7 +42,7 @@ describe("searchWorks", () => {
     fetchMock.mockResolvedValue(res(searchFixture));
     await searchWorks({ title: "dune", author: "frank herbert" }, 5);
 
-    const [url, init] = fetchMock.mock.calls[0] ?? [];
+    const [url, init] = must(fetchMock.mock.calls[0]);
     expect(url).toContain("https://openlibrary.org/search.json");
     expect(url).toContain("title=dune");
     expect(url).toContain("author=frank+herbert");
@@ -54,7 +57,7 @@ describe("searchWorks", () => {
   it("sends only the field the reader filled", async () => {
     fetchMock.mockResolvedValue(res(searchFixture));
     await searchWorks({ title: "", author: "le guin" });
-    const [url] = fetchMock.mock.calls[0] ?? [];
+    const [url] = must(fetchMock.mock.calls[0]);
     expect(url).toContain("author=le+guin");
     expect(url).not.toContain("title=");
   });
@@ -86,10 +89,10 @@ describe("fetchWork", () => {
 
     const detail = await fetchWork("/works/OL893415W");
     expect(detail).not.toBeNull();
-    expect(detail!.title).toBe("Dune");
-    expect(detail!.authors).toEqual(["Frank Herbert"]);
-    expect(detail!.description).toContain("Arrakis");
-    expect(detail!.coverId).toBe(11481354);
+    expect(must(detail).title).toBe("Dune");
+    expect(must(detail).authors).toEqual(["Frank Herbert"]);
+    expect(must(detail).description).toContain("Arrakis");
+    expect(must(detail).coverId).toBe(11481354);
   });
 
   it("still returns a book when search is down but the work endpoint is up", async () => {
@@ -100,8 +103,8 @@ describe("fetchWork", () => {
     );
 
     const detail = await fetchWork("OL893415W");
-    expect(detail!.title).toBe("Dune");
-    expect(detail!.authors).toEqual([]);
+    expect(must(detail).title).toBe("Dune");
+    expect(must(detail).authors).toEqual([]);
   });
 
   it("follows a redirect stub to the surviving work", async () => {
@@ -114,10 +117,10 @@ describe("fetchWork", () => {
     });
 
     const detail = await fetchWork("OL893415W");
-    expect(detail!.title).toBe("Dune");
+    expect(must(detail).title).toBe("Dune");
     // The resolved key wins over the one the caller passed in.
-    expect(detail!.sourceKey).toBe("OL893414W");
-    expect(detail!.description).toContain("Arrakis");
+    expect(must(detail).sourceKey).toBe("OL893414W");
+    expect(must(detail).description).toContain("Arrakis");
   });
 
   it("gives up on a redirect cycle instead of looping forever", async () => {

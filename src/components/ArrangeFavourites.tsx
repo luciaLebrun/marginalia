@@ -116,7 +116,7 @@ export function ArrangeFavourites({
   function begin(state: Press) {
     state.active = true;
     if (state.touch) lockScroll();
-    cells.current.get(state.bookId)?.setPointerCapture?.(state.pointerId);
+    cells.current.get(state.bookId)?.setPointerCapture(state.pointerId);
     setDrag({ bookId: state.bookId, dx: 0, dy: 0, over: order.indexOf(state.bookId) });
   }
 
@@ -152,7 +152,10 @@ export function ArrangeFavourites({
     if (!state.active) {
       if (Math.hypot(dx, dy) < DRAG_SLOP) return;
       // A touch that moves before the hold is a scroll: let it go.
-      if (state.touch) return end();
+      if (state.touch) {
+        end();
+        return;
+      }
       begin(state);
     }
     const over = positionAt(event.clientX, event.clientY);

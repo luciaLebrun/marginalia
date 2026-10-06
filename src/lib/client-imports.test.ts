@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
+import { must } from "../../tests/must";
 
 /**
  * Nothing a client component imports may reach Zod, the database or Better
@@ -42,7 +43,7 @@ function forbiddenReach(entry: string): string[] {
   const hits: string[] = [];
   const queue = [entry];
   while (queue.length > 0) {
-    const file = queue.pop()!;
+    const file = must(queue.pop());
     if (seen.has(file)) continue;
     seen.add(file);
     const source = readFileSync(file, "utf8");

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { must } from "../../tests/must";
 
 import {
   ALARM,
@@ -19,7 +20,7 @@ import {
 
 describe("hexToRgb / rgbToHex", () => {
   it("round-trips", () => {
-    expect(rgbToHex(hexToRgb("#E8501B")!)).toBe("#E8501B");
+    expect(rgbToHex(must(hexToRgb("#E8501B")))).toBe("#E8501B");
   });
 
   it("accepts a missing hash and mixed case", () => {
@@ -40,17 +41,17 @@ describe("hexToRgb / rgbToHex", () => {
 describe("contrastRatio", () => {
   it("is 21:1 for black on white", () => {
     expect(
-      contrastRatio(hexToRgb("#000000")!, hexToRgb("#FFFFFF")!),
+      contrastRatio(must(hexToRgb("#000000")), must(hexToRgb("#FFFFFF"))),
     ).toBeCloseTo(21, 1);
   });
 
   it("is 1:1 for a colour against itself", () => {
-    expect(contrastRatio(hexToRgb("#E8501B")!, hexToRgb("#E8501B")!)).toBe(1);
+    expect(contrastRatio(must(hexToRgb("#E8501B")), must(hexToRgb("#E8501B")))).toBe(1);
   });
 
   it("is order-independent", () => {
-    const a = hexToRgb("#007A5E")!;
-    const b = hexToRgb("#F4F1E8")!;
+    const a = must(hexToRgb("#007A5E"));
+    const b = must(hexToRgb("#F4F1E8"));
     expect(contrastRatio(a, b)).toBeCloseTo(contrastRatio(b, a), 10);
   });
 });
@@ -102,24 +103,24 @@ describe("conditionBand", () => {
 
   it("lifts a washed-out scan to a usable field", () => {
     const conditioned = conditionBand("#D9CFC9");
-    const { s, l } = rgbToHsl(hexToRgb(conditioned)!);
+    const { s, l } = rgbToHsl(must(hexToRgb(conditioned)));
     expect(s).toBeGreaterThanOrEqual(0.35 - Q);
     expect(l).toBeLessThanOrEqual(0.62 + Q);
   });
 
   it("pulls a near-black spine up into the band range", () => {
-    const { l } = rgbToHsl(hexToRgb(conditionBand("#0B0A09"))!);
+    const { l } = rgbToHsl(must(hexToRgb(conditionBand("#0B0A09"))));
     expect(l).toBeGreaterThanOrEqual(0.28 - Q);
   });
 
   it("pulls a near-white border down into the band range", () => {
-    const { l } = rgbToHsl(hexToRgb(conditionBand("#FBFAF6"))!);
+    const { l } = rgbToHsl(must(hexToRgb(conditionBand("#FBFAF6"))));
     expect(l).toBeLessThanOrEqual(0.62 + Q);
   });
 
   it("keeps the hue it was given", () => {
-    const before = rgbToHsl(hexToRgb("#2E86C1")!).h;
-    const after = rgbToHsl(hexToRgb(conditionBand("#2E86C1"))!).h;
+    const before = rgbToHsl(must(hexToRgb("#2E86C1"))).h;
+    const after = rgbToHsl(must(hexToRgb(conditionBand("#2E86C1")))).h;
     expect(after).toBeCloseTo(before, 2);
   });
 
@@ -136,7 +137,7 @@ describe("conditionBand", () => {
 
   describe("never lands on the refusal tone", () => {
     const hueGap = (hex: string) => {
-      const d = Math.abs(rgbToHsl(hexToRgb(hex)!).h - rgbToHsl(hexToRgb(ALARM)!).h) * 360;
+      const d = Math.abs(rgbToHsl(must(hexToRgb(hex))).h - rgbToHsl(must(hexToRgb(ALARM))).h) * 360;
       return Math.min(d, 360 - d);
     };
 
@@ -150,8 +151,8 @@ describe("conditionBand", () => {
     });
 
     it("pushes each side to its own side", () => {
-      const rust = rgbToHsl(hexToRgb(conditionBand("#961E11"))!).h * 360;
-      const wine = rgbToHsl(hexToRgb(conditionBand("#931A1F"))!).h * 360;
+      const rust = rgbToHsl(must(hexToRgb(conditionBand("#961E11")))).h * 360;
+      const wine = rgbToHsl(must(hexToRgb(conditionBand("#931A1F")))).h * 360;
       expect(rust).toBeGreaterThan(15);
       expect(wine).toBeGreaterThan(300);
     });
@@ -181,7 +182,7 @@ describe("bandColor", () => {
 
 describe("rgbToHsl / hslToRgb", () => {
   it("round-trips a saturated colour", () => {
-    const rgb = hexToRgb("#E8501B")!;
+    const rgb = must(hexToRgb("#E8501B"));
     const back = hslToRgb(rgbToHsl(rgb));
     expect(back.r).toBeCloseTo(rgb.r, 0);
     expect(back.g).toBeCloseTo(rgb.g, 0);

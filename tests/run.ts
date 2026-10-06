@@ -12,5 +12,5 @@ export const RUN = process.env.GITHUB_RUN_ID ?? `local${process.pid}`;
  * 20 of [a-z0-9_]. Salted by suite so two suites never share a key.
  */
 export function runKey(suite: string): number {
-  return [...`${suite}${RUN}`].reduce((hash, char) => (hash * 31 + char.codePointAt(0)!) % 900000, 7) + 100000;
+  return Array.from(`${suite}${RUN}`).reduce((hash, char) => (hash * 31 + (char.codePointAt(0) ?? 0)) % 900000, 7) + 100000;
 }

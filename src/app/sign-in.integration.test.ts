@@ -17,10 +17,10 @@ vi.stubEnv("BETTER_AUTH_URL", process.env.BETTER_AUTH_URL || "http://localhost:3
 vi.stubEnv("BETTER_AUTH_SECRET", process.env.BETTER_AUTH_SECRET || "a".repeat(32));
 
 vi.mock("next/headers", () => ({
-  headers: async () => new Headers(forwarded),
-  cookies: async () => ({ set: () => {} }),
+  headers: () => Promise.resolve(new Headers(forwarded)),
+  cookies: () => Promise.resolve({ set: () => undefined }),
 }));
-vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
+vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
 vi.mock("next/navigation", () => ({
   redirect: (url: string) => {
     throw new Error(`REDIRECT ${url}`);

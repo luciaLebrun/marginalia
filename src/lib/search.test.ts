@@ -196,7 +196,7 @@ describe("runSearch", () => {
    * The distinction the page exists to keep: an outage is not "no such book".
    */
   it("reports an Open Library error status as unavailable, not none", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
     const search = vi
       .fn<Search>()
       .mockRejectedValue(new OpenLibraryError(503, "https://openlibrary.org/search.json"));
@@ -208,7 +208,7 @@ describe("runSearch", () => {
   });
 
   it("reports a transport failure as unavailable", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
     const search = vi.fn<Search>().mockRejectedValue(new TypeError("fetch failed"));
     expect(await runSearch(q("dune"), search)).toMatchObject({ kind: "unavailable" });
   });

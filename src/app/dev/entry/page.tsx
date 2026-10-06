@@ -4,6 +4,7 @@ import google from "../../../../tests/fixtures/google-books-dune.json";
 import googleVolume from "../../../../tests/fixtures/google-books-volume-dune.json";
 import search from "../../../../tests/fixtures/openlibrary-search-dune.json";
 import work from "../../../../tests/fixtures/openlibrary-work-dune.json";
+import { must } from "../../../../tests/must";
 import { ReviewPostcard } from "@/components/ReviewPostcard";
 import { WordmarkBand } from "@/components/WordmarkBand";
 import { REVIEW_MAX } from "@/lib/read-schema";
@@ -46,7 +47,7 @@ const DUNE = {
  * the 1965 novel. The postcard is the surface built to be sent to someone, so
  * it is the one that must not call an edition's year a first publication.
  */
-const DUNE_GOOGLE = normalizeVolume(googleVolume)!;
+const DUNE_GOOGLE = must(normalizeVolume(googleVolume));
 
 const coverless = summaries.find((summary) => summary.coverId === undefined);
 

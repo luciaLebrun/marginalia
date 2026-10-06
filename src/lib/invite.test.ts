@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { must } from "../../tests/must";
 
 import {
   generateInviteCode,
@@ -116,7 +117,7 @@ describe("normalizeInviteCode", () => {
   it("is idempotent", () => {
     const once = normalizeInviteCode("k7qm3xpt");
     expect(once).not.toBeNull();
-    expect(normalizeInviteCode(once!)).toBe(once);
+    expect(normalizeInviteCode(must(once))).toBe(once);
   });
 });
 
