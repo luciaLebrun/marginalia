@@ -1,6 +1,7 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 import tseslint from "typescript-eslint";
 
 const eslintConfig = defineConfig([
@@ -36,6 +37,12 @@ const eslintConfig = defineConfig([
         { ignorePrimitives: { string: true, number: true, boolean: true } },
       ],
     },
+  },
+  {
+    // eslint-config-next already registers the jsx-a11y plugin (and a few of
+    // its rules at warn); registering it again errors, so take only the rules.
+    files: ["**/*.tsx"],
+    rules: jsxA11y.flatConfigs.strict.rules,
   },
   {
     files: ["**/*.{js,mjs,cjs}"],
