@@ -8,47 +8,39 @@ afterEach(() => {
 
 describe("trustedOrigins", () => {
   /*
-   * The one that matters. Production is the environment where a forwarded
-   * session would be worth stealing, and it is the one environment that never
-   * needs the proxy — so it trusts nothing extra, rather than merely not
+   * The one that matters. Production — the self-hosted VM, with no VERCEL — is
+   * the environment where a forwarded session would be worth stealing, and it
+   * never needs the proxy, so it trusts nothing extra rather than merely not
    * exercising the trust it holds.
    */
-  it("trusts nothing extra in production on Vercel", () => {
-    vi.stubEnv("VERCEL", "1");
-    vi.stubEnv("VERCEL_ENV", "production");
-    vi.stubEnv("NODE_ENV", "production");
-    expect(trustedOrigins()).toEqual([]);
-  });
-
-  /* Self-hosted there is no VERCEL_ENV to say so, only NODE_ENV. */
-  it("trusts nothing extra in production outside Vercel", () => {
+  it("trusts nothing extra in production, which is the VM", () => {
     vi.stubEnv("VERCEL", "");
     vi.stubEnv("VERCEL_ENV", "");
     vi.stubEnv("NODE_ENV", "production");
     expect(trustedOrigins()).toEqual([]);
   });
 
-  /* A preview build is a production build too; VERCEL is what tells them apart. */
-  it("trusts preview deployments on preview", () => {
-    vi.stubEnv("VERCEL", "1");
-    vi.stubEnv("VERCEL_ENV", "preview");
-    vi.stubEnv("NODE_ENV", "production");
-    expect(trustedOrigins()).toEqual([PREVIEW_ORIGIN_PATTERN]);
-  });
-
-  it("trusts them in local development too, where VERCEL_ENV is unset", () => {
-    vi.stubEnv("VERCEL", "");
-    vi.stubEnv("VERCEL_ENV", "");
-    vi.stubEnv("NODE_ENV", "development");
+  /*
+   * Everything that is not the VM trusts the preview pattern: a preview (a
+   * production build too — VERCEL tells them apart), Vercel production, which
+   * only relays preview sign-ins now (MRG-095), and local development.
+   */
+  it.each([
+    { where: "a Vercel preview", VERCEL: "1", VERCEL_ENV: "preview", NODE_ENV: "production" },
+    { where: "Vercel production, the sign-in relay", VERCEL: "1", VERCEL_ENV: "production", NODE_ENV: "production" },
+    { where: "local development", VERCEL: "", VERCEL_ENV: "", NODE_ENV: "development" },
+  ])("trusts preview deployments on $where", ({ VERCEL, VERCEL_ENV, NODE_ENV }) => {
+    vi.stubEnv("VERCEL", VERCEL);
+    vi.stubEnv("VERCEL_ENV", VERCEL_ENV);
+    vi.stubEnv("NODE_ENV", NODE_ENV);
     expect(trustedOrigins()).toEqual([PREVIEW_ORIGIN_PATTERN]);
   });
 
   it("reads the environment at call time, not at import", () => {
-    vi.stubEnv("VERCEL", "1");
     vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("VERCEL_ENV", "preview");
+    vi.stubEnv("VERCEL", "1");
     expect(trustedOrigins()).toHaveLength(1);
-    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("VERCEL", "");
     expect(trustedOrigins()).toHaveLength(0);
   });
 });
