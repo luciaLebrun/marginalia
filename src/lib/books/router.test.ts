@@ -237,3 +237,59 @@ describe("fetchBook", () => {
     expect(hosts()).toEqual(["openlibrary.org"]);
   });
 });
+
+describe("searchBooks source time limit (MRG-091)", () => {
+  const never = () => new Promise<never>(() => undefined);
+  const isGoogle = (url: string) => url.includes("googleapis.com");
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it("returns the other source's results when Google hangs", async () => {
+    fetchMock.mockImplementation((url: string) =>
+      isGoogle(url) ? never() : Promise.resolve(res(openLibrarySearch)),
+    );
+    const pending = searchBooks(DUNE, 20);
+    await vi.advanceTimersByTimeAsync(3000);
+    const books = await pending;
+    expect(books.length).toBeGreaterThan(0);
+    expect(books.every((b) => /^OL\d+W$/.test(b.sourceKey))).toBe(true);
+    expect(console.error).toHaveBeenCalledWith(
+      "Google Books search failed",
+      new Error("Google Books search timed out after 3000ms"),
+    );
+  });
+
+  it("returns Google's results when Open Library hangs", async () => {
+    fetchMock.mockImplementation((url: string) =>
+      isGoogle(url) ? Promise.resolve(res(googleSearch)) : never(),
+    );
+    const pending = searchBooks(DUNE, 20);
+    await vi.advanceTimersByTimeAsync(3000);
+    expect((await pending)[0]?.sourceKey).toBe("gb:B1hSG45JCX4C");
+  });
+
+  it("throws, as both-failed does, when both hang", async () => {
+    fetchMock.mockImplementation(never);
+    const pending = searchBooks(DUNE, 20);
+    const assertion = expect(pending).rejects.toThrow(/timed out/);
+    await vi.advanceTimersByTimeAsync(3000);
+    await assertion;
+  });
+
+  it("does not wait on or time out fast sources", async () => {
+    fetchMock.mockImplementation((url: string) =>
+      Promise.resolve(isGoogle(url) ? res(googleSearch) : res(openLibrarySearch)),
+    );
+    const books = await searchBooks(DUNE, 20);
+    expect(books.length).toBeGreaterThan(0);
+    expect(console.error).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+});

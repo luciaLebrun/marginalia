@@ -94,6 +94,9 @@ test.describe("the bedside stack", () => {
     await expect(buttons.nth(2)).toBeFocused();
     await expect(buttons).toHaveCount(4);
     await expect(page.getByRole("button", { name: before[3] })).toBeFocused();
+    // The live region names the book, so the next take-off reads differently.
+    const taken = must(before[2]).replace(/^Take (.*) off your list$/, "$1");
+    await expect(page.locator("output")).toHaveText(`${taken} taken off your to-read list.`);
 
     // The last spine: focus goes to the one above it.
     const now = await labels();
