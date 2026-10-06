@@ -68,8 +68,5 @@
       "@esbuild-kit/core-utils": "npm:tsx@^4.23.13",
       "esbuild": "0.28.2"
     }
-  },
-  "lint-staged": {
-    "*.{ts,tsx,mts,mjs,js}": "eslint --fix --max-warnings 0"
   }
 }
