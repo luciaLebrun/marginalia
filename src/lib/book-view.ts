@@ -3,6 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import type { Book } from "@/db/schema";
 import { INK, bandColor, readableOn } from "@/lib/color";
+import { identityKeys } from "@/lib/books";
 import { publishedLabel } from "@/lib/client-safe";
 
 /**
@@ -330,4 +331,75 @@ export function bookBand(
 ): { background: string; color: string } {
   const background = onShelf ? bandColor(book.coverColor, book.sourceKey) : INK;
   return { background, color: readableOn(background) };
+}
+
+/** The same book under another row the reader already has (MRG-107). */
+export interface OwnCopy {
+  sourceKey: string;
+  /** In the diary, or only on the to-read list. */
+  kind: "read" | "to-read";
+}
+
+type Shelved = Pick<Book, "id" | "sourceKey" | "title" | "authors" | "isbn13">;
+
+/**
+ * Pure. The first of `shelved` that is the viewed book under another row: a
+ * shared ISBN-13, or the same folded title and first author. A read beats a
+ * to-read, since it is the copy the diary is keyed on.
+ */
+export function matchOwnCopy(
+  book: Shelved,
+  shelved: readonly (Shelved & { kind: OwnCopy["kind"] })[],
+): OwnCopy | null {
+  const wanted = new Set(keysOf(book));
+  const same = shelved.filter(
+    (row) => row.id !== book.id && keysOf(row).some((key) => wanted.has(key)),
+  );
+  const hit = same.find((row) => row.kind === "read") ?? same[0];
+  return hit ? { sourceKey: hit.sourceKey, kind: hit.kind } : null;
+}
+
+function keysOf(row: Shelved): string[] {
+  return identityKeys({
+    sourceKey: row.sourceKey,
+    title: row.title,
+    authors: row.authors,
+    isbn13: row.isbn13 ?? undefined,
+  });
+}
+
+/**
+ * Another copy of this book the reader already has, if any. Book rows are
+ * keyed by source key, so one book can be two rows (ADR 0009 keeps them); this
+ * only lets the page say so.
+ *
+ * ponytail: loads the reader's whole diary and list and compares in JS. Fine
+ * for a diary of hundreds; past a few thousand rows, store a normalised
+ * identity column and query it.
+ */
+export async function getOwnCopy(userId: string, book: Shelved): Promise<OwnCopy | null> {
+  const db = getDb();
+  const columns = {
+    id: schema.book.id,
+    sourceKey: schema.book.sourceKey,
+    title: schema.book.title,
+    authors: schema.book.authors,
+    isbn13: schema.book.isbn13,
+  };
+  const [logged, listed] = await Promise.all([
+    db
+      .selectDistinct(columns)
+      .from(schema.log)
+      .innerJoin(schema.book, eq(schema.book.id, schema.log.bookId))
+      .where(eq(schema.log.userId, userId)),
+    db
+      .select(columns)
+      .from(schema.toRead)
+      .innerJoin(schema.book, eq(schema.book.id, schema.toRead.bookId))
+      .where(eq(schema.toRead.userId, userId)),
+  ]);
+  return matchOwnCopy(book, [
+    ...logged.map((row) => ({ ...row, kind: "read" as const })),
+    ...listed.map((row) => ({ ...row, kind: "to-read" as const })),
+  ]);
 }
