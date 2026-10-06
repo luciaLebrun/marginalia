@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { must } from "../../tests/must";
 
 import { entryLabel, groupShelf, parseShelfOrder, readingSpan, surnameKey } from "./diary";
 import type { DiaryEntry } from "@/components/Entry";
@@ -70,7 +71,7 @@ describe("groupShelf by year", () => {
       entry("older", "2024-03-01"),
     ]);
     expect(groups.map((g) => g.label)).toEqual(["2026", "2024", "Undated"]);
-    expect(groups.at(-1)!.entries.map((e) => e.id)).toEqual(["undated"]);
+    expect(must(groups.at(-1)).entries.map((e) => e.id)).toEqual(["undated"]);
   });
 
   it("handles a shelf that is entirely undated", () => {

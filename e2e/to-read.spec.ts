@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { must } from "../tests/must";
 
 /**
  * The to-read list (MRG-059) in a real browser at both device classes.
@@ -79,7 +80,7 @@ test.describe("the bedside stack", () => {
   test("keeps focus while taking a book off, then hands it to a neighbour or the heading", async ({ page }) => {
     await page.goto("/dev/to-read?stub=1", { waitUntil: "networkidle" });
     const buttons = page.locator("[data-take-off]");
-    const labels = () => buttons.evaluateAll((n) => n.map((b) => b.getAttribute("aria-label")!));
+    const labels = () => buttons.evaluateAll((n) => n.map((b) => must(b.getAttribute("aria-label"))));
     const press = async (at: number) => {
       await buttons.nth(at).focus();
       await page.keyboard.press("Enter");
@@ -126,7 +127,7 @@ test.describe("the bedside stack", () => {
   test("hands focus to the heading when clearing leaves a list too short for the field", async ({ page }) => {
     await page.goto("/dev/to-read?state=eight&stub=1", { waitUntil: "networkidle" });
     const field = page.getByRole("searchbox", { name: "Find in your list" });
-    const title = (await page.locator("ol > li > div > a:not([aria-hidden]) span").first().textContent())!;
+    const title = must(await page.locator("ol > li > div > a:not([aria-hidden]) span").first().textContent());
     await field.fill(title);
     const buttons = page.locator("[data-take-off]");
     await buttons.nth(0).focus();
@@ -147,7 +148,7 @@ test.describe("the bedside stack", () => {
     const label = await elsewhere.getAttribute("aria-label");
     await elsewhere.focus();
     await expect(buttons).toHaveCount(4);
-    await expect(page.getByRole("button", { name: label! })).toBeFocused();
+    await expect(page.getByRole("button", { name: must(label) })).toBeFocused();
   });
 
   test("says nothing is waiting, and how to put a book here", async ({ page }) => {

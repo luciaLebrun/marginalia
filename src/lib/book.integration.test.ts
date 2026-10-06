@@ -38,21 +38,21 @@ function detail(sourceKey: string, extra: Partial<BookDetail> = {}): BookDetail 
 /** Sources that hand back `found` and succeed at everything else. */
 function sources(found: BookDetail | null): BookSources {
   return {
-    fetchBook: vi.fn(async () => found),
-    enrich: vi.fn(async (d: BookDetail) => ({
-      ...d,
-      pageCount: 604,
-      source: "openlibrary+google" as const,
-    })),
-    cover: vi.fn(async () => ({ color: "#8a4b2f", usable: true })),
+    fetchBook: vi.fn(() => Promise.resolve(found)),
+    enrich: vi.fn((d: BookDetail) =>
+      Promise.resolve({
+        ...d,
+        pageCount: 604,
+        source: "openlibrary+google" as const,
+      }),
+    ),
+    cover: vi.fn(() => Promise.resolve({ color: "#8a4b2f", usable: true })),
   };
 }
 
 /** Sources standing in for an Open Library outage. */
 function down(): BookSources {
-  const fail = async () => {
-    throw new TypeError("fetch failed");
-  };
+  const fail = () => Promise.reject(new TypeError("fetch failed"));
   return { fetchBook: vi.fn(fail), enrich: vi.fn(fail), cover: vi.fn(fail) };
 }
 
@@ -93,7 +93,7 @@ describe.skipIf(!hasRealDb)("opening a book (integration)", () => {
 
   it("stores no cover when the jacket is a placeholder (MRG-076)", async () => {
     const src = sources({ ...detail(FRESH), coverUrl: "https://books.google.com/x?w=256" });
-    src.cover = vi.fn(async () => ({ color: null, usable: false }));
+    src.cover = vi.fn(() => Promise.resolve({ color: null, usable: false }));
     const outcome = await openBook(FRESH, src);
 
     expect(outcome.kind).toBe("found");
@@ -117,7 +117,7 @@ describe.skipIf(!hasRealDb)("opening a book (integration)", () => {
   });
 
   it("says unavailable, not not-found, when Open Library is down on a first open", async () => {
-    const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const outage = down();
 
     await expect(openBook(FRESH, outage)).resolves.toEqual({ kind: "unavailable" });

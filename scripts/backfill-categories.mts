@@ -18,7 +18,12 @@ import { fetchBook, fillCategory } from "../src/lib/books/index.ts";
 /** Upstream requests in flight at once. Polite to both sources. */
 const CONCURRENCY = 4;
 
-type Row = { id: string; sourceKey: string; title: string; authors: string[] };
+interface Row {
+  id: string;
+  sourceKey: string;
+  title: string;
+  authors: string[];
+}
 
 /** The category, null when there is none, or undefined when the source is down. */
 async function lookUp(row: Row): Promise<string | null | undefined> {

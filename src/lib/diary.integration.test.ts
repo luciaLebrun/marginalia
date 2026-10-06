@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { must } from "../../tests/must";
 
 import { getDb, schema } from "@/db";
 import { RUN } from "../../tests/run";
@@ -89,24 +90,24 @@ describe.skipIf(!hasRealDb)("diary (integration)", () => {
 
   it("converts the numeric rating to a number, not a string", async () => {
     const entries = await getDiary(USER);
-    const rated = entries.find((e) => e.id === D1)!;
+    const rated = must(entries.find((e) => e.id === D1));
     expect(rated.rating).toBe(3.5);
     expect(typeof rated.rating).toBe("number");
   });
 
   it("carries the book's stored band colour through, nulls included", async () => {
     const entries = await getDiary(USER);
-    expect(entries.find((e) => e.id === D1)!.coverColor).toBe("#2E776E");
-    expect(entries.find((e) => e.id === D2)!.coverColor).toBeNull();
+    expect(must(entries.find((e) => e.id === D1)).coverColor).toBe("#2E776E");
+    expect(must(entries.find((e) => e.id === D2)).coverColor).toBeNull();
   });
 
   it("treats a whitespace-only review as no review", async () => {
     const entries = await getDiary(USER);
-    expect(entries.find((e) => e.id === D3)!.hasReview).toBe(false);
+    expect(must(entries.find((e) => e.id === D3)).hasReview).toBe(false);
   });
 
   it("preserves the reread flag and a null read date", async () => {
-    const reread = (await getDiary(USER)).find((e) => e.id === D3)!;
+    const reread = must((await getDiary(USER)).find((e) => e.id === D3));
     expect(reread.isReread).toBe(true);
     expect(reread.readAt).toBeNull();
   });

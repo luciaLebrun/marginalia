@@ -81,7 +81,7 @@ describe("the preview origin pattern", () => {
    * only Vercel can issue a host that satisfies it.
    */
   it("has exactly one wildcard, and it is not the whole host", () => {
-    expect([...PREVIEW_ORIGIN_PATTERN].filter((c) => c === "*")).toHaveLength(1);
+    expect(Array.from(PREVIEW_ORIGIN_PATTERN).filter((c) => c === "*")).toHaveLength(1);
     expect(PREVIEW_ORIGIN_PATTERN).not.toContain("://*");
     expect(PREVIEW_ORIGIN_PATTERN).not.toContain("*.");
   });

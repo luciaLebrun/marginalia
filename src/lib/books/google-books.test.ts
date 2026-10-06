@@ -239,7 +239,7 @@ describe("normalizeVolume", () => {
       subtitle: undefined,
       authors: ["Frank Herbert"],
       firstPublishYear: 1965,
-      coverUrl: expect.stringContaining("w=800"),
+      coverUrl: expect.stringContaining("w=800") as string,
       isbn13: "9780441013593",
       pageCount: 604,
       description: "Set on the desert planet Arrakis.",

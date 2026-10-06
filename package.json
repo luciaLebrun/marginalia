@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "next typegen && eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -54,6 +54,7 @@
     "lint-staged": "^17.6.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.3",
+    "typescript-eslint": "^8.70.1",
     "vitest": "^5.0.2"
   },
   "packageManager": "pnpm@10.34.6",
@@ -67,8 +68,5 @@
       "@esbuild-kit/core-utils": "npm:tsx@^4.23.13",
       "esbuild": "0.28.2"
     }
-  },
-  "lint-staged": {
-    "*.{ts,tsx,mts,mjs,js}": "eslint --fix --max-warnings 0"
   }
 }

@@ -109,7 +109,7 @@ function CodeCells({
 }: Readonly<{ code: string; spent: boolean }>) {
   // Stored with its dash; the cells want the characters, and the dash is drawn
   // between the groups exactly as the door draws it.
-  const characters = [...code.replace("-", "")];
+  const characters = Array.from(code.replace("-", ""));
   const group = characters.length / 2;
 
   return (

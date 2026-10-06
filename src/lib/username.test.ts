@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { must } from "../../tests/must";
 
 import {
   MAX_LENGTH,
@@ -59,7 +60,7 @@ describe("normalizeUsername", () => {
   it("is idempotent, so one username has exactly one spelling", () => {
     const once = normalizeUsername("  @LuCiA_Reads ");
     expect(once).toBe("lucia_reads");
-    expect(normalizeUsername(once!)).toBe(once);
+    expect(normalizeUsername(must(once))).toBe(once);
   });
 });
 

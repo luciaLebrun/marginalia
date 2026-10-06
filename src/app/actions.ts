@@ -28,6 +28,12 @@ import {
   usernameError,
 } from "@/lib/username";
 
+/** A text field, or "" when it is missing or is not text (a file). */
+function formText(formData: FormData, name: string): string {
+  const value = formData.get(name);
+  return typeof value === "string" ? value : "";
+}
+
 /**
  * Stamp the reader's last-seen time. Scoped to the id it is given, which is
  * safe here because it writes only a timestamp and leaks nothing back — but
@@ -56,7 +62,7 @@ async function resolveClaimant(formData: FormData): Promise<string | null> {
 
   if (process.env.NODE_ENV === "production") return null;
 
-  const devUserId = String(formData.get("devUserId") ?? "");
+  const devUserId = formText(formData, "devUserId");
   return devUserId.startsWith("dev-") ? devUserId : null;
 }
 
@@ -68,7 +74,7 @@ export async function claimUsernameAction(
   const userId = await resolveClaimant(formData);
   if (!userId) return { error: "Sign in to claim a username." };
 
-  const input = String(formData.get("username") ?? "");
+  const input = formText(formData, "username");
 
   // The form shows a handle built from the reader's name as its placeholder,
   // which can read as already filled in.
@@ -125,7 +131,7 @@ export async function beginSignInAction(
   _previous: DoorState,
   formData: FormData,
 ): Promise<DoorState> {
-  const raw = String(formData.get("code") ?? "").trim();
+  const raw = formText(formData, "code").trim();
 
   if (raw.length > 0) {
     const normalized = normalizeInviteCode(raw);
@@ -283,7 +289,7 @@ export async function deleteAccountAction(
   const reader = await requireReader();
   if (!reader) return { error: "Sign in first." };
 
-  const typed = normalizeUsername(String(formData.get("confirm") ?? ""));
+  const typed = normalizeUsername(formText(formData, "confirm"));
   if (!reader.username || typed !== reader.username) {
     return { error: `Type ${reader.username ?? "your handle"} exactly to confirm.` };
   }

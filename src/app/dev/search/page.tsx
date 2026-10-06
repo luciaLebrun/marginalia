@@ -39,19 +39,17 @@ import { parseQuery, parseShown, type Search } from "@/lib/search";
  * no mutation.
  */
 const recorded = [...normalizeVolumes(googleDune), ...normalizeSearchResponse(dune)];
-const full: Search = async (_query, limit) =>
-  Array.from({ length: limit }, (_, i) => recorded[i % recorded.length]).flatMap((book, i) =>
+const full: Search = (_query, limit) =>
+  Promise.resolve(Array.from({ length: limit }, (_, i) => recorded[i % recorded.length]).flatMap((book, i) =>
     book ? [{ ...book, sourceKey: `${book.sourceKey}-${i}` }] : [],
-  );
+  ));
 
 const SOURCES: Record<string, Search> = {
-  fixture: async () => normalizeSearchResponse(dune),
-  google: async () => normalizeVolumes(googleDune),
+  fixture: () => Promise.resolve(normalizeSearchResponse(dune)),
+  google: () => Promise.resolve(normalizeVolumes(googleDune)),
   live: searchBooks,
-  empty: async () => [],
-  down: async () => {
-    throw new OpenLibraryError(503, "dev harness: simulated outage");
-  },
+  empty: () => Promise.resolve([]),
+  down: () => Promise.reject(new OpenLibraryError(503, "dev harness: simulated outage")),
   full,
   fullslow: async (query, limit) => {
     await new Promise((resolve) => setTimeout(resolve, 2000));

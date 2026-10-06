@@ -54,12 +54,12 @@ interface RawSearchDoc {
  * Docs without a usable key or title are dropped rather than half-rendered.
  */
 export function normalizeSearchResponse(body: unknown): BookSummary[] {
-  const docs = (body as { docs?: unknown })?.docs;
+  const docs = (body as { docs?: unknown } | null)?.docs;
   if (!Array.isArray(docs)) return [];
 
   const out: BookSummary[] = [];
-  for (const raw of docs as RawSearchDoc[]) {
-    if (typeof raw?.key !== "string" || typeof raw?.title !== "string") {
+  for (const raw of docs as (RawSearchDoc | null)[]) {
+    if (typeof raw?.key !== "string" || typeof raw.title !== "string") {
       continue;
     }
     out.push({

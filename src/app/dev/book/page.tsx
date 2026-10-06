@@ -7,6 +7,7 @@ import search from "../../../../tests/fixtures/openlibrary-search-dune.json";
 import freakonomics from "../../../../tests/fixtures/openlibrary-search-freakonomics.json";
 import subtitled from "../../../../tests/fixtures/openlibrary-search-subtitled.json";
 import work from "../../../../tests/fixtures/openlibrary-work-dune.json";
+import { must } from "../../../../tests/must";
 import {
   BookNotFound,
   BookOpening,
@@ -113,7 +114,7 @@ const DUNE_WITHOUT_COLOUR: Book = { ...DUNE, coverColor: null };
  * 5.32:1 for the Open Library band).
  */
 const DUNE_GOOGLE = stored(
-  normalizeVolume(googleVolume)!,
+  must(normalizeVolume(googleVolume)),
   "dev-dune-google",
   "#DEC65E",
 );
@@ -125,7 +126,7 @@ const DUNE_GOOGLE = stored(
  * underscore rules of press quotes. Not on the shelf, so the band is ink and
  * no colour has to be invented for it.
  */
-const BANNERED = stored(normalizeVolume(googlePiranesi)!, "dev-bannered");
+const BANNERED = stored(must(normalizeVolume(googlePiranesi)), "dev-bannered");
 
 const coverless = summaries.find((summary) => summary.coverId === undefined);
 const COVERLESS = coverless
