@@ -112,7 +112,7 @@ test.describe("review permalink", () => {
       expect(page.url()).toMatch(PERMALINK);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
-      const handle = new URL(page.url()).pathname.split("/")[1];
+      const handle = new URL(page.url()).pathname.split("/")[1] ?? "";
       const signature = page.locator("article > div:nth-child(2) > div:nth-child(2)");
       await expect(signature.getByRole("link").first()).toHaveAttribute("href", `/${handle}`);
       await expect(

@@ -43,7 +43,7 @@ export interface Jacket {
  * px, 462 device px). 256 is there for a 1x phone, where a cell is ~187 CSS
  * px — the same job Open Library's "-M.jpg" does in its own srcset.
  */
-const GOOGLE_WIDTHS = [256, 512, 800];
+const GOOGLE_WIDTHS = [256, 512, 800] as const;
 
 /**
  * The jacket a book renders, and the srcset its source can offer.

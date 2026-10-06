@@ -19,7 +19,10 @@ const USER = `_it_diary_reader_${RUN}`;
 const OTHER = `_it_diary_other_${RUN}`;
 const BOOK_A = `_it_diary_book_a_${RUN}`;
 const BOOK_B = `_it_diary_book_b_${RUN}`;
-const [D1, D2, D3, D4] = [1, 2, 3, 4].map((n) => `_it_d${n}_${RUN}`);
+const D1 = `_it_d1_${RUN}`;
+const D2 = `_it_d2_${RUN}`;
+const D3 = `_it_d3_${RUN}`;
+const D4 = `_it_d4_${RUN}`;
 
 describe.skipIf(!hasRealDb)("diary (integration)", () => {
   beforeAll(async () => {

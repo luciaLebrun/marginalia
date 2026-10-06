@@ -15,7 +15,7 @@ function refusal(input: Record<string, unknown>) {
   const parsed = readSchema.safeParse(input);
   return parsed.success
     ? null
-    : { message: parsed.error.issues[0].message, field: parsed.error.issues[0].path[0] };
+    : { message: parsed.error.issues[0]?.message, field: parsed.error.issues[0]?.path[0] };
 }
 
 afterEach(() => {

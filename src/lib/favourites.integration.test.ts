@@ -25,8 +25,14 @@ const KEY = runKey("fav");
 
 const READER = `_it_fav_reader_${RUN}`;
 const OTHER = `_it_fav_other_${RUN}`;
-const BOOKS = Array.from({ length: 6 }, (_, i) => `_it_fav_book_${i}_${RUN}`);
-const KEYS = BOOKS.map((_, i) => `OL99${KEY}${i}W`);
+const BOOKS = [
+  `_it_fav_book_0_${RUN}`,
+  `_it_fav_book_1_${RUN}`,
+  `_it_fav_book_2_${RUN}`,
+  `_it_fav_book_3_${RUN}`,
+  `_it_fav_book_4_${RUN}`,
+  `_it_fav_book_5_${RUN}`,
+] as const;
 
 async function read(userId: string, bookId: string) {
   const result = await createRead(userId, {
@@ -54,7 +60,7 @@ describe.skipIf(!hasRealDb)("favourites (integration)", () => {
       .onConflictDoNothing();
     await db
       .insert(schema.book)
-      .values(BOOKS.map((id, i) => ({ id, sourceKey: KEYS[i], title: `Fav ${i}`, authors: ["A"] })))
+      .values(BOOKS.map((id, i) => ({ id, sourceKey: `OL99${KEY}${i}W`, title: `Fav ${i}`, authors: ["A"] })))
       .onConflictDoNothing();
   });
 

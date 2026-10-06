@@ -34,7 +34,7 @@ function resolve(from: string, specifier: string): string | null {
 /** Value imports only: `import type` and `export type` vanish at compile time. */
 function imports(source: string): string[] {
   const found = source.matchAll(/^(?:import|export)\s+(?!type\s)[^;]*?from\s+["']([^"']+)["']/gm);
-  return [...found].map((match) => match[1]);
+  return [...found].flatMap((match) => (match[1] ? [match[1]] : []));
 }
 
 function forbiddenReach(entry: string): string[] {

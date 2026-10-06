@@ -27,6 +27,12 @@ const hasRealDb = url.length > 0 && !url.includes("placeholder");
 
 const OWNER = `_it_invite_owner_${RUN}`;
 
+async function issueOne(ttlDays?: number): Promise<string> {
+  const [code] = await createInviteCodes(OWNER, 1, ttlDays);
+  if (!code) throw new Error("createInviteCodes returned no code");
+  return code;
+}
+
 describe.skipIf(!hasRealDb)("invite codes (integration)", () => {
   beforeAll(async () => {
     await getDb()
@@ -50,7 +56,7 @@ describe.skipIf(!hasRealDb)("invite codes (integration)", () => {
   });
 
   it("accepts a fresh code, and normalises how the user typed it", async () => {
-    const [code] = await createInviteCodes(OWNER, 1);
+    const code = await issueOne();
     await expect(isInviteCodeUsable(code)).resolves.toBe(true);
     await expect(
       isInviteCodeUsable(code.toLowerCase().replace("-", " ")),
@@ -63,7 +69,7 @@ describe.skipIf(!hasRealDb)("invite codes (integration)", () => {
   });
 
   it("lets exactly one of five concurrent claims win", async () => {
-    const [code] = await createInviteCodes(OWNER, 1);
+    const code = await issueOne();
 
     const results = await Promise.all(
       Array.from({ length: 5 }, () => claimInviteCode(code)),
@@ -75,7 +81,7 @@ describe.skipIf(!hasRealDb)("invite codes (integration)", () => {
   });
 
   it("records who used a code", async () => {
-    const [code] = await createInviteCodes(OWNER, 1);
+    const code = await issueOne();
     await claimInviteCode(code);
     await attributeInviteCode(code, OWNER);
 
@@ -85,13 +91,13 @@ describe.skipIf(!hasRealDb)("invite codes (integration)", () => {
   });
 
   it("refuses an expired code", async () => {
-    const [code] = await createInviteCodes(OWNER, 1, -1);
+    const code = await issueOne(-1);
     await expect(isInviteCodeUsable(code)).resolves.toBe(false);
     await expect(claimInviteCode(code)).resolves.toBe(false);
   });
 
   it("can hand back a code whose signup did not complete", async () => {
-    const [code] = await createInviteCodes(OWNER, 1);
+    const code = await issueOne();
     expect(await claimInviteCode(code)).toBe(true);
 
     await releaseInviteCode(code);
