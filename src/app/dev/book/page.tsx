@@ -52,6 +52,9 @@ import { normalizeSearchResponse, normalizeWorkResponse } from "@/lib/books/open
  * - `favourite-first` — the same, first of three: Earlier ruled through.
  * - `full` — Dune read, not a favourite, with four already: the control
  *   ruled through beside its reason.
+ * - `own-copy` — Dune, not read here, while the reader already has it in the
+ *   diary from the other source (MRG-107): the notice after the imprint.
+ * - `own-copy-to-read` — the same, the other copy only on the to-read list.
  * - `opening` · `down` · `missing` — the three other states.
  *
  * Every book here is real recorded data. The reads are invented, the way
@@ -239,6 +242,26 @@ function State({ state, searchHref }: Readonly<{ state: string; searchHref?: str
           diaryHref={DIARY}
           searchAction="/dev/search"
           searchHref={searchHref}
+        />
+      );
+    case "own-copy":
+      return (
+        <BookTitlePage
+          book={DUNE}
+          reads={[]}
+          ownCopy={{ sourceKey: "gb:B1hSG45JCX4C", kind: "read" }}
+          username="lucia"
+          diaryHref={DIARY}
+        />
+      );
+    case "own-copy-to-read":
+      return (
+        <BookTitlePage
+          book={DUNE}
+          reads={[]}
+          ownCopy={{ sourceKey: "gb:B1hSG45JCX4C", kind: "to-read" }}
+          username="lucia"
+          diaryHref={DIARY}
         />
       );
     case "saved":

@@ -13,8 +13,11 @@ import {
   descriptionParagraphs,
   displaySubtitle,
   imprintRows,
+  sourceRecord,
+  type OwnCopy,
   type Read,
 } from "@/lib/book-view";
+import { bookPath } from "@/lib/client-safe";
 import { authorSearchHref } from "@/lib/search";
 
 /**
@@ -32,6 +35,7 @@ export function BookTitlePage({
   reads,
   onToRead = false,
   favourite = { isFavourite: false, full: false, position: -1, count: 0 },
+  ownCopy = null,
   username,
   diaryHref = "/",
   searchHref,
@@ -46,6 +50,8 @@ export function BookTitlePage({
   onToRead?: boolean;
   /** Whether this book is one of the reader's favourites, and whether four already are. */
   favourite?: { isFavourite: boolean; full: boolean; position: number; count: number };
+  /** Another row of this same book the reader already has (MRG-107). */
+  ownCopy?: OwnCopy | null;
   /** The reader's handle, so each read on the slip can address its own page. */
   username: string;
   /** The dev harness points this at its own shelf. */
@@ -129,6 +135,8 @@ export function BookTitlePage({
               </div>
             ))}
           </dl>
+
+          {ownCopy && <OwnCopyNotice copy={ownCopy} />}
 
           {/* Before the description, not after it: the reads and the line the
               next one goes on are the task, and a long blurb must not push
@@ -247,5 +255,28 @@ function AuthorBand({
         </Link>
       </nav>
     </div>
+  );
+}
+
+/**
+ * The same book already on this reader's shelf under another row (MRG-107).
+ * A soft-ink sentence on the title page's measure, as the favourites line is:
+ * it warns and never refuses, so no band and no alarm. Logging stays open.
+ */
+function OwnCopyNotice({ copy }: Readonly<{ copy: OwnCopy }>) {
+  const source = sourceRecord(copy.sourceKey).name;
+  return (
+    <p className="mt-4 max-w-[34rem] text-[0.8125rem] leading-snug text-ink-soft">
+      {copy.kind === "read"
+        ? `You’ve already logged this book from ${source}.`
+        : `This book is already on your to-read list, from ${source}.`}{" "}
+      <Link
+        href={bookPath(copy.sourceKey)}
+        className="underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink"
+      >
+        Open your {source} copy
+      </Link>
+      .
+    </p>
   );
 }

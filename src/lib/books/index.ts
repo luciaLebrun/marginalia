@@ -160,6 +160,26 @@ export function mergeResults(
   return out;
 }
 
+/** How long one source may take before it counts as failed for a search (MRG-091). */
+export const SOURCE_TIMEOUT_MS = 3000;
+
+/**
+ * Rejects if `work` has not settled within `SOURCE_TIMEOUT_MS`.
+ * ponytail: the slow fetch is abandoned, not aborted; it runs on and its own
+ * cache (google-books.ts) may still store a healthy body. Threading an
+ * AbortSignal into the sources would cancel it.
+ */
+function withTimeout<T>(work: Promise<T>, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`${label} timed out after ${SOURCE_TIMEOUT_MS}ms`)),
+      SOURCE_TIMEOUT_MS,
+    );
+  });
+  return Promise.race([work, late]).finally(() => clearTimeout(timer));
+}
+
 /**
  * Search both sources and merge, Google's hits first (MRG-067), with the
  * title and the author scoped separately at each source (MRG-068).
@@ -174,6 +194,11 @@ export function mergeResults(
  * sum. Either source failing leaves the other's results standing; only both
  * failing throws, which is what `runSearch` needs to say "unavailable" rather
  * than "no matches".
+ *
+ * Each source gets `SOURCE_TIMEOUT_MS`; one that overruns counts as failed, so
+ * a slow answer neither holds the page nor is stored as a result. There is no
+ * page-level cache here to guard: the only caching (MRG-088) sits inside
+ * google-books.ts and stores only what a source returns.
  */
 export async function searchBooks(
   query: BookQuery,
@@ -186,8 +211,10 @@ export async function searchBooks(
   if (!scoped.title && !scoped.author) return [];
 
   const [google, openLibrary] = await Promise.allSettled([
-    apiKey() ? searchVolumes(scoped, limit) : Promise.resolve<BookSummary[]>([]),
-    searchWorks(scoped, limit),
+    apiKey()
+      ? withTimeout(searchVolumes(scoped, limit), "Google Books search")
+      : Promise.resolve<BookSummary[]>([]),
+    withTimeout(searchWorks(scoped, limit), "Open Library search"),
   ]);
 
   if (google.status === "rejected") {
