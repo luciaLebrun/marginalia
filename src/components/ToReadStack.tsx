@@ -46,9 +46,10 @@ export function ToReadStack({
   // Two books of one title would not, so every other line ends in a zero-width
   // space: different text for the live region, silent in speech.
   const [taken, setTaken] = useState({ title: "", count: 0 });
+  const marker = taken.count % 2 ? "\u200B" : "";
   const announcement =
     state.saved === false && said.after !== state
-      ? `${taken.title} taken off your to-read list.${taken.count % 2 ? "\u200B" : ""}`
+      ? `${taken.title} taken off your to-read list.${marker}`
       : said.text;
 
   const refilter = (value: string) => {
