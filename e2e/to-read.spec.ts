@@ -80,7 +80,12 @@ test.describe("the bedside stack", () => {
   test("keeps focus while taking a book off, then hands it to a neighbour or the heading", async ({ page }) => {
     await page.goto("/dev/to-read?stub=1", { waitUntil: "networkidle" });
     const buttons = page.locator("[data-take-off]");
-    const labels = () => buttons.evaluateAll((n) => n.map((b) => must(b.getAttribute("aria-label"))));
+    // evaluateAll's callback runs in the browser, where must() does not exist:
+    // read the raw attributes there, narrow them here.
+    const labels = async () =>
+      (await buttons.evaluateAll((n) => n.map((b) => b.getAttribute("aria-label")))).map((label) =>
+        must(label, "aria-label"),
+      );
     const press = async (at: number) => {
       await buttons.nth(at).focus();
       await page.keyboard.press("Enter");

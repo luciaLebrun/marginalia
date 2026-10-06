@@ -78,7 +78,6 @@ export function ClaimForm({
             id="username"
             name="username"
             type="text"
-            autoFocus
             autoComplete="off"
             autoCapitalize="none"
             spellCheck={false}
