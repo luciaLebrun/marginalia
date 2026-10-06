@@ -13,6 +13,8 @@ profiles and invite-only sign-up.
 
 ## Getting started
 
+Use the Node version in `.nvmrc` (`nvm use`); pnpm refuses any other.
+
 ```bash
 pnpm install
 cp .env.example .env.local     # then fill it in

@@ -7,6 +7,7 @@
 # Base images come through mirror.gcr.io, Google's Docker Hub mirror: no Hub
 # login or pull-rate limit, and on Google Cloud it is the nearby registry.
 
+# Node major (22) must match .nvmrc; Docker cannot read it.
 FROM mirror.gcr.io/library/node:22-bookworm-slim AS deps
 WORKDIR /app
 # pnpm comes through corepack; the bundled npm is never used and carries most

@@ -52,6 +52,9 @@
     "vitest": "^5.0.2"
   },
   "packageManager": "pnpm@10.34.6",
+  "engines": {
+    "node": ">=22.9.0 <23"
+  },
   "description": "A reading diary — log, rate and review the books you read.",
   "pnpm": {
     "overrides": {
