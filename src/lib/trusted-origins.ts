@@ -25,21 +25,21 @@ export const PREVIEW_ORIGIN_PATTERN =
 /**
  * Production trusts nothing extra.
  *
- * The proxy is already inert there — the plugin skips when the request arrives
- * at the production URL — but a production session must not be forwardable to a
- * preview origin under any circumstances, so the trust is withdrawn as well as
- * unused. `VERCEL_ENV` is set by Vercel itself and is `production`, `preview`
- * or `development`; it is also how we know this is production on Vercel.
+ * Production is the self-hosted VM (MRG-081): a production build outside Vercel
+ * (`NODE_ENV=production`, `VERCEL` unset). The proxy is inert there — the plugin
+ * skips when the request arrives at the production URL — but a production
+ * session must not be forwardable to a preview origin under any circumstances,
+ * so the trust is withdrawn as well as unused.
  *
- * Self-hosted there is no `VERCEL_ENV`, so a production build outside Vercel
- * (`NODE_ENV=production`, `VERCEL` unset) is production too. Reading only
- * `VERCEL_ENV` would take it for local development and trust the preview
- * pattern on the live site. Anything else, including undefined, is local
- * development or a Vercel preview, which keep the pattern.
+ * Vercel's own production deployment is no longer production. Every page there
+ * redirects to the VM, and it lives on only as the registered Google callback
+ * that relays preview sign-ins (MRG-095, next.config.ts) — so, like a preview
+ * or local development, it trusts the preview pattern. `VERCEL` is set by
+ * Vercel on every deployment, preview and production alike.
  */
 export function trustedOrigins(): string[] {
-  const { VERCEL_ENV, VERCEL, NODE_ENV } = process.env;
-  const production = VERCEL_ENV === "production" || (NODE_ENV === "production" && !VERCEL);
+  const { VERCEL, NODE_ENV } = process.env;
+  const production = NODE_ENV === "production" && !VERCEL;
   return production ? [] : [PREVIEW_ORIGIN_PATTERN];
 }
 
