@@ -533,15 +533,19 @@
   }
 }
 
-/* Native sheets (the log sheet, a slip line's edit) ease open and shut. */
+/*
+  Native sheets (the log sheet, a slip line's edit) ease open. They shut at
+  once: transitioning content-visibility as well would animate the close, but
+  it leaves the opening sheet's controls unfocusable for the whole ease, so a
+  keystroke or the sheet's own focus on open would land nowhere.
+*/
 details::details-content {
   block-size: 0;
   overflow-y: clip;
   opacity: 0;
   transition:
     block-size 420ms cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 260ms ease,
-    content-visibility 420ms allow-discrete;
+    opacity 260ms ease;
 }
 details[open]::details-content {
   block-size: auto;
@@ -624,8 +628,6 @@ details[open]::details-content {
     transition: opacity 200ms ease;
   }
   details::details-content {
-    transition:
-      opacity 180ms ease,
-      content-visibility 180ms allow-discrete;
+    transition: opacity 180ms ease;
   }
 }

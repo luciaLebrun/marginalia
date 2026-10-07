@@ -1820,8 +1820,10 @@ documented here because it arrived with this world.
 - **The jacket morph** (the focal moment). A jacket is a shared element between the
   shelf (or the hero, or a favourite) and its book page: it travels 560ms on the
   jacket spring, softened by a 1.5px blur mid-flight.
-- **Sheets.** Native `<details>` (the log sheet, a slip line's edit) ease open and shut
-  on their block size over 420ms.
+- **Sheets.** Native `<details>` (the log sheet, a slip line's edit) ease open on
+  their block size over 420ms and shut at once. Their `content-visibility` is never
+  transitioned: that would animate the close too, but it leaves an opening sheet's
+  controls unfocusable for the whole ease.
 - **Reveal.** Shelf cells, search results and spines rise 28px from 96% as they scroll
   into view, on a scroll-driven timeline where supported and not at all otherwise.
 - **Press.** A jacket cell, a spine or a pill gives to 96.5% under a press.

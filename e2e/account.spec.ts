@@ -86,10 +86,12 @@ test.describe("the account sheet", () => {
    * The line's tone is a class, not an inline style: a style would hold the
    * resting hairline down over `focus-within` (MRG-060).
    */
-  test("inks the line under the field being typed in", async ({ page }) => {
+  test("inks the line under the field being typed in", async ({ page }, info) => {
     const line = page.locator("#name").locator("xpath=..");
     await page.focus("#name");
-    await expect(line).toHaveCSS("border-bottom-color", "rgb(22, 19, 15)");
+    // MRG-108: on a phone the ink is the night text.
+    const ink = info.project.name === "mobile" ? "rgb(245, 245, 242)" : "rgb(22, 19, 15)";
+    await expect(line).toHaveCSS("border-bottom-color", ink);
   });
 
   test("warns before a handle move that breaks the old address", async ({ page }) => {
