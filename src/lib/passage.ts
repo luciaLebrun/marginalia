@@ -29,7 +29,7 @@ export interface MarginPassage {
 }
 
 /** The reader's passages, newest first. One indexed read, no external calls. */
-export async function getPassages(userId: string): Promise<MarginPassage[]> {
+export function getPassages(userId: string): Promise<MarginPassage[]> {
   const db = getDb();
   return db
     .select({
@@ -58,7 +58,7 @@ export async function getPassages(userId: string): Promise<MarginPassage[]> {
     .orderBy(desc(schema.passage.createdAt));
 }
 
-export async function countBookPassages(userId: string, bookId: string): Promise<number> {
+export function countBookPassages(userId: string, bookId: string): Promise<number> {
   return getDb().$count(
     schema.passage,
     and(eq(schema.passage.userId, userId), eq(schema.passage.bookId, bookId)),

@@ -164,7 +164,7 @@ function Sheet({
           className="band-label mt-4 flex w-full items-baseline bg-band-fiction px-3 py-4 text-left text-ink disabled:cursor-not-allowed disabled:line-through disabled:opacity-50"
         >
           <span className="font-stretch-[118%] tracking-[0.2em]">
-            {pending ? "Keeping…" : edit ? "Keep the changes" : "Keep it"}
+            {commitLabel(pending, edit !== undefined)}
           </span>
         </button>
       </form>
@@ -172,6 +172,11 @@ function Sheet({
       {edit && <RemovePassage id={edit.id} />}
     </details>
   );
+}
+
+function commitLabel(pending: boolean, editing: boolean): string {
+  if (pending) return "Keeping…";
+  return editing ? "Keep the changes" : "Keep it";
 }
 
 /** Two presses, as a read's removal is: the first asks, focus lands on the way out. */
