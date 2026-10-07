@@ -250,6 +250,6 @@ test("the diary's masthead leads to the to-read list, then the account", async (
     return;
   }
   const nav = page.getByRole("navigation", { name: "Your pages" });
-  await expect(nav.getByRole("link")).toHaveText(["To read", "Your account"]);
+  await expect(nav.getByRole("link")).toHaveText(["To read", "Margins", "Your account"]);
   await expect(nav.getByRole("link", { name: "To read" })).toHaveAttribute("href", "/to-read");
 });

@@ -57,8 +57,10 @@ async function retry<T>(label: string, fn: () => Promise<T>): Promise<T | null> 
 }
 
 const db = getDb();
+const DAY = 24 * 60 * 60 * 1000;
 
 if (process.argv.includes("--clear")) {
+  await db.delete(schema.passage).where(eq(schema.passage.userId, USER_ID));
   await db.delete(schema.log).where(eq(schema.log.userId, USER_ID));
   await db.delete(schema.inviteCode).where(eq(schema.inviteCode.createdBy, USER_ID));
   await db.delete(schema.user).where(eq(schema.user.id, USER_ID));
@@ -93,11 +95,13 @@ await db
   .set({ username: null })
   .where(eq(schema.user.id, NEWCOMER_ID));
 
+await db.delete(schema.passage).where(eq(schema.passage.userId, USER_ID));
 await db.delete(schema.favourite).where(eq(schema.favourite.userId, USER_ID));
 await db.delete(schema.log).where(eq(schema.log.userId, USER_ID));
 
 let logged = 0;
 const loggedBooks: string[] = [];
+const bookIds = new Map<string, string>();
 for (const [title, author, readAt, rating] of SHELF) {
   const results: BookSummary[] | null = await retry(title, () =>
     searchBooks({ title, author }, 1),
@@ -143,6 +147,7 @@ for (const [title, author, readAt, rating] of SHELF) {
 
   logged++;
   loggedBooks.push(row.id);
+  bookIds.set(title, row.id);
   console.log(
     `  ${String(logged).padStart(2)}. ${book.title}  ${coverColor ?? "(fallback)"}`,
   );
@@ -158,6 +163,29 @@ await db
   .values(favourites.map((bookId, position) => ({ userId: USER_ID, bookId, position })));
 console.log(`seeded ${favourites.length} favourites`);
 
+/*
+ * Three passages (MRG-110), short real quotations from books logged above, so
+ * /margins has a journal to show: one with a note, one without a page.
+ */
+const PASSAGES: [title: string, words: string, page: number | null, note: string | null][] = [
+  ["Dune", "Fear is the mind-killer.", 8, "Said over and over until it stops being a line."],
+  [
+    "The Remains of the Day",
+    "What is the point in worrying oneself too much about what one could or could not have done to control the course one’s life took?",
+    244,
+    null,
+  ],
+  ["Piranesi", "The beauty of the House is immeasurable; its kindness infinite.", null, null],
+];
+const passages = PASSAGES.flatMap(([title, words, page, note], i) => {
+  const bookId = bookIds.get(title);
+  // Staggered so "newest first" has an order to show.
+  return bookId
+    ? [{ id: crypto.randomUUID(), userId: USER_ID, bookId, words, page, note, createdAt: new Date(Date.now() - i * DAY) }]
+    : [];
+});
+if (passages.length > 0) await db.insert(schema.passage).values(passages);
+console.log(`seeded ${passages.length} passages`);
 
 /*
  * An invite run in all three states, so `/dev/settings` shows what the owner
@@ -167,7 +195,6 @@ console.log(`seeded ${favourites.length} favourites`);
  */
 await db.delete(schema.inviteCode).where(eq(schema.inviteCode.createdBy, USER_ID));
 
-const DAY = 24 * 60 * 60 * 1000;
 await db.insert(schema.inviteCode).values([
   {
     code: generateInviteCode(),

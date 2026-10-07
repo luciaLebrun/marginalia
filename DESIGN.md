@@ -64,6 +64,12 @@ typography:
     fontWeight: 400
     lineHeight: 1.625
     letterSpacing: "normal"
+  passage:
+    fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "1.0625rem"
+    fontWeight: 400
+    lineHeight: 1.625
+    letterSpacing: "normal"
   label:
     fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
     fontSize: "0.6875rem"
@@ -285,6 +291,22 @@ components:
   postcard-signature:
     textColor: "{colors.ink}"
     typography: "{typography.field}"
+  margins-band:
+    textColor: "{colors.ink}"
+    typography: "{typography.label}"
+    padding: "12px 16px"
+  journal-passage:
+    textColor: "{colors.ink}"
+    typography: "{typography.passage}"
+    width: "34rem"
+  keep-passage-line:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink-soft}"
+    typography: "{typography.label}"
+    height: "3.25rem"
+    padding: "0 12px"
+  keep-passage-line-open:
+    textColor: "{colors.ink}"
   postcard-band-record:
     backgroundColor: "{colors.ink}"
     textColor: "{colors.paper}"
@@ -539,7 +561,10 @@ colour is earned by reading and not by saving, and no jacket colour is extracted
 book that has never been logged. A favourite always wears earned colour, because only
 a book the reader has logged can be one: removing a book's last read takes it off the
 reader's favourites as well as off the shelf, so no favourite is ever left to fall back
-to ink.
+to ink. A kept passage is held to the same test: a passage belongs to its book, not to a
+read, so it can be kept from a book that is not on the shelf, and then Margins gives it
+the ink band on a laptop and the ink flood on the phone (`bookBand(passage, onShelf)`);
+keeping a passage never earns a book its colour.
 
 **The Refusal Tone Rule.** Alarm red says one thing — *this was refused, or this is
 about to destroy something* — and it says it as a stroke or as words, never as a
@@ -622,6 +647,13 @@ of the system, and it is what makes a second typeface unnecessary.
   no words takes the same step in soft ink. A spine's first author takes this step in
   paper at 70%, on one truncated line beneath the title — beneath it, never as a
   tracked-caps label above it.
+- **Passage** (400, 1.0625rem, lh relaxed, ink, capped at 34rem): words a reader
+  kept from a book — an earlier passage in the Margins journal, and the words field of
+  the passage sheet as they are typed. Body voice one step up, because the words are
+  the object and are reread rather than skimmed, set in the reader's own line breaks
+  (`white-space: pre-line`) with `text-pretty`. A passage's note under it stays at the
+  body step's 0.8125rem in soft ink. The latest passage does not take this step: on
+  Margins' spotlight it is set by length at display, headline or field (see Margins).
 - **Label** (600, 0.6875rem, `wdth` 88, 0.14em tracking, caps): the band voice —
   author name, "Add", "Reread", the tally, a year's book count, a field's label, an
   invite's state, every button on the account surfaces, a book page's author line
@@ -670,8 +702,10 @@ box. A control that inverts this — small value inside a chrome input under a l
 heading — is not this system. One named exception, approved by the user: a field
 that holds paragraphs of prose — the log sheet's review — sets its value at the body
 step (0.9375rem, regular), not the field step, still in ink on a ruled line with no
-box and still under its band-voice label. Short values stay at the field step, and
-no other field joins the exception without the same approval.
+box and still under its band-voice label. The passage sheet (MRG-110) ships two more
+prose fields under the same terms: a passage's words at the Passage step (1.0625rem)
+and its note at the body step. Short values stay at the field step — the passage's
+page among them — and no other field joins the exception without the same approval.
 
 ## Layout
 
@@ -819,7 +853,9 @@ with square line caps — including the log line's plus and minus, the reread ti
 and the dash between the two halves of an invite code,
 which is drawn rather than typed so a screen reader never spells it as part of the
 code. Never an icon font, never an emoji, never a glyph character. The phone's
-bottom-bar icons are the one round-capped set.
+bottom-bar icons are the one round-capped set; the bar's drawn quote mark (Margins)
+reappears at 16px on the book page's "Keep a passage" line, so the place and the act
+of keeping share one mark.
 
 State is drawn in the same vocabulary. At 40rem and up there is no chrome control: no
 filled input box, no pill, no toggle, no badge. What changes between states is the
@@ -1048,14 +1084,17 @@ device repeated, and the year rule immediately below is already a ruled strip.
   the bio as body copy in soft ink, capped at 38rem, each 12px under the line above.
   With no bio there is no line and nothing stands in for it. The reader's own diary
   shows neither. A page that is not a diary names itself in this band the same way: the
-  to-read list sets "To read" at display scale with its count holding the right edge.
+  to-read list sets "To read" at display scale with its count holding the right edge,
+  and Margins sets "Margins" with "N passages" there.
 - **Band three:** ink ground, paper text, the tally in label type ("11 books logged"
   / "Nothing logged yet") left, and the way onward right. The left words are a tally by
   default; a page that is not a diary gives them directly instead — the to-read list
-  reads "Newest saved on top", or "Saved from a book's page" when nothing is waiting.
+  reads "Newest saved on top", or "Saved from a book's page" when nothing is waiting;
+  Margins reads "Newest kept first", or "Kept from a book’s page" with nothing kept.
   The right end carries one way onward or several: several are a `nav` labelled "Your
-  pages", 20px apart. On the reader's own diary they are "To read" (`/to-read`) then
-  "Your account" (`/settings`). On a profile it is one link, and which depends on who is
+  pages", 20px apart. On the reader's own diary they are "To read" (`/to-read`),
+  "Margins" (`/margins`), then "Your account" (`/settings`); on Margins they are "Your
+  diary" then "To read". On a profile it is one link, and which depends on who is
   looking: the owner, on their own profile, keeps "Your account"; a signed-in friend gets
   "Your diary" (their own `/`); a signed-out visitor gets nothing, only the tally. Every
   link on this band carries the paper focus ring. This band remains the page's ruled
@@ -1160,7 +1199,8 @@ page.
   a hairline border, facing the title column (see Layout). In that column: the title
   at display scale, the subtitle at the field step in soft ink, the imprint rows, the
   Want to Read control, the date slip, the Favourite control once the slip holds a
-  read, then the description in soft-ink body copy.
+  read, the Keep a Passage line (shown whether or not the book has a read: a passage
+  is kept mid-book as readily as after), then the description in soft-ink body copy.
 - **Imprint rows:** a list opened by a hairline, one row per known value, each closed
   by a hairline, 10px vertical. The label sits left in soft-ink band voice and the
   value right on the same baseline, at body size, weight 500, in ink. A value Open
@@ -1345,6 +1385,72 @@ header over an article.
 - **States:** none of its own, and no motion. Its links respond in colour only.
   Undated, unrated, reread, no cover (the page-scale type-only jacket), no review, and
   signed out against signed in are all real settings with real copy.
+
+### Margins (page-scale tri-band)
+
+The reader's private commonplace book (`/margins`, MRG-110): the words lead, a jacket
+is only ever a small stamp, so the page never reads as a second shelf and never as a
+wall of quote cards. Newest first. At 40rem and up it runs under the masthead (see
+Masthead); below 40rem see Margins Spotlight (phone).
+
+- **Spotlight:** the latest passage owns the first viewport as a quotation, in a
+  44rem column (24px side padding, 40px top). A full-column band in the book's colour
+  (Earned Colour Rule; foreground from `readableOn()`) heads it, 12px/16px, and *is*
+  the link to the book: "Title · Author · p. 214" in band voice, the title underlined in
+  the foreground at 40%, the focus ring in the band's foreground. Under it the words
+  on paper, in ink, at 600 and sized by length, so neither the page name nor a heading
+  ever outranks them and a long passage steps down rather than running a viewport of
+  display type: up to 80 characters at Display (3.5rem, lh 1.02), up to 240 at
+  Headline (2.25rem, lh 1.12), longer at the Field step (1.375rem, lh snug). The
+  opening quotation mark hangs outside the measure in the gutter at 50%, so the
+  words' first line stands on the same edge as the stamp and note under them. The
+  band already carries the credit, so the stamp under the words keeps only its
+  jacket; then the note in soft-ink body copy (34rem), then "Edit".
+- **Journal:** the earlier passages as one column — 41rem at 40rem and up, 16px
+  gutters below — opened by a hairline, each passage closed by one (none after the
+  last), 28px vertical. Each is the words at the Passage step on the 34rem measure,
+  the stamp, the note at 0.8125rem in soft ink, and "Edit". Each rises in on reveal.
+- **Stamp:** where a passage came from, and the link to its book (the jacket travels
+  there as from the shelf). A small 2:3 jacket in a hairline-bordered sunk-paper well
+  (2rem wide in the journal, 2.75rem under the spotlight), 12px beside the title at
+  the Title step (0.9375rem under the spotlight), underlined in hairline tone and ink
+  under the pointer, over "Author · p. 214" at 0.8125rem in soft ink, both truncated
+  on one line. A missing page omits its part rather than printing a dash.
+- **Edit:** a native `<summary>` Text Button, "Edit" in soft ink becoming "Close" in
+  ink when open, that deploys the passage sheet (see Keep a Passage) in edit mode
+  under the passage, between hairlines.
+- **Empty:** honest, and it invents no passage. "Nothing kept yet" at the Display step
+  (2.25rem), one soft-ink body sentence (30rem) saying a passage is kept from a
+  book's page and lands here privately, then an Outline Button, "Open your diary".
+
+### Keep a Passage
+
+A line on the book page's 34rem column, 24px under the control above it, that
+deploys the passage sheet in place: a native `<details>`, never a modal. It is the
+Log Sheet's language, kept for a passage rather than a read.
+
+- **Line:** a 3.25rem summary, 12px horizontal padding, closed by a 2px rule, exactly
+  as the date slip's "Log a read" line: "Keep a passage" in band voice left, the
+  drawn 16px quote mark right. Soft ink over a hairline-tone rule at rest; words,
+  mark and rule go to ink under the pointer, on focus-visible and while open, and
+  open the visible word becomes "Close" while "Keep a passage" stays the accessible
+  name. Under it, once the book has any, one 0.8125rem soft-ink line: "One passage" or
+  "N passages from this book in your Margins", the last two words linking there.
+- **Sheet:** Log Sheet rows (16px/12px, hairline-closed, band-voice label above a 2px
+  ruled line: hairline at rest, ink on `focus-within`, alarm when refused). "The
+  passage" — required, a textarea at the Passage step that grows with its text, with a
+  "N / 1500" soft-ink tabular counter (0.8125rem) under it; then on one row "Page" (6rem,
+  the Field step, tabular, "—" placeholder) beside "Your note" (body step, "Optional",
+  at most 280). A field's refusal prints under its row; a refusal with no field (signed
+  out, a book gone) is one body sentence in alarm above the commit.
+- **Commit:** a Commit Band in the flow, 16px under the rows: "Keep it" ("Keep the
+  changes" in edit mode, "Keeping…" while it runs), unavailable while the words are
+  empty; its unavailable mark is the Printed State Rule's rule-through. After a save the sheet remounts closed and empty, and a hidden
+  live readout says "Passage kept in your Margins." (its words alternate each save).
+- **Remove (edit mode only):** the Log Sheet's guarded remove — a Text Button "Remove
+  this passage"; pressed, one body sentence in alarm, "Remove this passage for good?",
+  over a Text Button "Keep it" and an Outline Button "Remove" in alarm, 20px apart.
+  Focus lands on "Keep it"; kept, it returns to "Remove this passage".
 
 ### Field Row
 
@@ -1696,6 +1802,9 @@ One family still: Archivo, run wider and heavier for display on the phone.
   in favourites and in search results, with its first author beneath it at 0.75rem in
   Night Soft, truncated — the author moves under the title because the colour band
   that carried it is folded away.
+- **Margins** keeps the Tri-band steps on the phone: the spotlight's words at Display,
+  Headline or Field by length (2.25rem, 1.75rem, 1.375rem, at 600), never Night Display,
+  because a quotation is not a name.
 - **Bar Label** (`{typography.m-bar-label}`): the five place names in the bottom bar,
   sentence case. The condensed tracked caps stay the voice of buttons and band labels;
   the bar is a place list, not a band.
@@ -1769,13 +1878,15 @@ mark keeps the Tri-band's square caps.
 
 #### Bottom Bar (signature component)
 
-A floating, frosted five-place bar — Diary · Search · Log · To read · Account — inset
+A floating, frosted five-place bar — Diary · Margins · Log · To read · Account — inset
 0.75rem from the sides and above the home indicator, in `{rounded.m-sheet}`. Log sits
 in the middle as a raised 3.5rem Ember square (`{rounded.m-card}`) lifted 2rem out of
 the bar, its label on the others' baseline. The current place is marked by one white
 10% pill that slides between slots on the bar spring rather than five marks that
 blink, with `aria-current` and the slot's icon and label going from Night Text Soft to
-Night Text. A book page keeps the place the reader came from. Presses give: a slot
+Night Text. Slot two is Margins, drawn as a quote mark (MRG-110); Search no longer
+has a slot of its own and is reached through Log, so search lights the Log slot. A
+book page keeps the slot it was opened from. Presses give: a slot
 scales to 0.9, the Log pill to 0.88 with a quarter turn. The bar is exempt from every
 place transition, so it is the one thing that never moves between pages. Not drawn at
 40rem and up.
@@ -1786,6 +1897,17 @@ The diary's first viewport (see Layout). With no reads, the field is the neutral
 wash, the tally reads "0 books logged — yet", and an Ember pill reads "Log your first
 book" under one sentence of guidance; nothing is mocked up. The jacket settles in
 (`hero-in`) and is a shared element with that book's page.
+
+#### Margins Spotlight (phone)
+
+The masthead is not drawn. The latest passage stands on its book's flood (`m-flood`;
+ink's flood when the book is not on the shelf), under the 1.25rem gutter and the
+safe-area inset: the 0.75rem wordmark left and "N passages" right in the flood's
+`readableOn()` tone, then the words in that tone at their length-chosen step, with no
+quotation mark — the gutter cannot hold one at display size, and the flood and the
+size already say "quotation". Under the words, the stamp with its jacket rounded and
+glowing in the flood colour, its title and "Author · p." in the tone (the second line
+at 75%), never grey; then the note in the tone at 75%. The journal follows on night.
 
 #### Phone Cell
 
@@ -1846,7 +1968,9 @@ visibly.
 - **Do** change the phone by token remap and `max-sm:` / `m-` utilities on the same
   markup; never fork a component into a phone copy.
 - **Do** flood a field or tint a glow only with a book's earned, conditioned band
-  colour.
+  colour; a passage from an unshelved book floods ink.
+- **Do** set words on a flood in the flood's `readableOn()` tone, secondary lines at
+  75% of it, never Night Soft grey.
 - **Do** set Night words on Ember, and keep Ember to the one lit control on a view.
 - **Do** round jackets, cards, sheets and controls on the recorded radius scale.
 - **Do** give every new motion a reduced-motion crossfade or stillness.

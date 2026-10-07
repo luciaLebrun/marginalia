@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { WordmarkBand } from "./WordmarkBand";
-import { ACCOUNT_LINK, TO_READ_LINK, type MastheadLink } from "@/lib/masthead-link";
+import { ACCOUNT_LINK, MARGINS_LINK, TO_READ_LINK, type MastheadLink } from "@/lib/masthead-link";
 
 /**
  * The masthead is a tri-band at page scale — colour, field, record — so the
@@ -18,7 +18,7 @@ export function Masthead({
   handle = null,
   bio = null,
   // The reader's own diary: their list, then their account.
-  link = [TO_READ_LINK, ACCOUNT_LINK],
+  link = [TO_READ_LINK, MARGINS_LINK, ACCOUNT_LINK],
   tally,
 }: Readonly<{
   name: string | null;

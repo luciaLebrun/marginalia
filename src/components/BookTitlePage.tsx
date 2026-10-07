@@ -3,6 +3,7 @@ import { Fragment } from "react";
 
 import { Cover } from "./Cover";
 import { DateSlip } from "./DateSlip";
+import { KeepPassage } from "./PassageSheet";
 import { Jacket } from "./Place";
 import { FavouriteToggle } from "./FavouriteToggle";
 import type { FavouriteState, ToReadState } from "@/app/actions";
@@ -37,6 +38,7 @@ export function BookTitlePage({
   onToRead = false,
   favourite = { isFavourite: false, full: false, position: -1, count: 0 },
   ownCopy = null,
+  passageCount = 0,
   username,
   diaryHref = "/",
   searchHref,
@@ -53,6 +55,8 @@ export function BookTitlePage({
   favourite?: { isFavourite: boolean; full: boolean; position: number; count: number };
   /** Another row of this same book the reader already has (MRG-107). */
   ownCopy?: OwnCopy | null;
+  /** How many passages the reader has kept from this book (MRG-110). */
+  passageCount?: number;
   /** The reader's handle, so each read on the slip can address its own page. */
   username: string;
   /** The dev harness points this at its own shelf. */
@@ -167,6 +171,23 @@ export function BookTitlePage({
               diaryHref={diaryHref}
               action={favouriteAction}
             />
+          )}
+
+          {/* Margins (MRG-110): kept mid-book as readily as after, so it does
+              not wait for a read the way a favourite does. */}
+          <KeepPassage bookId={book.id} />
+          {passageCount > 0 && (
+            <p className="mt-3 max-w-[34rem] text-[0.8125rem] leading-snug text-ink-soft">
+              {passageCount === 1 ? "One passage" : `${passageCount} passages`} from this book in{" "}
+              <Link
+                href="/margins"
+                transitionTypes={["nav-swap"]}
+                className="underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink"
+              >
+                your Margins
+              </Link>
+              .
+            </p>
           )}
 
           {paragraphs.length > 0 && (

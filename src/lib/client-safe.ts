@@ -68,3 +68,9 @@ export const TO_READ_FILTER_MIN = 8;
 export function showsFilter(total: number, filter: string): boolean {
   return total >= TO_READ_FILTER_MIN || filter !== "";
 }
+
+/** A passage kept from a book: a page or two of quotation, not the chapter. */
+export const PASSAGE_MAX = 1500;
+
+/** One line of the reader's own, set under the passage. */
+export const PASSAGE_NOTE_MAX = 280;
