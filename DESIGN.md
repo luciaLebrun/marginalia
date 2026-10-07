@@ -702,9 +702,9 @@ box. A control that inverts this — small value inside a chrome input under a l
 heading — is not this system. One named exception, approved by the user: a field
 that holds paragraphs of prose — the log sheet's review — sets its value at the body
 step (0.9375rem, regular), not the field step, still in ink on a ruled line with no
-box and still under its band-voice label. The passage sheet (MRG-110) ships two more
-prose fields under the same terms: a passage's words at the Passage step (1.0625rem)
-and its note at the body step. Short values stay at the field step — the passage's
+box and still under its band-voice label. The passage sheet (MRG-110) adds two more
+prose fields under the same terms, approved by the user on 2026-10-07: a passage's
+words at the Passage step (1.0625rem) and its note at the body step. Short values stay at the field step — the passage's
 page among them — and no other field joins the exception without the same approval.
 
 ## Layout
