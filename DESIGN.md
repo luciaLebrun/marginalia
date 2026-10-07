@@ -1401,7 +1401,11 @@ Masthead); below 40rem see Margins Spotlight (phone).
   on paper, in ink, at 600 and sized by length, so neither the page name nor a heading
   ever outranks them and a long passage steps down rather than running a viewport of
   display type: up to 80 characters at Display (3.5rem, lh 1.02), up to 240 at
-  Headline (2.25rem, lh 1.12), longer at the Field step (1.375rem, lh snug). Every
+  Headline (2.25rem, lh 1.12), up to 600 at the Field step (1.375rem, lh snug), and
+  past that at the Passage step (1.0625rem, 400, relaxed) — a long paragraph in bold
+  display type is a wall. Passage words and notes break anywhere when they must
+  (`overflow-wrap: anywhere`), so a pasted link or an unbroken word never widens the
+  page. Every
   passage stands between its double quotes, opening and closing, set inline in the
   words' own size and colour, as a printed quotation is (the user's call,
   2026-10-07); the marks are type, hidden from assistive tech under the blockquote. The

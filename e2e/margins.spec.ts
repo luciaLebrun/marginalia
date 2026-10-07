@@ -27,6 +27,14 @@ test.describe("margins", () => {
     await expect(page.locator("blockquote")).toHaveCount(0);
   });
 
+  test("never scrolls sideways, whatever the reader pasted", async ({ page }) => {
+    await page.goto("/dev/margins?state=long", { waitUntil: "networkidle" });
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+  });
+
   test("is a place in the phone's bar, in the slot Search held", async ({ page }, info) => {
     test.skip(info.project.name !== "mobile", "the bar is phone-only (MRG-108)");
     await page.goto("/dev/margins", { waitUntil: "networkidle" });

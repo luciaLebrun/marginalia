@@ -58,9 +58,11 @@ export function MarginsView({ passages }: Readonly<{ passages: MarginPassage[] }
  * steps down rather than running a viewport of display type.
  */
 function wordsSize(words: string): string {
-  if (words.length <= 80) return "text-[2.25rem] leading-[1.02] tracking-[-0.02em] sm:text-[3.5rem]";
-  if (words.length <= 240) return "text-[1.75rem] leading-[1.18] tracking-[-0.02em] sm:text-[2.25rem] sm:leading-[1.12]";
-  return "text-[1.375rem] leading-snug tracking-[-0.01em]";
+  if (words.length <= 80) return "font-semibold text-[2.25rem] leading-[1.02] tracking-[-0.02em] sm:text-[3.5rem]";
+  if (words.length <= 240) return "font-semibold text-[1.75rem] leading-[1.18] tracking-[-0.02em] sm:text-[2.25rem] sm:leading-[1.12]";
+  if (words.length <= 600) return "font-semibold text-[1.375rem] leading-snug tracking-[-0.01em]";
+  // Past a long paragraph, bold display type is a wall: the Passage step, as the journal sets it.
+  return "max-w-[34rem] text-[1.0625rem] leading-relaxed";
 }
 
 /**
@@ -107,14 +109,14 @@ function Spotlight({ passage, count }: Readonly<{ passage: MarginPassage; count:
           The passage you kept last, from {passage.title}
         </h1>
         <blockquote className="hero-in mt-8 max-sm:text-[var(--tone)] sm:mt-0">
-          <p className={`font-semibold text-pretty whitespace-pre-line ${wordsSize(passage.words)}`}>
+          <p className={`text-pretty whitespace-pre-line [overflow-wrap:anywhere] ${wordsSize(passage.words)}`}>
             <Quoted words={passage.words} />
           </p>
         </blockquote>
 
         <Stamp passage={passage} large />
         {passage.note && (
-          <p className="mt-4 max-w-[34rem] text-[0.9375rem] leading-relaxed text-ink-soft max-sm:text-[var(--tone)] max-sm:opacity-75">
+          <p className="mt-4 max-w-[34rem] text-[0.9375rem] leading-relaxed text-ink-soft [overflow-wrap:anywhere] max-sm:text-[var(--tone)] max-sm:opacity-75">
             {passage.note}
           </p>
         )}
@@ -147,13 +149,13 @@ function Passage({ passage }: Readonly<{ passage: MarginPassage }>) {
     <article>
       <blockquote>
         {/* The Passage step: body voice a step up, on the 34rem measure. */}
-        <p className="max-w-[34rem] text-[1.0625rem] leading-relaxed text-pretty whitespace-pre-line">
+        <p className="max-w-[34rem] text-[1.0625rem] leading-relaxed text-pretty whitespace-pre-line [overflow-wrap:anywhere]">
           <Quoted words={passage.words} />
         </p>
       </blockquote>
       <Stamp passage={passage} />
       {passage.note && (
-        <p className="mt-3 max-w-[34rem] text-[0.8125rem] leading-relaxed text-ink-soft">{passage.note}</p>
+        <p className="mt-3 max-w-[34rem] text-[0.8125rem] leading-relaxed text-ink-soft [overflow-wrap:anywhere]">{passage.note}</p>
       )}
       <div className="mt-3">
         <EditPassage passage={passage} />
