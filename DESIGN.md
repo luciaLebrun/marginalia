@@ -1401,14 +1401,15 @@ Masthead); below 40rem see Margins Spotlight (phone).
   on paper, in ink, at 600 and sized by length, so neither the page name nor a heading
   ever outranks them and a long passage steps down rather than running a viewport of
   display type: up to 80 characters at Display (3.5rem, lh 1.02), up to 240 at
-  Headline (2.25rem, lh 1.12), longer at the Field step (1.375rem, lh snug). The
-  opening quotation mark hangs outside the measure in the gutter at 50%, so the
-  words' first line stands on the same edge as the stamp and note under them. The
+  Headline (2.25rem, lh 1.12), longer at the Field step (1.375rem, lh snug). Every
+  passage stands between its double quotes, opening and closing, set inline in the
+  words' own size and colour, as a printed quotation is (the user's call,
+  2026-10-07); the marks are type, hidden from assistive tech under the blockquote. The
   band already carries the credit, so the stamp under the words keeps only its
   jacket; then the note in soft-ink body copy (34rem), then "Edit".
 - **Journal:** the earlier passages as one column — 41rem at 40rem and up, 16px
   gutters below — opened by a hairline, each passage closed by one (none after the
-  last), 28px vertical. Each is the words at the Passage step on the 34rem measure,
+  last), 28px vertical. Each is the words, between their double quotes, at the Passage step on the 34rem measure,
   the stamp, the note at 0.8125rem in soft ink, and "Edit". Each rises in on reveal.
 - **Stamp:** where a passage came from, and the link to its book (the jacket travels
   there as from the shelf). A small 2:3 jacket in a hairline-bordered sunk-paper well
@@ -1903,9 +1904,8 @@ book" under one sentence of guidance; nothing is mocked up. The jacket settles i
 The masthead is not drawn. The latest passage stands on its book's flood (`m-flood`;
 ink's flood when the book is not on the shelf), under the 1.25rem gutter and the
 safe-area inset: the 0.75rem wordmark left and "N passages" right in the flood's
-`readableOn()` tone, then the words in that tone at their length-chosen step, with no
-quotation mark — the gutter cannot hold one at display size, and the flood and the
-size already say "quotation". Under the words, the stamp with its jacket rounded and
+`readableOn()` tone, then the words in that tone at their length-chosen step, between
+their inline double quotes as at every width. Under the words, the stamp with its jacket rounded and
 glowing in the flood colour, its title and "Author · p." in the tone (the second line
 at 75%), never grey; then the note in the tone at 75%. The journal follows on night.
 

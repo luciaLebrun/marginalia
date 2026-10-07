@@ -6,7 +6,7 @@ import { Masthead } from "./Masthead";
 import { EditPassage } from "./PassageSheet";
 import { Place } from "./Place";
 import { bookBand } from "@/lib/book-view";
-import { bookPath } from "@/lib/client-safe";
+import { bookPath, unquote } from "@/lib/client-safe";
 import { DIARY_LINK, TO_READ_LINK } from "@/lib/masthead-link";
 import type { MarginPassage } from "@/lib/passage";
 
@@ -107,16 +107,8 @@ function Spotlight({ passage, count }: Readonly<{ passage: MarginPassage; count:
           The passage you kept last, from {passage.title}
         </h1>
         <blockquote className="hero-in mt-8 max-sm:text-[var(--tone)] sm:mt-0">
-          {/* The opening mark hangs in the gutter, so the words' first line
-              stands on the same edge as the stamp and the note under them. */}
-          <p className={`relative font-semibold text-pretty whitespace-pre-line ${wordsSize(passage.words)}`}>
-            {/* A phone's gutter cannot hold the mark at display size, and
-                inline it indents the line; the flood and the size already say
-                "quotation" there, so the mark is a laptop's only. */}
-            <span aria-hidden="true" className="absolute top-[0.06em] right-full mr-[0.08em] leading-none opacity-50 max-sm:hidden">
-              “
-            </span>
-            {passage.words}
+          <p className={`font-semibold text-pretty whitespace-pre-line ${wordsSize(passage.words)}`}>
+            <Quoted words={passage.words} />
           </p>
         </blockquote>
 
@@ -134,13 +126,30 @@ function Spotlight({ passage, count }: Readonly<{ passage: MarginPassage; count:
   );
 }
 
+/**
+ * A passage between its double quotes, as it would be printed (the user's
+ * call, MRG-110): opening and closing marks inline, at every width. The
+ * marks are type, not words, so a screen reader hears the blockquote alone.
+ */
+function Quoted({ words }: Readonly<{ words: string }>) {
+  return (
+    <>
+      <span aria-hidden="true">“</span>
+      {unquote(words)}
+      <span aria-hidden="true">”</span>
+    </>
+  );
+}
+
 /** An earlier passage: the words first, then the stamp that says where from. */
 function Passage({ passage }: Readonly<{ passage: MarginPassage }>) {
   return (
     <article>
       <blockquote>
         {/* The Passage step: body voice a step up, on the 34rem measure. */}
-        <p className="max-w-[34rem] text-[1.0625rem] leading-relaxed text-pretty whitespace-pre-line">{passage.words}</p>
+        <p className="max-w-[34rem] text-[1.0625rem] leading-relaxed text-pretty whitespace-pre-line">
+          <Quoted words={passage.words} />
+        </p>
       </blockquote>
       <Stamp passage={passage} />
       {passage.note && (
