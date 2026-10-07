@@ -12,7 +12,7 @@ const INK = "rgb(22, 19, 15)";
 
 test.describe("search", () => {
   test("a blank search waits in the field", async ({ page }) => {
-    await page.goto("/dev/search", { waitUntil: "networkidle" });
+    await page.goto("/dev/search");
 
     await expect(page.getByRole("searchbox", { name: "Title" })).toHaveValue("");
     await expect(page.getByRole("searchbox", { name: "Author" })).toHaveValue("");
@@ -25,7 +25,7 @@ test.describe("search", () => {
 
   /* Both fields land in the address, so Back and a shared link both work. */
   test("submitting puts both fields in the address and keeps them filled", async ({ page }) => {
-    await page.goto("/dev/search", { waitUntil: "networkidle" });
+    await page.goto("/dev/search");
 
     await page.getByRole("searchbox", { name: "Title" }).fill("dune");
     await page.getByRole("searchbox", { name: "Author" }).fill("herbert");
@@ -43,7 +43,7 @@ test.describe("search", () => {
   /* Either line alone is a search: a reader who only knows the author still
      gets a shelf back. */
   test("an author alone is a search", async ({ page }) => {
-    await page.goto("/dev/search", { waitUntil: "networkidle" });
+    await page.goto("/dev/search");
 
     await page.getByRole("searchbox", { name: "Author" }).fill("herbert");
     await page.keyboard.press("Enter");
@@ -54,7 +54,7 @@ test.describe("search", () => {
 
   test.describe("with results", () => {
     test.beforeEach(async ({ page }) => {
-      await page.goto("/dev/search?title=dune&author=herbert", { waitUntil: "networkidle" });
+      await page.goto("/dev/search?title=dune&author=herbert");
     });
 
     test("counts them in the record band", async ({ page }) => {
@@ -130,8 +130,11 @@ test.describe("search", () => {
 
     test("results are reachable and visibly focused by keyboard", async ({ page }) => {
       const first = page.locator("ol.shelf-grid > li > a").first();
-      await first.focus();
-      await expect(first).toBeFocused();
+      // Hydration can blur a focus made before it finishes: retry until it holds.
+      await expect(async () => {
+        await first.focus();
+        await expect(first).toBeFocused({ timeout: 500 });
+      }).toPass();
       const outline = await first.evaluate((el) => getComputedStyle(el).outlineStyle);
       expect(outline).not.toBe("none");
     });
@@ -155,9 +158,7 @@ test.describe("search", () => {
   });
 
   test("no matches says so and says how to recover", async ({ page }) => {
-    await page.goto("/dev/search?title=zzqx&author=nobody&source=empty", {
-      waitUntil: "networkidle",
-    });
+    await page.goto("/dev/search?title=zzqx&author=nobody&source=empty");
 
     await expect(page.getByRole("status")).toHaveText("No matches");
     await expect(page.getByText(/nothing matches “zzqx” by “nobody”/i)).toBeVisible();
@@ -181,7 +182,7 @@ test.describe("search", () => {
    * book", or a reader goes looking for a typo that is not there.
    */
   test("an outage reads as unavailable, never as no matches", async ({ page }) => {
-    await page.goto("/dev/search?title=dune&source=down", { waitUntil: "networkidle" });
+    await page.goto("/dev/search?title=dune&source=down");
 
     await expect(page.getByRole("status")).toHaveText("Search unavailable");
     await expect(page.getByText(/neither source is answering/i)).toBeVisible();
@@ -201,7 +202,7 @@ test("the real route sends a signed-out visitor to the door", async ({ page }) =
  * on this same page.
  */
 test("a one-line miss is never told to add the other line", async ({ page }) => {
-  await page.goto("/dev/search?title=zzqx&source=empty", { waitUntil: "networkidle" });
+  await page.goto("/dev/search?title=zzqx&source=empty");
 
   await expect(page.getByText(/nothing matches “zzqx”/i)).toBeVisible();
   await expect(page.getByText(/add the author/i)).toHaveCount(0);
@@ -220,7 +221,7 @@ test.describe("show more", () => {
   test("adds twenty under the grid, up to sixty, without moving what was there", async ({
     page,
   }) => {
-    await page.goto("/dev/search?title=dune&source=full", { waitUntil: "networkidle" });
+    await page.goto("/dev/search?title=dune&source=full");
     await expect(cells(page)).toHaveCount(20);
     // The book's path; the query after it carries the show-more count (MRG-086).
     const firstPath = async () =>
@@ -250,7 +251,7 @@ test.describe("show more", () => {
 
   /* A keyboard reader is taken to the first new book, not left behind it. */
   test("hands keyboard focus to the first new result", async ({ page }) => {
-    await page.goto("/dev/search?title=dune&source=full", { waitUntil: "networkidle" });
+    await page.goto("/dev/search?title=dune&source=full");
     await more(page).focus();
     await page.keyboard.press("Enter");
     await expect(cells(page)).toHaveCount(40);
@@ -264,24 +265,20 @@ test.describe("show more", () => {
 
   /* After a step, a short page means the sources are spent. */
   test("says when the sources ran out", async ({ page }) => {
-    await page.goto("/dev/search?title=dune&author=herbert&shown=40", {
-      waitUntil: "networkidle",
-    });
+    await page.goto("/dev/search?title=dune&author=herbert&shown=40");
     await expect(page.getByRole("button", { name: "Show 20 more" })).toBeDisabled();
     await expect(page.getByText("That is every book the search found.")).toBeVisible();
   });
 
   /* A short page means the sources are spent: nothing to offer. */
   test("is not offered under a short page", async ({ page }) => {
-    await page.goto("/dev/search?title=dune", { waitUntil: "networkidle" });
+    await page.goto("/dev/search?title=dune");
     await expect(cells(page).first()).toBeVisible();
     await expect(more(page)).toHaveCount(0);
   });
 
   test("ignores a hand-edited count it cannot honour", async ({ page }) => {
-    await page.goto("/dev/search?title=dune&source=full&shown=abc", {
-      waitUntil: "networkidle",
-    });
+    await page.goto("/dev/search?title=dune&source=full&shown=abc");
     await expect(cells(page)).toHaveCount(20);
   });
 });

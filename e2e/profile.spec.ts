@@ -10,7 +10,7 @@ import { expect, test, type Page } from "@playwright/test";
  */
 test.describe("public profile", () => {
   test("renders the reader's shelf at their handle", async ({ page }) => {
-    await page.goto("/@lucia", { waitUntil: "networkidle" });
+    await page.goto("/@lucia");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Lucia");
     expect(await page.locator("article").count()).toBeGreaterThan(0);
   });
@@ -22,7 +22,7 @@ test.describe("public profile", () => {
   });
 
   test("does not offer the log action on someone else's diary", async ({ page }) => {
-    await page.goto("/@lucia", { waitUntil: "networkidle" });
+    await page.goto("/@lucia");
     await expect(page.getByRole("link", { name: /log a book/i })).toHaveCount(0);
   });
 
@@ -31,7 +31,7 @@ test.describe("public profile", () => {
    * public diary"; this is where that promise is kept.
    */
   test("says whose diary it is: the handle, then the bio, under the name", async ({ page }) => {
-    await page.goto("/@lucia", { waitUntil: "networkidle" });
+    await page.goto("/@lucia");
 
     const masthead = page.locator("header");
     await expect(masthead.getByText("@lucia", { exact: true })).toBeVisible();
@@ -43,7 +43,7 @@ test.describe("public profile", () => {
    * real: the app is invite-only, and the record band offers them no link.
    */
   test("offers a signed-out visitor no account and no diary link", async ({ page }) => {
-    await page.goto("/@lucia", { waitUntil: "networkidle" });
+    await page.goto("/@lucia");
 
     await expect(page.getByRole("link", { name: "Your account" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Your diary" })).toHaveCount(0);
@@ -127,7 +127,7 @@ test.describe("profile masthead by viewer (harness)", () => {
 
 test.describe("username claim", () => {
   test("shows the form and rejects a bad username with a reason", async ({ page }) => {
-    await page.goto("/dev/claim", { waitUntil: "networkidle" });
+    await page.goto("/dev/claim");
 
     // The dev reader may already hold a username; the harness says so.
     if (await page.getByText(/already claimed as/i).isVisible().catch(() => false)) {
@@ -160,7 +160,7 @@ test.describe("username claim", () => {
    * every new reader's form. It is now built from the reader's own name.
    */
   test("hints a handle from the reader's own name, not someone else's", async ({ page }) => {
-    await page.goto("/dev/claim", { waitUntil: "networkidle" });
+    await page.goto("/dev/claim");
     if (await page.getByText(/already claimed as/i).isVisible().catch(() => false)) {
       test.skip(true, "dev reader already has a username");
     }
@@ -172,7 +172,7 @@ test.describe("username claim", () => {
   });
 
   test("refuses an empty handle in its own sentence, not the browser's bubble", async ({ page }) => {
-    await page.goto("/dev/claim", { waitUntil: "networkidle" });
+    await page.goto("/dev/claim");
     if (await page.getByText(/already claimed as/i).isVisible().catch(() => false)) {
       test.skip(true, "dev reader already has a username");
     }
@@ -189,7 +189,7 @@ test.describe("username claim", () => {
   });
 
   test("the field is labelled and reachable by keyboard", async ({ page }) => {
-    await page.goto("/dev/claim", { waitUntil: "networkidle" });
+    await page.goto("/dev/claim");
     if (await page.getByText(/already claimed as/i).isVisible().catch(() => false)) {
       test.skip(true, "dev reader already has a username");
     }
