@@ -1,9 +1,12 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { BottomBar } from "@/components/BottomBar";
 import { Favourites } from "@/components/Favourites";
 import { MarkSeen } from "@/components/MarkSeen";
 import { Masthead } from "@/components/Masthead";
+import { NowReading } from "@/components/NowReading";
+import { Place } from "@/components/Place";
 import { Shelf } from "@/components/Shelf";
 import { SignInDoor } from "@/components/SignInDoor";
 import { WordmarkBand } from "@/components/WordmarkBand";
@@ -28,13 +31,17 @@ export default async function DiaryPage({ searchParams }: PageProps<"/">) {
     getFavourites(session.user.id),
   ]);
 
+  const span = readingSpan(entries);
+  const latest = entries[0] ?? null;
+
   return (
+    <>
+    <Place>
     <main className="flex-1">
-      <Masthead
-        name={session.user.name}
-        span={readingSpan(entries)}
-        count={count}
-      />
+      <NowReading name={session.user.name} count={count} span={span} latest={latest} />
+      <div className="m-hidden">
+        <Masthead name={session.user.name} span={span} count={count} />
+      </div>
       {/* The hint waits for a first read: before that there is nothing that
           could be a favourite, and the empty shelf's one action is to log. */}
       <Favourites books={favourites} arrange hint={count > 0} />
@@ -42,9 +49,13 @@ export default async function DiaryPage({ searchParams }: PageProps<"/">) {
         entries={entries}
         by={parseShelfOrder((await searchParams).by)}
         path="/"
+        heroKey={latest?.sourceKey}
       />
       <MarkSeen userId={session.user.id} />
     </main>
+    </Place>
+    <BottomBar />
+    </>
   );
 }
 

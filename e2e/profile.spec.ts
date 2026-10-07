@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 /**
  * The public profile at /@name, and the username claim.
@@ -78,19 +78,27 @@ test.describe("public profile", () => {
  * and busy dev server, ran it past its timeout (MRG-070).
  */
 test.describe("profile masthead by viewer (harness)", () => {
-  test("keeps the account link for the owner", async ({ page }) => {
+  /*
+   * MRG-108: on a phone the masthead's "Your pages" nav is display:none (the
+   * bottom bar replaces it, and the harness does not mount the bar), so
+   * role queries cannot see it. The links are still in the markup, and what the
+   * masthead offers each viewer is what these protect: match them by text.
+   */
+  const mastheadLink = (page: Page, name: string, phone: boolean) =>
+    phone ? page.locator("header nav a", { hasText: name }) : page.getByRole("link", { name });
+
+  test("keeps the account link for the owner", async ({ page }, testInfo) => {
+    const phone = testInfo.project.name === "mobile";
     await page.goto("/dev/profile?viewer=owner");
-    await expect(page.getByRole("link", { name: "Your account" })).toHaveAttribute(
-      "href",
-      "/settings",
-    );
-    await expect(page.getByRole("link", { name: "Your diary" })).toHaveCount(0);
+    await expect(mastheadLink(page, "Your account", phone)).toHaveAttribute("href", "/settings");
+    await expect(mastheadLink(page, "Your diary", phone)).toHaveCount(0);
   });
 
-  test("sends a signed-in friend back to their own diary", async ({ page }) => {
+  test("sends a signed-in friend back to their own diary", async ({ page }, testInfo) => {
+    const phone = testInfo.project.name === "mobile";
     await page.goto("/dev/profile?viewer=friend");
-    await expect(page.getByRole("link", { name: "Your diary" })).toHaveAttribute("href", "/");
-    await expect(page.getByRole("link", { name: "Your account" })).toHaveCount(0);
+    await expect(mastheadLink(page, "Your diary", phone)).toHaveAttribute("href", "/");
+    await expect(mastheadLink(page, "Your account", phone)).toHaveCount(0);
   });
 
   test("offers a signed-out visitor nothing", async ({ page }) => {

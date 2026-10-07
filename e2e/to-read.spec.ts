@@ -52,9 +52,14 @@ test.describe("the bedside stack", () => {
     expect(await height("Dune Messiah")).toBeLessThan(await height("Dune"));
   });
 
-  test("never wears a jacket colour: a waiting book has not earned one", async ({ page }) => {
+  test("never wears a jacket colour: a waiting book has not earned one", async ({ page }, testInfo) => {
     await page.goto("/dev/to-read", { waitUntil: "networkidle" });
-    await expect(page.locator("ol > li > div").first()).toHaveCSS("background-color", "rgb(22, 19, 15)");
+    // MRG-108: on a phone ink chips become the raised night surface (#232327),
+    // one neutral for every spine; still no jacket colour.
+    const spine = testInfo.project.name === "mobile" ? "rgb(35, 35, 39)" : "rgb(22, 19, 15)";
+    for (const li of await page.locator("ol > li > div").all()) {
+      await expect(li).toHaveCSS("background-color", spine);
+    }
   });
 
   test("keeps Take it off outside the spine's link, named for its book", async ({ page }) => {
@@ -165,7 +170,8 @@ test.describe("the bedside stack", () => {
     await expect(page.getByRole("link", { name: "Search for a book" })).toHaveAttribute("href", "/search");
   });
 
-  test("sets the whole spine off true, not just its left edge", async ({ page }) => {
+  test("sets the whole spine off true, not just its left edge", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === "mobile", "phone layout (MRG-108): spines are full width and square, the pile is not offset");
     await page.goto("/dev/to-read", { waitUntil: "networkidle" });
     const rights = await page
       .locator("ol > li > div")
@@ -231,8 +237,18 @@ test.describe("Want to read on the book page", () => {
   });
 });
 
-test("the diary's masthead leads to the to-read list, then the account", async ({ page }) => {
+test("the diary's masthead leads to the to-read list, then the account", async ({ page }, testInfo) => {
   await page.goto("/dev/shelf", { waitUntil: "networkidle" });
+  if (testInfo.project.name === "mobile") {
+    // MRG-108: the masthead's nav is hidden on a phone; the bar carries the
+    // same two places, in the same order (To read, then Account).
+    const places = page.getByRole("navigation", { name: "Places" });
+    await expect(places.getByRole("link", { name: "To read" })).toHaveAttribute("href", "/to-read");
+    await expect(places.getByRole("link", { name: "Account" })).toHaveAttribute("href", "/settings");
+    const order = await places.getByRole("link").allTextContents();
+    expect(order.indexOf("To read")).toBeLessThan(order.indexOf("Account"));
+    return;
+  }
   const nav = page.getByRole("navigation", { name: "Your pages" });
   await expect(nav.getByRole("link")).toHaveText(["To read", "Your account"]);
   await expect(nav.getByRole("link", { name: "To read" })).toHaveAttribute("href", "/to-read");

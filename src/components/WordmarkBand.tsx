@@ -9,11 +9,11 @@ const BAND = CATEGORY_BANDS[0];
 export function WordmarkBand() {
   return (
     <div
-      className="flex items-baseline justify-between gap-4 px-4 py-5 sm:px-6 sm:py-7"
+      className="flex items-baseline justify-between gap-4 px-4 py-5 max-sm:bg-transparent! max-sm:px-5 max-sm:pt-[max(1.25rem,env(safe-area-inset-top))] max-sm:pb-2 max-sm:text-ink! sm:px-6 sm:py-7"
       style={{ background: BAND, color: readableOn(BAND) }}
     >
-      <p className="band-wordmark text-[1rem] sm:text-[1.375rem]">Marginalia</p>
-      <p className="band-label opacity-80">A reading diary</p>
+      <p className="band-wordmark text-[1rem] max-sm:text-[0.75rem] sm:text-[1.375rem]">Marginalia</p>
+      <p className="band-label opacity-80 max-sm:hidden">A reading diary</p>
     </div>
   );
 }

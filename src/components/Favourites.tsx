@@ -43,10 +43,10 @@ export function Favourites({
 
   return (
     <section aria-labelledby="favourites" className="flex flex-col gap-3 px-4 pt-6 pb-4 sm:px-6">
-      <div className="flex items-baseline justify-between gap-4 border-y border-ink bg-paper-sunk px-3 py-2">
+      <div className="flex items-baseline justify-between gap-4 border-y border-ink bg-paper-sunk px-3 py-2 max-sm:border-0 max-sm:bg-transparent max-sm:px-1">
         <h2
           id="favourites"
-          className="text-[1.75rem] leading-none font-semibold tracking-[-0.02em] sm:text-[2.25rem]"
+          className="text-[1.75rem] leading-none font-semibold tracking-[-0.02em] max-sm:font-bold max-sm:tracking-[-0.03em] max-sm:[font-stretch:112%] sm:text-[2.25rem]"
         >
           Favourites
         </h2>
@@ -87,7 +87,7 @@ export function Favourites({
               position in a hairline frame, never a blank. */}
           {Array.from({ length: MAX - books.length }, (_, i) => (
             <li key={`empty-${i}`} aria-hidden="true" className="flex flex-col">
-              <div className="flex-1 border border-rule" />
+              <div className="flex-1 border border-rule max-sm:aspect-[2/3] max-sm:flex-none max-sm:rounded-[0.875rem] max-sm:border-dashed" />
             </li>
           ))}
         </ol>
@@ -96,7 +96,7 @@ export function Favourites({
   );
 }
 
-const FRAME = "flex flex-1 flex-col border border-rule bg-paper";
+const FRAME = "flex flex-1 flex-col border border-rule bg-paper max-sm:border-0 max-sm:bg-transparent";
 
 /** A shelf cell at favourite scale: colour, jacket, and the title as its record. */
 function FavouriteCell({
@@ -109,14 +109,15 @@ function FavouriteCell({
 
   const cell = (
     <>
-      <div className="flex px-2.5 py-2" style={{ background: band, color: readableOn(band) }}>
+      <div className="flex px-2.5 py-2 max-sm:hidden" style={{ background: band, color: readableOn(band) }}>
         <span className="band-label truncate">{author}</span>
       </div>
-      <div className="aspect-[2/3] overflow-hidden bg-paper-sunk">
+      <div className="m-jacket aspect-[2/3] overflow-hidden bg-paper-sunk" style={{ "--flood": band } as React.CSSProperties}>
         <Cover coverId={book.coverId} coverUrl={book.coverUrl} title={book.title} authors={book.authors} scale="band" />
       </div>
-      <div className="flex-1 border-t border-rule px-2.5 py-2 transition-colors group-hover:border-ink group-focus-visible:border-ink">
-        <h3 className="text-[0.9375rem] leading-tight font-semibold text-balance">{book.title}</h3>
+      <div className="flex-1 border-t border-rule px-2.5 py-2 transition-colors group-hover:border-ink group-focus-visible:border-ink max-sm:border-0 max-sm:px-0.5 max-sm:pt-3">
+        <h3 className="text-[0.9375rem] leading-tight font-semibold text-balance max-sm:tracking-[-0.01em]">{book.title}</h3>
+        <p className="m-only mt-1 truncate text-[0.75rem] text-ink-soft">{author}</p>
       </div>
     </>
   );
@@ -127,7 +128,8 @@ function FavouriteCell({
       aria-label={`${book.title}, ${author}`}
       aria-describedby={describedBy}
       prefetch={false}
-      className={`group ${FRAME} transition-colors hover:border-ink focus-visible:border-ink`}
+      transitionTypes={["sheet-up"]}
+      className={`press group ${FRAME} transition-colors hover:border-ink focus-visible:border-ink`}
     >
       {cell}
     </Link>

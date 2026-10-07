@@ -1,3 +1,4 @@
+import { BottomBar } from "@/components/BottomBar";
 import { notFound } from "next/navigation";
 
 import { getDevReader, NoDevReader } from "@/app/dev/dev-reader";
@@ -26,6 +27,7 @@ export default async function DevSettingsPage() {
   const invites = await listInvitesWithState(user.id);
 
   return (
+    <>
     <main className="flex-1">
       <AccountHeader username={user.username} note="Development harness" />
 
@@ -38,10 +40,10 @@ export default async function DevSettingsPage() {
       >
         <InviteRun invites={invites} />
 
-        <section aria-labelledby="device-heading" className="border-t border-ink">
+        <section aria-labelledby="device-heading" className="border-t border-ink max-sm:mx-4 max-sm:mt-4 max-sm:rounded-[1.25rem] max-sm:border-0 max-sm:bg-paper-sunk">
           <h2
             id="device-heading"
-            className="band-label bg-ink px-4 py-3 text-paper sm:px-6"
+            className="band-label bg-ink px-4 py-3 text-paper max-sm:bg-transparent max-sm:pt-5 max-sm:pb-0 sm:px-6"
           >
             This device
           </h2>
@@ -53,5 +55,7 @@ export default async function DevSettingsPage() {
         <DeleteAccount username={user.username} />
       </AccountSheet>
     </main>
+    <BottomBar />
+    </>
   );
 }

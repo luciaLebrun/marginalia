@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 
 import { getDevReader, NoDevReader } from "@/app/dev/dev-reader";
+import { BottomBar } from "@/components/BottomBar";
 import { Favourites } from "@/components/Favourites";
+import { NowReading } from "@/components/NowReading";
 import { MarkSeen } from "@/components/MarkSeen";
 import { Masthead } from "@/components/Masthead";
 import { Shelf } from "@/components/Shelf";
@@ -56,16 +58,22 @@ export default async function DevShelfPage({ searchParams }: PageProps<"/dev/she
   }
 
   return (
+    <>
     <main className="flex-1">
-      <Masthead name={user.name} span={readingSpan(entries)} count={count} />
+      <NowReading name={user.name} count={count} span={readingSpan(entries)} latest={entries[0] ?? null} />
+      <div className="m-hidden">
+        <Masthead name={user.name} span={readingSpan(entries)} count={count} />
+      </div>
       <Favourites
         books={bare(favourites)}
         arrange
         hint={count > 0}
         moveAction={moveDevFavouriteAction}
       />
-      <Shelf entries={entries} by={parseShelfOrder(by)} path="/dev/shelf" />
+      <Shelf entries={entries} by={parseShelfOrder(by)} path="/dev/shelf" heroKey={entries[0]?.sourceKey} />
       <MarkSeen userId={user.id} />
     </main>
+    <BottomBar />
+    </>
   );
 }
