@@ -418,9 +418,10 @@ test.describe("book page", () => {
       await expect(page.getByLabel("Finished")).toBeVisible();
       // Open, the disclosure keeps its name; only its drawn mark and visible
       // word change.
-      await expect(page.locator("summary")).toHaveAccessibleName("Log a read");
+      // The log sheet's own disclosure: the page has Keep a passage too (MRG-110).
+      await expect(page.locator("details", { has: page.getByLabel("Finished") }).locator("summary")).toHaveAccessibleName("Log a read");
 
-      await page.locator("summary", { hasText: "Close" }).click();
+      await slip(page).locator("summary", { hasText: "Close" }).click();
       await expect(page.getByLabel("Finished")).toBeHidden();
       await expect(page.locator("summary", { hasText: "Log a read" })).toBeVisible();
     });

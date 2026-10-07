@@ -14,7 +14,7 @@ import { useLayoutEffect, useRef } from "react";
  */
 const SLOTS = [
   { href: "/", label: "Diary", icon: "M4 5.5h6.5v13H4zM13.5 5.5H20v13h-6.5z" },
-  { href: "/search", label: "Search", icon: "M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM15.2 15.2 20 20" },
+  { href: "/margins", label: "Margins", icon: "M6 18c2.4-1.2 3.5-3.4 3.5-6.5H5.5V6h6v5.2c0 4.3-2 6.9-5.5 8.3M14 18c2.4-1.2 3.5-3.4 3.5-6.5h-4V6h6v5.2c0 4.3-2 6.9-5.5 8.3" },
   { href: "/search?log=1", label: "Log", icon: "M12 5v14M5 12h14" },
   { href: "/to-read", label: "To read", icon: "M7 4h10v16l-5-3.5L7 20z" },
   { href: "/settings", label: "Account", icon: "M12 12a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5zM4.5 20c.9-3.6 3.9-5.5 7.5-5.5s6.6 1.9 7.5 5.5" },
@@ -32,7 +32,9 @@ function current(path: string): number {
   if (pathname === "/") return 0;
   // A book is opened from somewhere: it keeps the place the reader came from.
   if (pathname.startsWith("/book")) return lastAt ?? 0;
-  if (pathname.startsWith("/search")) return 1;
+  if (pathname.startsWith("/margins")) return 1;
+  // Search is where Log lands (MRG-110 gave its slot to Margins).
+  if (pathname.startsWith("/search")) return 2;
   if (pathname.startsWith("/to-read")) return 3;
   if (pathname.startsWith("/settings")) return 4;
   // A profile is somebody's diary; the reader's own reads as theirs.
@@ -70,7 +72,8 @@ export function BottomBar() {
         <li
           ref={pill}
           aria-hidden="true"
-          className="bar-pill pointer-events-none absolute inset-y-1.5 left-1.5 w-[calc((100%-0.75rem)/5)] rounded-[1.375rem]"
+          // Under Log the raised pill is its own mark, so the slider steps aside.
+          className={`bar-pill pointer-events-none absolute inset-y-1.5 left-1.5 w-[calc((100%-0.75rem)/5)] rounded-[1.375rem] ${at === 2 ? "opacity-0" : ""}`}
         />
         {SLOTS.map((slot, i) => {
           const log = i === 2;

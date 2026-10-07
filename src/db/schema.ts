@@ -285,6 +285,41 @@ export const favourite = pgTable(
   ],
 );
 
+/**
+ * A reader's margins (MRG-110): passages they keep from a book, private to
+ * them and never shown on the profile.
+ *
+ * Tied to the book, not to a read — a passage may be kept before the book is
+ * logged, or after. Many rows per reader and book, so the key is a generated
+ * id. `page` is optional but never zero or negative. Deleting an account
+ * removes its passages; a book holding passages is not deletable out from
+ * under them, as with `log`.
+ */
+export const passage = pgTable(
+  "passage",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    bookId: text("book_id")
+      .notNull()
+      .references(() => book.id, { onDelete: "restrict" }),
+    words: text("words").notNull(),
+    page: integer("page"),
+    note: text("note"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    // The journal: one reader's passages, newest first.
+    index("passage_user_created_at_idx").on(t.userId, t.createdAt.desc()),
+    // The book page: one reader's passages from one book.
+    index("passage_user_book_idx").on(t.userId, t.bookId),
+    check("passage_page_positive", sql`${t.page} > 0`),
+  ],
+);
+
 export type User = typeof user.$inferSelect;
 export type Book = typeof book.$inferSelect;
 export type NewBook = typeof book.$inferInsert;
@@ -293,3 +328,4 @@ export type NewLog = typeof log.$inferInsert;
 export type InviteCode = typeof inviteCode.$inferSelect;
 export type ToRead = typeof toRead.$inferSelect;
 export type Favourite = typeof favourite.$inferSelect;
+export type Passage = typeof passage.$inferSelect;
