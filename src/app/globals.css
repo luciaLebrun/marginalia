@@ -252,3 +252,382 @@
     animation: band-ink 620ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 }
+
+/*
+  ─────────────────────────────────────────────────────────────────────────────
+  Now Reading — the phone's own world (MRG-108), below 40rem only.
+
+  Desktop is printed paper; the phone is read at night, in the minute after a
+  book is closed, on a lit screen. So below 40rem the same tokens are re-cut
+  for a night ground, the book's own jacket colour floods the fields, and
+  surfaces become rounded sheets with soft depth. Every component keeps its
+  markup: the world changes by token and by the m- utilities below, so the two
+  layouts never drift apart in behaviour.
+  ─────────────────────────────────────────────────────────────────────────────
+*/
+@media (max-width: 39.999rem) {
+  :root {
+    --color-paper: #0e0e10;
+    --color-paper-sunk: #1a1a1d;
+    --color-ink: #f5f5f2;
+    --color-ink-soft: #a19e98;
+    --color-rule: #f5f5f21f;
+    --color-alarm: #ff6b5b;
+    --color-band-fiction: #ff7a45;
+    --m-raised: #232327;
+    --m-on-accent: #0e0e10;
+    --m-shadow: 0 18px 40px -16px rgb(0 0 0 / 0.75), 0 4px 10px -4px rgb(0 0 0 / 0.5);
+    color-scheme: dark;
+  }
+
+  html {
+    scrollbar-color: var(--m-raised) var(--color-paper);
+  }
+
+  /* Room under the last thing on the page for the floating bar. */
+  body:has(.bottom-bar) {
+    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom));
+  }
+
+  /* Ink chips become raised night surfaces; their paper text stays light. */
+  /* An element that sets its own phone colour keeps it. */
+  .bg-ink:not([class*="max-sm:bg-"]) {
+    background-color: var(--m-raised);
+  }
+  .border-ink:not([class*="max-sm:border-"]) {
+    border-color: rgb(245 245 242 / 0.28);
+  }
+  .text-paper:not([class*="max-sm:text-"]) {
+    color: var(--color-ink);
+  }
+  .text-paper\/70 {
+    color: rgb(245 245 242 / 0.7);
+  }
+  .decoration-paper\/40 {
+    text-decoration-color: rgb(245 245 242 / 0.3);
+  }
+  .border-paper\/20 {
+    border-color: rgb(245 245 242 / 0.12);
+  }
+
+  /* The shelf breathes: jackets float on the night with their own glow,
+     instead of butting on a ruled hairline. */
+  .shelf-grid,
+  .favourites-grid {
+    gap: 1.75rem 0.875rem;
+    background-image: none;
+    background-color: transparent;
+  }
+
+  /* The accent is the one lit control on a page, with dark words on it. */
+  .bg-band-fiction,
+  .bg-band-fiction *,
+  .hover\:bg-band-fiction:hover,
+  .enabled\:hover\:bg-band-fiction:enabled:hover {
+    color: var(--m-on-accent);
+  }
+
+  /* Every outlined button is a pill. */
+  .band-label.border {
+    border-radius: 999px;
+    padding-inline: 1.125rem;
+  }
+
+  /* Commit bands are lit pills set inside their column, not printed slabs. */
+  .bg-band-fiction.band-label {
+    border-radius: 1.125rem;
+    border: 0;
+  }
+
+  .m-hidden {
+    display: none !important;
+  }
+}
+
+@media (min-width: 40rem) {
+  .m-only {
+    display: none !important;
+  }
+}
+
+/* ── The bottom bar ─────────────────────────────────────────────────────── */
+.bottom-bar {
+  background: rgb(22 22 25 / 0.84);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.07) inset,
+    0 20px 40px -12px rgb(0 0 0 / 0.8);
+}
+
+.bar-pill {
+  background: rgb(255 255 255 / 0.1);
+  transform: translateX(calc(var(--at) * 100%));
+  transition:
+    transform 520ms cubic-bezier(0.34, 1.36, 0.5, 1),
+    opacity 200ms ease;
+}
+
+.bar-slot {
+  color: var(--color-ink-soft);
+  transition:
+    color 200ms ease,
+    transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.bar-slot[aria-current="page"] {
+  color: #f5f5f2;
+}
+.bar-slot:active {
+  transform: scale(0.9);
+}
+.bar-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.bar-log {
+  color: #f5f5f2;
+}
+/* Raised out of the bar; its label stays on the others' baseline. */
+.bar-log .bar-log-pill {
+  margin-top: -2rem;
+}
+.bar-log-pill {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1.25rem;
+  background: #ff7a45;
+  color: #0e0e10;
+  box-shadow:
+    0 12px 24px -8px rgb(255 122 69 / 0.55),
+    0 0 0 4px rgb(14 14 16 / 0.9);
+  transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.bar-log:active .bar-log-pill {
+  transform: scale(0.88) rotate(90deg);
+}
+
+/* ── The jacket-colour field (phone diary hero and book page) ───────────── */
+@media (max-width: 39.999rem) {
+  .m-flood {
+    background:
+      radial-gradient(130% 70% at 50% 0%, var(--flood) 0%, transparent 75%),
+      linear-gradient(to bottom, color-mix(in oklab, var(--flood) 55%, #0e0e10) 0%, #0e0e10 100%);
+  }
+
+  .m-jacket {
+    border: 0;
+    border-radius: 0.875rem;
+    overflow: hidden;
+    box-shadow:
+      0 24px 48px -18px color-mix(in oklab, var(--flood, #000) 70%, black),
+      var(--m-shadow);
+  }
+}
+
+/*
+  ─────────────────────────────────────────────────────────────────────────────
+  Motion, at every width. One focal moment — a jacket lifting out of the shelf
+  into its own page — and the quiet feedback around it: places slide, sheets
+  ease open, shelves arrive as you scroll to them, presses give.
+  ─────────────────────────────────────────────────────────────────────────────
+*/
+:root {
+  interpolate-size: allow-keywords;
+}
+
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(*) {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* The jacket morph: one object moving, softened mid-flight. */
+::view-transition-group(.jacket) {
+  animation-duration: 560ms;
+  animation-timing-function: cubic-bezier(0.22, 1.2, 0.36, 1);
+}
+::view-transition-image-pair(.jacket) {
+  animation-name: jacket-flight;
+}
+@keyframes jacket-flight {
+  40% {
+    filter: blur(1.5px) brightness(1.08);
+  }
+}
+
+/* The floating bar never moves between places. */
+::view-transition-group(bottom-bar) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(bottom-bar) {
+  display: none;
+}
+::view-transition-new(bottom-bar) {
+  animation: none;
+}
+
+/* Places: deeper slides in from the right, back from the left. */
+::view-transition-old(.nav-forward) {
+  --slide: -48px;
+  animation:
+    160ms ease-in both vt-fade reverse,
+    420ms cubic-bezier(0.16, 1, 0.3, 1) both vt-slide reverse;
+}
+::view-transition-new(.nav-forward) {
+  --slide: 48px;
+  animation:
+    240ms ease-out 100ms both vt-fade,
+    420ms cubic-bezier(0.16, 1, 0.3, 1) both vt-slide;
+}
+::view-transition-old(.nav-back) {
+  --slide: 48px;
+  animation:
+    160ms ease-in both vt-fade reverse,
+    420ms cubic-bezier(0.16, 1, 0.3, 1) both vt-slide reverse;
+}
+::view-transition-new(.nav-back) {
+  --slide: -48px;
+  animation:
+    240ms ease-out 100ms both vt-fade,
+    420ms cubic-bezier(0.16, 1, 0.3, 1) both vt-slide;
+}
+/* A sideways move between places in the bar: a short crossfade-rise. */
+::view-transition-old(.nav-swap) {
+  animation: 140ms ease-in both vt-fade reverse;
+}
+::view-transition-new(.nav-swap) {
+  --rise: 14px;
+  animation:
+    260ms ease-out 60ms both vt-fade,
+    380ms cubic-bezier(0.16, 1, 0.3, 1) both vt-rise;
+}
+/* The book's page rises as a sheet over the shelf. */
+::view-transition-new(.sheet-up) {
+  --rise: 64px;
+  animation:
+    220ms ease-out both vt-fade,
+    520ms cubic-bezier(0.16, 1, 0.3, 1) both vt-rise;
+}
+::view-transition-old(.sheet-up) {
+  animation: 200ms ease-in both vt-fade reverse;
+}
+
+@keyframes vt-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes vt-slide {
+  from {
+    translate: var(--slide) 0;
+  }
+}
+@keyframes vt-rise {
+  from {
+    translate: 0 var(--rise);
+  }
+}
+
+/*
+  Native sheets (the log sheet, a slip line's edit) ease open. They shut at
+  once: transitioning content-visibility as well would animate the close, but
+  it leaves the opening sheet's controls unfocusable for the whole ease, so a
+  keystroke or the sheet's own focus on open would land nowhere.
+*/
+details::details-content {
+  block-size: 0;
+  overflow-y: clip;
+  opacity: 0;
+  transition:
+    block-size 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 260ms ease;
+}
+details[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+
+/* A press gives, everywhere a jacket or a pill can be tapped. */
+.press {
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.press:active {
+  transform: scale(0.965);
+}
+
+/* Shelves arrive as you reach them: each cell rises from just below. */
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 55%;
+  }
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(28px) scale(0.96);
+    }
+  }
+}
+
+/* A figure that changes rolls in rather than swapping. */
+.roll {
+  display: inline-block;
+  animation: roll 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes roll {
+  from {
+    opacity: 0;
+    transform: translateY(0.6em);
+    filter: blur(2px);
+  }
+}
+
+/* The diary's hero: the latest jacket settles into its field. */
+.hero-in {
+  animation: hero-in 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.92) rotate(-2deg);
+  }
+}
+
+/*
+  Reduced motion: nothing travels. Places and sheets crossfade, presses and
+  reveals stay still, and every state still changes visibly.
+*/
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+  }
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: 180ms ease both vt-fade !important;
+  }
+  ::view-transition-old(*) {
+    animation-direction: reverse !important;
+  }
+  .reveal,
+  .roll,
+  .hero-in {
+    animation: none !important;
+  }
+  .press:active,
+  .bar-slot:active,
+  .bar-log:active .bar-log-pill {
+    transform: none;
+  }
+  .bar-pill {
+    transition: opacity 200ms ease;
+  }
+  details::details-content {
+    transition: opacity 180ms ease;
+  }
+}

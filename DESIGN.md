@@ -1,6 +1,6 @@
 ---
 name: Marginalia
-description: A reading diary drawn as a Penguin/Pelican paperback cover system — paper ground, flat ink, one typeface, three bands.
+description: A reading diary drawn as a Penguin/Pelican paperback cover system — paper ground, flat ink, one typeface, three bands; below 40rem, Now Reading, a night ground lit by each book's jacket colour.
 colors:
   paper: "#F4F1E8"
   paper-sunk: "#EAE5D8"
@@ -11,6 +11,14 @@ colors:
   band-fiction: "#E8501B"
   band-crime: "#007A5E"
   band-pelican: "#00A0C6"
+  m-night: "#0E0E10"
+  m-raised: "#1A1A1D"
+  m-raised-2: "#232327"
+  m-text: "#F5F5F2"
+  m-text-soft: "#A19E98"
+  m-rule: "#F5F5F21F"
+  m-accent: "#FF7A45"
+  m-alarm: "#FF6B5B"
 typography:
   wordmark:
     fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
@@ -56,6 +64,12 @@ typography:
     fontWeight: 400
     lineHeight: 1.625
     letterSpacing: "normal"
+  passage:
+    fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "1.0625rem"
+    fontWeight: 400
+    lineHeight: 1.625
+    letterSpacing: "normal"
   label:
     fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
     fontSize: "0.6875rem"
@@ -70,8 +84,41 @@ typography:
     fontWeight: 500
     lineHeight: 1.25
     fontFeature: "tabular-nums"
+  m-display:
+    fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "2.75rem"
+    fontWeight: 700
+    lineHeight: 0.92
+    letterSpacing: "-0.035em"
+    fontVariation: "'wdth' 112"
+  m-headline:
+    fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "1.75rem"
+    fontWeight: 700
+    lineHeight: 1
+    letterSpacing: "-0.03em"
+    fontVariation: "'wdth' 112"
+  m-title:
+    fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "0.9375rem"
+    fontWeight: 600
+    lineHeight: 1.25
+    letterSpacing: "-0.01em"
+  m-bar-label:
+    fontFamily: "Archivo, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "0.625rem"
+    fontWeight: 600
+    lineHeight: 1
+    letterSpacing: "0.02em"
 rounded:
   band: "2px"
+  m-cell: "0.5rem"
+  m-jacket: "0.875rem"
+  m-spine: "1rem"
+  m-commit: "1.125rem"
+  m-card: "1.25rem"
+  m-sheet: "1.75rem"
+  m-pill: "999px"
 spacing:
   hairline: "1px"
   band-y: "8px"
@@ -79,6 +126,10 @@ spacing:
   page-x: "16px"
   page-x-wide: "24px"
   section: "40px"
+  m-gutter: "20px"
+  m-card-inset: "16px"
+  m-grid-row: "28px"
+  m-grid-col: "14px"
 components:
   entry-card:
     backgroundColor: "{colors.paper}"
@@ -240,7 +291,23 @@ components:
   postcard-signature:
     textColor: "{colors.ink}"
     typography: "{typography.field}"
-    postcard-band-record:
+  margins-band:
+    textColor: "{colors.ink}"
+    typography: "{typography.label}"
+    padding: "12px 16px"
+  journal-passage:
+    textColor: "{colors.ink}"
+    typography: "{typography.passage}"
+    width: "34rem"
+  keep-passage-line:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink-soft}"
+    typography: "{typography.label}"
+    height: "3.25rem"
+    padding: "0 12px"
+  keep-passage-line-open:
+    textColor: "{colors.ink}"
+  postcard-band-record:
     backgroundColor: "{colors.ink}"
     textColor: "{colors.paper}"
     typography: "{typography.label}"
@@ -260,6 +327,61 @@ components:
     typography: "{typography.field}"
     rounded: "0"
     height: "4.5rem"
+  m-bottom-bar:
+    backgroundColor: "#161619D6"
+    textColor: "{colors.m-text}"
+    typography: "{typography.m-bar-label}"
+    rounded: "{rounded.m-sheet}"
+  m-bar-log:
+    backgroundColor: "{colors.m-accent}"
+    textColor: "{colors.m-night}"
+    rounded: "{rounded.m-card}"
+    size: "3.5rem"
+  m-jacket:
+    backgroundColor: "{colors.m-raised}"
+    rounded: "{rounded.m-jacket}"
+  m-cell-title:
+    textColor: "{colors.m-text}"
+    typography: "{typography.m-title}"
+  m-hero-name:
+    typography: "{typography.m-display}"
+    padding: "24px 20px 32px"
+  m-book-sheet:
+    backgroundColor: "{colors.m-night}"
+    textColor: "{colors.m-text}"
+    rounded: "{rounded.m-sheet}"
+    padding: "28px 20px 40px"
+  m-year-rule:
+    backgroundColor: "#0E0E10BF"
+    textColor: "{colors.m-text}"
+    typography: "{typography.m-headline}"
+    padding: "12px 20px"
+  m-commit-pill:
+    backgroundColor: "{colors.m-accent}"
+    textColor: "{colors.m-night}"
+    typography: "{typography.label}"
+    rounded: "{rounded.m-commit}"
+  m-pill-button:
+    textColor: "{colors.m-text}"
+    typography: "{typography.label}"
+    rounded: "{rounded.m-pill}"
+    padding: "10px 18px"
+  m-pill-button-hover:
+    backgroundColor: "{colors.m-accent}"
+    textColor: "{colors.m-night}"
+  m-order-choice-current:
+    backgroundColor: "{colors.m-text}"
+    textColor: "{colors.m-night}"
+    rounded: "{rounded.m-pill}"
+    padding: "10px 14px"
+  m-card:
+    backgroundColor: "{colors.m-raised}"
+    textColor: "{colors.m-text}"
+    rounded: "{rounded.m-card}"
+  m-spine:
+    backgroundColor: "{colors.m-raised-2}"
+    textColor: "{colors.m-text}"
+    rounded: "{rounded.m-spine}"
 ---
 
 # Design System: Marginalia
@@ -280,8 +402,9 @@ The density is printed rather than app-like. Cells butt against each other on a 
 hairline, band padding is 8–10px, and there is no card gutter, no elevation, no
 rounding to soften a join. The one colour that varies is each entry's own band,
 derived from that book's cover art; everything else on the page is paper, ink, soft
-ink, or sunk paper. What the world refuses is recorded in the build itself: no dark
-mode (this is printed paper, and paper does not invert), no shadows, no gradient
+ink, or sunk paper. What the world refuses at 40rem and up is recorded in the build itself: no dark
+mode (this is printed paper, and paper does not invert; the phone's night ground is a
+second world chosen by viewport, not an inversion of this one), no shadows, no gradient
 shading, no second typeface, and no decorative imagery — the book jackets are the
 only pictures and they arrive from Open Library at unpredictable ratio and quality,
 so the system holds them in a fixed frame rather than trusting them.
@@ -299,14 +422,19 @@ across a code that is spent. One tone was added to the palette to do the one job
 cannot do — say that something failed — and one element is pinned to the viewport,
 which the world otherwise never does.
 
+Below 40rem the phone has its own world, Now Reading, recorded in its own section at
+the end of this file. It overrides this world's ground, depth, shape, pinning and
+type display at that width only; everything not named there still holds.
+
 **Key Characteristics:**
 - A three-band frame — colour / field / record — at both cell and page scale
-- Paper ground, flat ink, hairline rules, zero elevation
+- Paper ground, flat ink, hairline rules, zero elevation (at 40rem and up)
 - One family (Archivo variable), differentiated by weight and by width axis
 - Band foreground chosen by WCAG contrast at render time, never fixed
 - Tabular figures everywhere: this page is a record of dates and ratings
 - State drawn as a printed mark — rule, fill, strike — never as a chrome control
-- Exactly one authored motion moment on the whole surface
+- Motion at every width: one focal moment (a jacket travelling from shelf to page) and
+  quiet feedback around it; reduced motion crossfades only
 
 ## Colors
 
@@ -433,7 +561,10 @@ colour is earned by reading and not by saving, and no jacket colour is extracted
 book that has never been logged. A favourite always wears earned colour, because only
 a book the reader has logged can be one: removing a book's last read takes it off the
 reader's favourites as well as off the shelf, so no favourite is ever left to fall back
-to ink.
+to ink. A kept passage is held to the same test: a passage belongs to its book, not to a
+read, so it can be kept from a book that is not on the shelf, and then Margins gives it
+the ink band on a laptop and the ink flood on the phone (`bookBand(passage, onShelf)`);
+keeping a passage never earns a book its colour.
 
 **The Refusal Tone Rule.** Alarm red says one thing — *this was refused, or this is
 about to destroy something* — and it says it as a stroke or as words, never as a
@@ -516,6 +647,13 @@ of the system, and it is what makes a second typeface unnecessary.
   no words takes the same step in soft ink. A spine's first author takes this step in
   paper at 70%, on one truncated line beneath the title — beneath it, never as a
   tracked-caps label above it.
+- **Passage** (400, 1.0625rem, lh relaxed, ink, capped at 34rem): words a reader
+  kept from a book — an earlier passage in the Margins journal, and the words field of
+  the passage sheet as they are typed. Body voice one step up, because the words are
+  the object and are reread rather than skimmed, set in the reader's own line breaks
+  (`white-space: pre-line`) with `text-pretty`. A passage's note under it stays at the
+  body step's 0.8125rem in soft ink. The latest passage does not take this step: on
+  Margins' spotlight it is set by length at display, headline or field (see Margins).
 - **Label** (600, 0.6875rem, `wdth` 88, 0.14em tracking, caps): the band voice —
   author name, "Add", "Reread", the tally, a year's book count, a field's label, an
   invite's state, every button on the account surfaces, a book page's author line
@@ -564,8 +702,10 @@ box. A control that inverts this — small value inside a chrome input under a l
 heading — is not this system. One named exception, approved by the user: a field
 that holds paragraphs of prose — the log sheet's review — sets its value at the body
 step (0.9375rem, regular), not the field step, still in ink on a ruled line with no
-box and still under its band-voice label. Short values stay at the field step, and
-no other field joins the exception without the same approval.
+box and still under its band-voice label. The passage sheet (MRG-110) adds two more
+prose fields under the same terms, approved by the user on 2026-10-07: a passage's
+words at the Passage step (1.0625rem) and its note at the body step. Short values stay at the field step — the passage's
+page among them — and no other field joins the exception without the same approval.
 
 ## Layout
 
@@ -589,7 +729,7 @@ a paragraph stops at 38rem, so a value on a laptop sits on a line rather than un
 a 1400px stroke.
 
 **The shelf grid** is whole-cell repack at four steps: 2 columns below 40rem, 3 at
-≥40rem, 4 at ≥64rem, 6 at ≥80rem. Cells are separated by a 1px gap over a paper
+≥40rem, 4 at ≥64rem, 6 at ≥80rem. At 40rem and up, cells are separated by a 1px gap over a paper
 background, so the join between two cells reads as a single printed hairline.
 Across that 1px gap the next cell would paint over a linked cell's 2px-offset focus
 ring, so every link in the grid — an Entry Card, a Search Result, the Log Cell — is
@@ -645,13 +785,15 @@ a band nested in the form would unpin exactly where the reader scrolls past the 
 field, which is the stretch of page where unsaved work must not go quiet. It reaches
 the form by `form` id instead of by nesting. The log sheet's commit band is a second
 commit band, not a second pin: it sits at the foot of its sheet, in the flow.
+This holds at 40rem and up; below it the phone adds the floating bottom bar and
+sticky year rules (see Below 40rem: Now Reading, The Thumb Reach Rule).
 
 **Both viewports are primary.** Neither the 390px nor the 1440px layout is the
 fallback; a change that only holds on one of them is not finished.
 
 ### Named Rules
 
-**The Edge-to-Edge Rule.** Bands span the full viewport width. Never inset a band
+**The Edge-to-Edge Rule.** At 40rem and up, bands span the full viewport width. Never inset a band
 inside a container to make it look like a card. The one band set to a measure is a
 band that heads an object on that measure: the date slip's head runs to the title
 column's 34rem edge and no further. It is never boxed; what it heads closes on ruled
@@ -659,37 +801,41 @@ lines, not on a border.
 
 **The Ruled Signature Rule.** An incomplete row shows ruled empty slots. Never
 centre a short row, never stretch cells to fill it, and never insert placeholder
-cards to square it off.
+cards to square it off. Below 40rem the empty slots are left as night rather than
+ruled; a short row is still never centred or stretched.
 
-**The One Pin Rule.** Bands run in the flow of the page. The single exception is the
+**The One Pin Rule.** At 40rem and up, bands run in the flow of the page. The single exception is the
 commit band, which pins to the foot of the viewport *only while unsaved work
 exists* and is not rendered at all otherwise — the exception is paid for by the
 promise that the page never silently holds work. Nothing else floats, sticks, or
 overlays: no sticky header, no toast, no floating action button, and no second
 pinned band alongside this one. The log sheet's commit band runs in the flow and
-never pins; the exception stays the account sheet's.
+never pins; the exception stays the account sheet's. Below 40rem the phone has a
+second pin, the floating bottom bar, and its year rules stick to the top of the
+viewport; the Thumb Reach Rule governs that width.
 
 ## Elevation & Depth
 
-**There is no elevation.** No `box-shadow` exists anywhere in the build, and none may
-be added. Depth is entirely tonal and structural: paper against sunk paper, ink
+**At 40rem and up there is no elevation.** No `box-shadow` exists in the Tri-band
+world, and none may be added to it; the phone's soft depth is scoped below 40rem. Depth is entirely tonal and structural: paper against sunk paper, ink
 against paper, a 15%-alpha hairline against both. A jacket sits in a sunk-paper well;
 that recession is the only "depth" the system has, and it is a colour step, not a
 light source. The pinned commit band is separated from the column behind it by a 1px
 solid ink rule and an opaque paper ground, not by a shadow.
 
-There is likewise no gradient shading. The single `linear-gradient` in the codebase
-is a *drawing* device — it rules the shelf's column lines — not a shade.
+There is likewise no gradient shading at this width. The single Tri-band
+`linear-gradient` is a *drawing* device — it rules the shelf's column lines — not a shade.
 
 ### Named Rules
 
-**The Flat Ink Rule.** Every surface is flat at every state. Hover and focus change
-*colour* (the "Add" cell floods with the fiction band), never height, never blur,
-never a shadow. Nothing on this page casts light.
+**The Flat Ink Rule.** At 40rem and up, every surface is flat at every state. Hover and
+focus change *colour* (the "Add" cell floods with the fiction band), never height,
+never blur, never a shadow. Nothing on this page casts light. A press may give
+(scale 0.965) at every width; that is motion, not depth.
 
 ## Shapes
 
-Square. Every cell, band, rule, and well ships with a 0px radius; the corners of a
+Square, at 40rem and up (the phone rounds; see Below 40rem: Now Reading). Every cell, band, rule, and well ships with a 0px radius; the corners of a
 paperback are the corners of this system. A `rounded.band` token of 2px exists in the
 theme as the absolute ceiling the direction contract set, but **no shipped surface
 consumes it** — treat 2px as a limit, not as a default, and prefer 0.
@@ -706,9 +852,12 @@ the drawn rating mark. Icons and separators are authored SVG paths at 1.5px stro
 with square line caps — including the log line's plus and minus, the reread tick,
 and the dash between the two halves of an invite code,
 which is drawn rather than typed so a screen reader never spells it as part of the
-code. Never an icon font, never an emoji, never a glyph character.
+code. Never an icon font, never an emoji, never a glyph character. The phone's
+bottom-bar icons are the one round-capped set; the bar's drawn quote mark (Margins)
+reappears at 16px on the book page's "Keep a passage" line, so the place and the act
+of keeping share one mark.
 
-State is drawn in the same vocabulary. There is no chrome control anywhere: no
+State is drawn in the same vocabulary. At 40rem and up there is no chrome control: no
 filled input box, no pill, no toggle, no badge. What changes between states is the
 weight, tone, or presence of a printed mark.
 
@@ -846,7 +995,8 @@ bedside stack, not a row in a list.
   link, and before the jacket. Pending, its label becomes the live readout
   ("Taking off…").
 - **Lie:** each whole spine lies off true by its stable step (Layout, Stable Colour
-  Rule). Newest saved on top. Nothing tilts, nothing casts a shadow, nothing moves.
+  Rule). Newest saved on top. Nothing tilts and nothing casts a shadow at 40rem and up; a
+  spine reveals on scroll and gives under a press, as a cell does (Motion).
 - **Links and focus:** the words are the link to the book's page; the jacket is a
   second link to the same page, `tabIndex -1` and `aria-hidden`, so the ring bounds the
   words while the whole spine is clickable. That ring is the paper inset exception of
@@ -934,14 +1084,17 @@ device repeated, and the year rule immediately below is already a ruled strip.
   the bio as body copy in soft ink, capped at 38rem, each 12px under the line above.
   With no bio there is no line and nothing stands in for it. The reader's own diary
   shows neither. A page that is not a diary names itself in this band the same way: the
-  to-read list sets "To read" at display scale with its count holding the right edge.
+  to-read list sets "To read" at display scale with its count holding the right edge,
+  and Margins sets "Margins" with "N passages" there.
 - **Band three:** ink ground, paper text, the tally in label type ("11 books logged"
   / "Nothing logged yet") left, and the way onward right. The left words are a tally by
   default; a page that is not a diary gives them directly instead — the to-read list
-  reads "Newest saved on top", or "Saved from a book's page" when nothing is waiting.
+  reads "Newest saved on top", or "Saved from a book's page" when nothing is waiting;
+  Margins reads "Newest kept first", or "Kept from a book’s page" with nothing kept.
   The right end carries one way onward or several: several are a `nav` labelled "Your
-  pages", 20px apart. On the reader's own diary they are "To read" (`/to-read`) then
-  "Your account" (`/settings`). On a profile it is one link, and which depends on who is
+  pages", 20px apart. On the reader's own diary they are "To read" (`/to-read`),
+  "Margins" (`/margins`), then "Your account" (`/settings`); on Margins they are "Your
+  diary" then "To read". On a profile it is one link, and which depends on who is
   looking: the owner, on their own profile, keeps "Your account"; a signed-in friend gets
   "Your diary" (their own `/`); a signed-out visitor gets nothing, only the tally. Every
   link on this band carries the paper focus ring. This band remains the page's ruled
@@ -1046,7 +1199,8 @@ page.
   a hairline border, facing the title column (see Layout). In that column: the title
   at display scale, the subtitle at the field step in soft ink, the imprint rows, the
   Want to Read control, the date slip, the Favourite control once the slip holds a
-  read, then the description in soft-ink body copy.
+  read, the Keep a Passage line (shown whether or not the book has a read: a passage
+  is kept mid-book as readily as after), then the description in soft-ink body copy.
 - **Imprint rows:** a list opened by a hairline, one row per known value, each closed
   by a hairline, 10px vertical. The label sits left in soft-ink band voice and the
   value right on the same baseline, at body size, weight 500, in ink. A value Open
@@ -1104,7 +1258,8 @@ library book, saying "your reads", never "due".
   the standard focus ring. Open, the line stays ink, the visible word becomes "Close"
   and the plus loses its upright to become a drawn minus; "Close" is `aria-hidden` and
   "Log a read" remains the accessible name, so the disclosure is announced as "Log a
-  read, expanded", never "Close". Colour only; nothing moves.
+  read, expanded", never "Close". The line itself changes colour only; the sheet under
+  it eases open (Motion).
 
 ### Log Sheet
 
@@ -1230,6 +1385,77 @@ header over an article.
 - **States:** none of its own, and no motion. Its links respond in colour only.
   Undated, unrated, reread, no cover (the page-scale type-only jacket), no review, and
   signed out against signed in are all real settings with real copy.
+
+### Margins (page-scale tri-band)
+
+The reader's private commonplace book (`/margins`, MRG-110): the words lead, a jacket
+is only ever a small stamp, so the page never reads as a second shelf and never as a
+wall of quote cards. Newest first. At 40rem and up it runs under the masthead (see
+Masthead); below 40rem see Margins Spotlight (phone).
+
+- **Spotlight:** the latest passage owns the first viewport as a quotation, in a
+  44rem column (24px side padding, 40px top). A full-column band in the book's colour
+  (Earned Colour Rule; foreground from `readableOn()`) heads it, 12px/16px, and *is*
+  the link to the book: "Title · Author · p. 214" in band voice, the title underlined in
+  the foreground at 40%, the focus ring in the band's foreground. Under it the words
+  on paper, in ink, at 600 and sized by length, so neither the page name nor a heading
+  ever outranks them and a long passage steps down rather than running a viewport of
+  display type: up to 80 characters at Display (3.5rem, lh 1.02), up to 240 at
+  Headline (2.25rem, lh 1.12), up to 600 at the Field step (1.375rem, lh snug), and
+  past that at the Passage step (1.0625rem, 400, relaxed) — a long paragraph in bold
+  display type is a wall. Passage words and notes break anywhere when they must
+  (`overflow-wrap: anywhere`), so a pasted link or an unbroken word never widens the
+  page. Every
+  passage stands between its double quotes, opening and closing, set inline in the
+  words' own size and colour, as a printed quotation is (the user's call,
+  2026-10-07); the marks are type, hidden from assistive tech under the blockquote. The
+  band already carries the credit, so the stamp under the words keeps only its
+  jacket; then the note in soft-ink body copy (34rem), then "Edit".
+- **Journal:** the earlier passages as one column — 41rem at 40rem and up, 16px
+  gutters below — opened by a hairline, each passage closed by one (none after the
+  last), 28px vertical. Each is the words, between their double quotes, at the Passage step on the 34rem measure,
+  the stamp, the note at 0.8125rem in soft ink, and "Edit". Each rises in on reveal.
+- **Stamp:** where a passage came from, and the link to its book (the jacket travels
+  there as from the shelf). A small 2:3 jacket in a hairline-bordered sunk-paper well
+  (2rem wide in the journal, 2.75rem under the spotlight), 12px beside the title at
+  the Title step (0.9375rem under the spotlight), underlined in hairline tone and ink
+  under the pointer, over "Author · p. 214" at 0.8125rem in soft ink, both truncated
+  on one line. A missing page omits its part rather than printing a dash.
+- **Edit:** a native `<summary>` Text Button, "Edit" in soft ink becoming "Close" in
+  ink when open, that deploys the passage sheet (see Keep a Passage) in edit mode
+  under the passage, between hairlines.
+- **Empty:** honest, and it invents no passage. "Nothing kept yet" at the Display step
+  (2.25rem), one soft-ink body sentence (30rem) saying a passage is kept from a
+  book's page and lands here privately, then an Outline Button, "Open your diary".
+
+### Keep a Passage
+
+A line on the book page's 34rem column, 24px under the control above it, that
+deploys the passage sheet in place: a native `<details>`, never a modal. It is the
+Log Sheet's language, kept for a passage rather than a read.
+
+- **Line:** a 3.25rem summary, 12px horizontal padding, closed by a 2px rule, exactly
+  as the date slip's "Log a read" line: "Keep a passage" in band voice left, the
+  drawn 16px quote mark right. Soft ink over a hairline-tone rule at rest; words,
+  mark and rule go to ink under the pointer, on focus-visible and while open, and
+  open the visible word becomes "Close" while "Keep a passage" stays the accessible
+  name. Under it, once the book has any, one 0.8125rem soft-ink line: "One passage" or
+  "N passages from this book in your Margins", the last two words linking there.
+- **Sheet:** Log Sheet rows (16px/12px, hairline-closed, band-voice label above a 2px
+  ruled line: hairline at rest, ink on `focus-within`, alarm when refused). "The
+  passage" — required, a textarea at the Passage step that grows with its text, with a
+  "N / 1500" soft-ink tabular counter (0.8125rem) under it; then on one row "Page" (6rem,
+  the Field step, tabular, "—" placeholder) beside "Your note" (body step, "Optional",
+  at most 280). A field's refusal prints under its row; a refusal with no field (signed
+  out, a book gone) is one body sentence in alarm above the commit.
+- **Commit:** a Commit Band in the flow, 16px under the rows: "Keep it" ("Keep the
+  changes" in edit mode, "Keeping…" while it runs), unavailable while the words are
+  empty; its unavailable mark is the Printed State Rule's rule-through. After a save the sheet remounts closed and empty, and a hidden
+  live readout says "Passage kept in your Margins." (its words alternate each save).
+- **Remove (edit mode only):** the Log Sheet's guarded remove — a Text Button "Remove
+  this passage"; pressed, one body sentence in alarm, "Remove this passage for good?",
+  over a Text Button "Keep it" and an Outline Button "Remove" in alarm, 20px apart.
+  Focus lands on "Keep it"; kept, it returns to "Remove this passage".
 
 ### Field Row
 
@@ -1409,13 +1635,14 @@ Cover already says the title.
 
 ### Motion
 
-**The One Moment Rule.** The entire surface has exactly one authored animation: an
+**The One Moment Rule** (scoped). Tri-band's own authored moment is unchanged: an
 entry's colour band inks in from the spine edge via a `clip-path` wipe, 620ms on
-`cubic-bezier(0.16, 1, 0.3, 1)`, `animation-fill-mode: backwards`. It is gated twice —
-to entries created since the reader's server-side `lastSeenAt`, and to the band's
-first intersection with the viewport. The band renders visible from the server, so
-with no JS or under `prefers-reduced-motion: reduce` nothing is hidden and nothing
-moves. No other transition on the page changes anything but colour or opacity.
+`cubic-bezier(0.16, 1, 0.3, 1)`, `animation-fill-mode: backwards`, gated to entries
+created since the reader's server-side `lastSeenAt` and to the band's first
+intersection with the viewport. It is no longer the only motion: since MRG-108 a
+motion layer runs at every width — place transitions, the jacket morph, sheet easing,
+reveal, press, roll — recorded under Below 40rem: Now Reading, Motion. Hover and focus
+still change only colour; under `prefers-reduced-motion: reduce` nothing travels.
 
 ## Do's and Don'ts
 
@@ -1461,23 +1688,24 @@ moves. No other transition on the page changes anything but colour or opacity.
   list fallback.
 
 ### Don't:
-- **Don't** add a `box-shadow`, an elevation layer, or a lift-on-hover anywhere. Depth
-  is tonal only.
-- **Don't** use a gradient as shading, tint, or decoration. The one gradient in this
-  system draws the shelf's column rules and is a ruling device.
+- **Don't** add a `box-shadow`, an elevation layer, or a lift-on-hover at 40rem and
+  up. Depth there is tonal only.
+- **Don't** use a gradient as shading, tint, or decoration at 40rem and up. The one
+  Tri-band gradient draws the shelf's column rules and is a ruling device.
 - **Don't** introduce a second typeface, including for numerals, code, or quotes.
-- **Don't** round a corner past the 2px ceiling, and prefer 0 — nothing shipped uses
-  even 2px.
+- **Don't** round a corner past the 2px ceiling at 40rem and up, and prefer 0 —
+  nothing shipped at that width uses even 2px.
 - **Don't** hard-code a foreground colour on a coloured band, and don't assume paper
   reads on the fiction orange (3.32:1, fails AA).
-- **Don't** build a dark mode or invert the ground. This world is printed paper.
+- **Don't** build a dark mode keyed to `prefers-color-scheme`, or invert the ground at
+  40rem and up. This world is printed paper.
 - **Don't** fill a surface with `{colors.alarm}`, use it as a band, or add a second
   red. It is a stroke and a sentence, and it means refusal.
-- **Don't** pin, float, or overlay anything else. The account sheet's commit band is
+- **Don't** pin, float, or overlay anything else at 40rem and up. The account sheet's commit band is
   the one exception, and it disappears when there is nothing to commit; the log
   sheet's commit band runs in the flow.
-- **Don't** give a control chrome: no filled input box, no pill, no toggle, no badge,
-  no rounded chip. State is a mark on the page.
+- **Don't** give a control chrome at 40rem and up: no filled input box, no pill, no
+  toggle, no badge, no rounded chip. State is a mark on the page.
 - **Don't** grey out a disabled control as the only signal, and don't delete a spent
   object from the page — rule through it and keep it legible.
 - **Don't** use the condensed tracked-out caps as a kicker or eyebrow above a heading;
@@ -1489,5 +1717,271 @@ moves. No other transition on the page changes anything but colour or opacity.
   design. The production database is empty; every state must be honest to that.
 - **Don't** give a book a band colour, a jacket colour, or a fallback for merely being
   saved. A waiting book is ink until it is read.
-- **Don't** add a second animated moment. If something must move, replace the band
-  wipe rather than joining it.
+- **Don't** add motion outside the recorded layer (place transitions, the jacket
+  morph, sheet easing, reveal, press, roll, hero-in, the band wipe), and don't add any
+  motion without a reduced-motion crossfade or stillness.
+
+## Below 40rem: Now Reading
+
+Everything above this heading is the Tri-band world, and it stays authoritative at
+40rem and up. Below 40rem the phone has its own world, confirmed with the user under
+MRG-108. It is not a fork: every component keeps its markup and its behaviour, and
+the world changes only through a token remap inside `@media (max-width: 39.999rem)`,
+`max-sm:` utilities, and the phone-only `m-` utilities (`m-only`, `m-hidden`,
+`m-flood`, `m-jacket`). Tri-band rules that this section does not override still hold
+on the phone: one family, tabular figures, `readableOn()` on every band, conditioned
+and stable colour, earned colour, refusal tone, the word beside the colour, and the
+honest empty state.
+
+### Overview
+
+**Creative North Star: "Now Reading"**
+
+Desktop is printed paper. The phone is read at night, in the minute after a book is
+closed, on a lit screen. So below 40rem the ground goes to night, the book's own jacket
+colour floods the field behind it, and surfaces become rounded sheets with soft depth
+that move on springs. The first viewport of a reader's own diary is their latest read:
+its jacket large on a wash of its colour, their name and tally above it, the shelf of
+rounded jackets two-up beneath, and a floating bar in thumb reach.
+
+**Key Characteristics:**
+- A night ground chosen by viewport, never by `prefers-color-scheme`
+- The jacket's own conditioned colour as a full-field wash and as the glow under its cover
+- Rounded sheets, pills, and soft downward shadows; the colour bands of the cell are folded away
+- One lit control per view in the night accent, with night words on it
+- A floating five-place bar, the one element that never moves between places
+- Archivo pushed wide and bold for display (`wdth` 112, 700), still the one family
+
+### Colors
+
+The Tri-band tokens are re-cut for the night, and components consume them unchanged:
+`paper` resolves to `{colors.m-night}`, `paper-sunk` to `{colors.m-raised}`, `ink` to
+`{colors.m-text}`, `ink-soft` to `{colors.m-text-soft}`, `rule` to `{colors.m-rule}`,
+`alarm` to `{colors.m-alarm}`, and `band-fiction` to `{colors.m-accent}`. Crime green and
+Pelican cyan keep their values; band colours from jackets are conditioned as on desktop.
+
+- **Night** (`{colors.m-night}`): the page ground, the book page's sheet, the text on the
+  accent, and the 4px ring that seats the raised Log pill in the bar. The browser's
+  `theme-color` is night below 40rem and paper above, and `color-scheme` is `dark` here
+  only, so form controls and the scrollbar follow.
+- **Raised** (`{colors.m-raised}`): the first step up — a jacket well, a rounded account
+  card.
+- **Raised 2** (`{colors.m-raised-2}`): every surface that is an ink chip on desktop —
+  a spine on the to-read pile, an ink band that has not set its own phone colour — and
+  the scrollbar thumb. Their paper words read as `{colors.m-text}`.
+- **Night Text** (`{colors.m-text}`) and **Night Soft** (`{colors.m-text-soft}`): primary
+  and secondary text, as ink and soft ink are on paper. The focus ring takes Night Text
+  because it is the remapped ink.
+- **Night Rule** (`{colors.m-rule}`): Night Text at 12%; every remaining hairline. Ink
+  borders that have not set a phone colour soften to Night Text at 28%.
+- **Ember** (`{colors.m-accent}`): the one lit control on a view — the raised Log pill,
+  every commit band (now a pill), an outline button's hover flood, "Log your first book".
+  Words on it are always Night, never light.
+- **Night Alarm** (`{colors.m-alarm}`): refusal, as on desktop — a stroke and a sentence.
+
+**The Night by Viewport Rule.** The phone's night ground is a second world chosen by
+width, not a dark mode. Nothing switches on `prefers-color-scheme`; a laptop in a dark
+OS still gets paper, and a phone in a light OS still gets night.
+
+**The Jacket Flood Rule.** Colour on the phone is the book's own, and it is still
+earned. A shelved book's conditioned band colour washes the field behind its jacket
+(`m-flood`: a radial wash from the top over a fall from the colour at 55% into night)
+and tints the glow under its cover. A search result and a spine have no band colour,
+so their jackets cast a neutral black shadow and their grounds stay raised; an empty
+diary's hero washes in a neutral `#2A2A2E`. Nothing ever floods in the accent.
+
+**The One Lit Control Rule.** Ember is the single lit control on a view, and the words
+on it are Night. A second Ember surface on the same view is a second primary action,
+and the view has only one.
+
+### Typography
+
+One family still: Archivo, run wider and heavier for display on the phone.
+
+- **Night Display** (`{typography.m-display}`): the reader's name on the Now Reading
+  hero and on a profile's masthead. A book's title on its sheet takes the same weight
+  and tracking (−0.03em) at 2.25rem and `wdth` 108.
+- **Night Headline** (`{typography.m-headline}`): the year (or author, or category) on a
+  sticky year rule, and "Favourites".
+- **Night Title** (`{typography.m-title}`): a book's title under its jacket on the shelf,
+  in favourites and in search results, with its first author beneath it at 0.75rem in
+  Night Soft, truncated — the author moves under the title because the colour band
+  that carried it is folded away.
+- **Margins** keeps the Tri-band steps on the phone: the spotlight's words at Display,
+  Headline or Field by length (2.25rem, 1.75rem, 1.375rem, at 600), never Night Display,
+  because a quotation is not a name.
+- **Bar Label** (`{typography.m-bar-label}`): the five place names in the bottom bar,
+  sentence case. The condensed tracked caps stay the voice of buttons and band labels;
+  the bar is a place list, not a band.
+- The wordmark shrinks to 0.75rem at the head of the hero and the wordmark band, and
+  "A reading diary" is not drawn.
+
+### Layout
+
+- **Gutter.** Phone page content sits on a 1.25rem gutter (`{spacing.m-gutter}`); the
+  account's cards inset 1rem.
+- **The shelf breathes.** The grid keeps two columns, but cells stand apart on a 1.75rem
+  row gap and 0.875rem column gap with no hairlines, no ruled column lines, and no
+  card frame. A short row is still left-aligned and never stretched; its empty
+  positions are night rather than ruled.
+- **The hero.** On the reader's own diary the Tri-band masthead is replaced by Now
+  Reading: wordmark and reading span on one line under the safe-area inset, the name
+  at Night Display, the tally (its figure rolls in), then the latest read's jacket at
+  46% width beside its title, author, date and rating. The masthead's "Your pages"
+  nav is not drawn; the bar replaces it.
+- **The book page is a sheet over its jacket.** The wordmark band is not drawn. The
+  frontispiece stands at 64% width on the jacket's flood, the author band runs
+  transparent over it with its way back as frosted pills, and the title column rises
+  as a night sheet with 1.75rem top corners, a minimum of half the viewport, and the
+  sheet shadow.
+- **Account surfaces are cards.** Invitations, the device section and the delete fence
+  become rounded Raised cards inset 1rem; their ink header bands fold into the card.
+- **The to-read pile stands straight.** Spines run full width, 0.5rem apart, with 1rem
+  corners. The stable lie is a desktop drawing; on the phone it is not drawn.
+- **Room for the bar.** A page with the bar pads its foot by 6.5rem plus the
+  safe-area inset, and the viewport is `viewport-fit: cover` so night runs under the
+  notch.
+
+**The Thumb Reach Rule.** Beyond the account sheet's commit band, the phone pins
+exactly two kinds of element: the floating bottom bar, and each year rule, which sticks to the top of the viewport over a
+frosted night (Night at 75%, 24px blur) while its group scrolls. Nothing else floats, sticks, or overlays: no top
+app bar, no toast, no floating action button beside the bar's own Log pill.
+
+### Elevation & Depth
+
+The phone is lifted. Depth is soft, offset downward, and coloured only by the object
+casting it: a jacket glows in its own flood colour, the Log pill in Ember, and
+everything else casts black. There are no hard offset shadows and no outlines drawn as
+depth.
+
+- **Night lift** (`--m-shadow`): the base under a jacket.
+- **Jacket glow**: the jacket's flood colour at 70% into black, 24px down and 48px
+  wide, over Night lift.
+- **Sheet**: `0 -12px 32px -12px` black at 60%, cast upward by the book page's sheet
+  onto the flood.
+- **Bar**: an inset 1px white hairline at 7% over a 20px-down, 40px black shadow,
+  with a 24px backdrop blur at 1.8 saturation through 84% night.
+- **Log glow**: Ember at 55%, 12px down, plus a 4px night seat.
+
+**The Glow Belongs to Its Object Rule.** A shadow is never decorative and never a
+brand colour laid under an arbitrary surface. It is black, or it is the colour of the
+thing casting it.
+
+### Shapes
+
+Rounded, on a short scale: 0.5rem for an invite code's cell (`{rounded.m-cell}`),
+0.875rem for every jacket and an empty favourites slot (`{rounded.m-jacket}`, the
+slot dashed), 1rem for a spine (`{rounded.m-spine}`), 1.125rem for a commit band
+(`{rounded.m-commit}`), 1.25rem for an account card and the Log pill
+(`{rounded.m-card}`), 1.75rem for the bar and the book page's sheet
+(`{rounded.m-sheet}`), and a full pill for every outlined button, the shelf-order
+choices and the frosted back links (`{rounded.m-pill}`). The bar's icons are the one
+round-capped, round-joined SVG set (1.75px stroke, 2.25px for Log); every other drawn
+mark keeps the Tri-band's square caps.
+
+### Components
+
+#### Bottom Bar (signature component)
+
+A floating, frosted five-place bar — Diary · Margins · Log · To read · Account — inset
+0.75rem from the sides and above the home indicator, in `{rounded.m-sheet}`. Log sits
+in the middle as a raised 3.5rem Ember square (`{rounded.m-card}`) lifted 2rem out of
+the bar, its label on the others' baseline. The current place is marked by one white
+10% pill that slides between slots on the bar spring rather than five marks that
+blink, with `aria-current` and the slot's icon and label going from Night Text Soft to
+Night Text. Slot two is Margins, drawn as a quote mark (MRG-110); Search no longer
+has a slot of its own and is reached through Log, so search lights the Log slot. A
+book page keeps the slot it was opened from. Presses give: a slot
+scales to 0.9, the Log pill to 0.88 with a quarter turn. The bar is exempt from every
+place transition, so it is the one thing that never moves between pages. Not drawn at
+40rem and up.
+
+#### Now Reading Hero
+
+The diary's first viewport (see Layout). With no reads, the field is the neutral
+wash, the tally reads "0 books logged — yet", and an Ember pill reads "Log your first
+book" under one sentence of guidance; nothing is mocked up. The jacket settles in
+(`hero-in`) and is a shared element with that book's page.
+
+#### Margins Spotlight (phone)
+
+The masthead is not drawn. The latest passage stands on its book's flood (`m-flood`;
+ink's flood when the book is not on the shelf), under the 1.25rem gutter and the
+safe-area inset: the 0.75rem wordmark left and "N passages" right in the flood's
+`readableOn()` tone, then the words in that tone at their length-chosen step, between
+their inline double quotes as at every width. Under the words, the stamp with its jacket rounded and
+glowing in the flood colour, its title and "Author · p." in the tone (the second line
+at 75%), never grey; then the note in the tone at 75%. The journal follows on night.
+
+#### Phone Cell
+
+An Entry Card, Favourite or Search Result on the phone: no frame, no colour band, no
+record rule — the rounded jacket with its glow, then the title at Night Title and the
+author beneath. Hover and focus still draw the cell's ring; a press gives.
+
+#### Pills
+
+Outlined buttons become pills (1.125rem side padding) and keep their printed states
+— ruled through when unavailable, alarm when armed. Commit bands become Ember pills set
+inside their column, borderless, with Night words. The shelf-order line becomes a row
+of pill choices: the current one filled in Night Text with Night words, the others
+bare, each pressing to 0.95.
+
+#### Delete Fence (phone)
+
+A Raised card in `{rounded.m-card}` on a Night Rule hairline at rest, like every other
+account card; alarm arrives only as the Refusal Tone Rule allows, when the handle is
+typed back.
+
+### Motion (every width)
+
+Motion is no longer Tri-band's single moment; it is one layer, at every width,
+documented here because it arrived with this world.
+
+- **Places.** Each page is wrapped in a view transition whose kind is set by the link
+  that started it: deeper slides in 48px from the right, back slides from the left
+  (420ms ease-out, with a short fade); a sideways move between bar places is a
+  crossfade-rise of 14px; a book's page rises 64px as a sheet over the shelf (520ms).
+  A navigation with no kind — browser back, a refresh — does not slide.
+- **The jacket morph** (the focal moment). A jacket is a shared element between the
+  shelf (or the hero, or a favourite) and its book page: it travels 560ms on the
+  jacket spring, softened by a 1.5px blur mid-flight.
+- **Sheets.** Native `<details>` (the log sheet, a slip line's edit) ease open on
+  their block size over 420ms and shut at once. Their `content-visibility` is never
+  transitioned: that would animate the close too, but it leaves an opening sheet's
+  controls unfocusable for the whole ease.
+- **Reveal.** Shelf cells, search results and spines rise 28px from 96% as they scroll
+  into view, on a scroll-driven timeline where supported and not at all otherwise.
+- **Press.** A jacket cell, a spine or a pill gives to 96.5% under a press.
+- **Roll.** A changed figure rolls up into place (700ms).
+- **Band wipe.** The Tri-band's colour-band ink-in is unchanged; on the phone the band
+  is folded away, so it is seen at 40rem and up.
+
+**The Travel, Not Blink Rule.** What changes place moves as one object — the bar's
+pill, the jacket — rather than disappearing here and appearing there. Every motion
+eases out on `cubic-bezier(0.16, 1, 0.3, 1)` or one of the three named springs.
+
+**The Still Reader Rule.** Under `prefers-reduced-motion: reduce` nothing travels:
+places and sheets crossfade (180ms), the bar's pill fades rather than slides, reveal,
+roll and hero-in do not run, and presses do not scale. Every state still changes
+visibly.
+
+### Do's and Don'ts (below 40rem)
+
+#### Do:
+- **Do** change the phone by token remap and `max-sm:` / `m-` utilities on the same
+  markup; never fork a component into a phone copy.
+- **Do** flood a field or tint a glow only with a book's earned, conditioned band
+  colour; a passage from an unshelved book floods ink.
+- **Do** set words on a flood in the flood's `readableOn()` tone, secondary lines at
+  75% of it, never Night Soft grey.
+- **Do** set Night words on Ember, and keep Ember to the one lit control on a view.
+- **Do** round jackets, cards, sheets and controls on the recorded radius scale.
+- **Do** give every new motion a reduced-motion crossfade or stillness.
+
+#### Don't:
+- **Don't** key the night ground to `prefers-color-scheme`.
+- **Don't** pin anything but the bottom bar, the year rules and the account commit band.
+- **Don't** cast a hard offset shadow, or a glow in a colour other than its object's.
+- **Don't** give an unshelved book a coloured flood or glow.
+- **Don't** let the bar move during a place transition.

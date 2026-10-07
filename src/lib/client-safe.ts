@@ -68,3 +68,21 @@ export const TO_READ_FILTER_MIN = 8;
 export function showsFilter(total: number, filter: string): boolean {
   return total >= TO_READ_FILTER_MIN || filter !== "";
 }
+
+/** A passage kept from a book: a page or two of quotation, not the chapter. */
+export const PASSAGE_MAX = 1500;
+
+/** One line of the reader's own, set under the passage. */
+export const PASSAGE_NOTE_MAX = 280;
+
+/**
+ * A passage without the double quotes it may have been pasted with, so the
+ * page's own marks (MRG-110) never double up. Only a pair of double marks at
+ * both ends with none inside goes. A single mark never does, so "the dogs'"
+ * keeps its apostrophe; and a pair with marks inside — dialogue — is left
+ * alone, or its own quotes would open and close nothing. At render time, so
+ * the reader's stored words stay exactly as typed.
+ */
+export function unquote(words: string): string {
+  return /^["“„«]([^"“”„«»]*)["”»]$/.exec(words)?.[1] ?? words;
+}

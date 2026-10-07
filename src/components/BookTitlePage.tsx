@@ -3,6 +3,8 @@ import { Fragment } from "react";
 
 import { Cover } from "./Cover";
 import { DateSlip } from "./DateSlip";
+import { KeepPassage } from "./PassageSheet";
+import { Jacket } from "./Place";
 import { FavouriteToggle } from "./FavouriteToggle";
 import type { FavouriteState, ToReadState } from "@/app/actions";
 import { ToReadToggle } from "./ToReadToggle";
@@ -36,6 +38,7 @@ export function BookTitlePage({
   onToRead = false,
   favourite = { isFavourite: false, full: false, position: -1, count: 0 },
   ownCopy = null,
+  passageCount = 0,
   username,
   diaryHref = "/",
   searchHref,
@@ -52,6 +55,8 @@ export function BookTitlePage({
   favourite?: { isFavourite: boolean; full: boolean; position: number; count: number };
   /** Another row of this same book the reader already has (MRG-107). */
   ownCopy?: OwnCopy | null;
+  /** How many passages the reader has kept from this book (MRG-110). */
+  passageCount?: number;
   /** The reader's handle, so each read on the slip can address its own page. */
   username: string;
   /** The dev harness points this at its own shelf. */
@@ -72,7 +77,7 @@ export function BookTitlePage({
   const subtitle = displaySubtitle(book.subtitle);
 
   return (
-    <article>
+    <article className="m-flood" style={{ "--flood": band.background } as React.CSSProperties}>
       <AuthorBand
         authors={book.authors}
         band={band}
@@ -83,25 +88,27 @@ export function BookTitlePage({
 
       {/* The jacket's column is sized to the jacket, so the title page faces
           it across one gap rather than across the dead half of a third. */}
-      <div className="grid gap-6 px-4 pt-6 pb-10 sm:grid-cols-[min(24rem,33%)_minmax(0,1fr)] sm:gap-10 sm:px-6 sm:pt-8">
-        <div className="mx-auto w-3/5 max-w-[24rem] sm:mx-0 sm:w-full">
-          <div className="aspect-[2/3] overflow-hidden border border-rule bg-paper-sunk">
-            <Cover
-              coverId={book.coverId}
+      <div className="grid gap-6 px-4 pt-6 pb-10 max-sm:gap-0 max-sm:px-0 max-sm:pt-4 max-sm:pb-0 sm:grid-cols-[min(24rem,33%)_minmax(0,1fr)] sm:gap-10 sm:px-6 sm:pt-8">
+        <div className="mx-auto w-3/5 max-w-[24rem] max-sm:w-[64%] max-sm:pb-10 sm:mx-0 sm:w-full">
+          <Jacket sourceKey={book.sourceKey}>
+            <div className="m-jacket aspect-[2/3] overflow-hidden border border-rule bg-paper-sunk">
+              <Cover
+                coverId={book.coverId}
                 coverUrl={book.coverUrl}
-              title={book.title}
-              authors={book.authors}
-              sizes="(min-width: 40rem) min(24rem, 33vw), 60vw"
-              scale="page"
-            />
-          </div>
+                title={book.title}
+                authors={book.authors}
+                sizes="(min-width: 40rem) min(24rem, 33vw), 64vw"
+                scale="page"
+              />
+            </div>
+          </Jacket>
         </div>
 
         {/* Every block in this column hangs on one 34rem edge, the title
             included, so the title page reads as a single set measure — a long
             title wraps rather than running past the imprint. */}
-        <div className="flex min-w-0 flex-col">
-          <h1 className="max-w-[34rem] text-[2.25rem] leading-[0.95] font-semibold tracking-[-0.02em] text-balance break-words sm:text-[3.5rem]">
+        <div className="flex min-w-0 flex-col max-sm:min-h-[50vh] max-sm:rounded-t-[1.75rem] max-sm:bg-paper max-sm:px-5 max-sm:pt-7 max-sm:pb-10 max-sm:shadow-[0_-12px_32px_-12px_rgb(0_0_0/0.6)]">
+          <h1 className="max-w-[34rem] text-[2.25rem] leading-[0.95] font-semibold tracking-[-0.02em] text-balance break-words max-sm:text-[2.25rem] max-sm:font-bold max-sm:tracking-[-0.03em] max-sm:[font-stretch:108%] sm:text-[3.5rem]">
             {book.title}
           </h1>
 
@@ -166,6 +173,23 @@ export function BookTitlePage({
             />
           )}
 
+          {/* Margins (MRG-110): kept mid-book as readily as after, so it does
+              not wait for a read the way a favourite does. */}
+          <KeepPassage bookId={book.id} />
+          {passageCount > 0 && (
+            <p className="mt-3 max-w-[34rem] text-[0.8125rem] leading-snug text-ink-soft">
+              {passageCount === 1 ? "One passage" : `${passageCount} passages`} from this book in{" "}
+              <Link
+                href="/margins"
+                transitionTypes={["nav-swap"]}
+                className="underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink"
+              >
+                your Margins
+              </Link>
+              .
+            </p>
+          )}
+
           {paragraphs.length > 0 && (
             <div className="mt-8 flex max-w-[34rem] flex-col gap-3 text-[0.9375rem] leading-relaxed text-ink-soft">
               {paragraphs.map((paragraph) => (
@@ -215,7 +239,7 @@ function AuthorBand({
       // A 2px ink rule — the world's ruled-line weight — between this band and
       // the wordmark's. A fallback band can be the very same orange, and over a
       // hairline the two read as one block rather than as two bands.
-      className="flex items-center justify-between gap-4 border-t-2 border-ink px-4 py-3 sm:px-6"
+      className="flex items-center justify-between gap-4 border-t-2 border-ink px-4 py-3 max-sm:border-0 max-sm:bg-transparent! max-sm:px-5 max-sm:pt-[max(1rem,env(safe-area-inset-top))] sm:px-6"
       style={
         {
           background: band.background,
@@ -246,11 +270,11 @@ function AuthorBand({
       </p>
       <nav aria-label="Ways back" className="flex shrink-0 flex-row gap-4">
         {searchHref && (
-          <Link href={searchHref} className="band-label shrink-0 underline underline-offset-4 transition-colors [text-decoration-color:color-mix(in_srgb,var(--band-tone)_40%,transparent)] hover:[text-decoration-color:var(--band-tone)] focus-visible:[outline-color:var(--band-tone)]">
+          <Link href={searchHref} transitionTypes={["nav-back"]} className="band-label shrink-0 max-sm:rounded-full max-sm:bg-black/25 max-sm:px-3.5 max-sm:py-2.5 max-sm:no-underline max-sm:backdrop-blur-md underline underline-offset-4 transition-colors [text-decoration-color:color-mix(in_srgb,var(--band-tone)_40%,transparent)] hover:[text-decoration-color:var(--band-tone)] focus-visible:[outline-color:var(--band-tone)]">
             Your search
           </Link>
         )}
-        <Link href={diaryHref} className="band-label shrink-0 underline underline-offset-4 transition-colors [text-decoration-color:color-mix(in_srgb,var(--band-tone)_40%,transparent)] hover:[text-decoration-color:var(--band-tone)] focus-visible:[outline-color:var(--band-tone)]">
+        <Link href={diaryHref} transitionTypes={["nav-back"]} className="band-label shrink-0 max-sm:rounded-full max-sm:bg-black/25 max-sm:px-3.5 max-sm:py-2.5 max-sm:no-underline max-sm:backdrop-blur-md underline underline-offset-4 transition-colors [text-decoration-color:color-mix(in_srgb,var(--band-tone)_40%,transparent)] hover:[text-decoration-color:var(--band-tone)] focus-visible:[outline-color:var(--band-tone)]">
           Your diary
         </Link>
       </nav>

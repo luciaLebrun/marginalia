@@ -106,9 +106,16 @@ Beyond the first release, two directions are stated rather than parked:
   rather than extraction.
 
 Explicitly undecided: whether a friends' feed, custom shelves or public lists,
-reading progress, or saved quotes are ever built. They are parked, not planned.
-A fixed four favourites is not a public list, so shipping it leaves public lists
-undecided.
+or reading progress are ever built. They are parked, not planned. A fixed four
+favourites is not a public list, so shipping it leaves public lists undecided.
+
+Confirmed with the user on 2026-10-07: **saved passages ("Margins")** are in
+scope, un-parked from the list above. A reader keeps a passage from a book —
+the words, optionally a page number and a line of their own — from that book's
+page, whether they have finished it or are still reading. A passage belongs to
+the book, not to a read. Margins are **private**, like the to-read list: never
+shown on the profile and never a feed. On the phone, Margins takes the bottom
+bar's slot that Search held; search stays reachable through Log.
 
 ## Brand Commitments
 

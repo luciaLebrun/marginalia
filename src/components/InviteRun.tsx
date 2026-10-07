@@ -31,8 +31,8 @@ export function InviteRun({
   const live = invites.filter((invite) => invite.state === "live").length;
 
   return (
-    <section aria-labelledby="invites-heading" className="border-t border-ink">
-      <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 bg-ink px-4 py-3 text-paper sm:px-6">
+    <section aria-labelledby="invites-heading" className="border-t border-ink max-sm:mx-4 max-sm:mt-6 max-sm:rounded-[1.25rem] max-sm:border-0 max-sm:bg-paper-sunk">
+      <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 bg-ink px-4 py-3 text-paper max-sm:bg-transparent max-sm:pt-5 max-sm:pb-1 sm:px-6">
         <h2 id="invites-heading" className="band-label font-stretch-[118%] tracking-[0.2em]">
           Invitations
         </h2>
@@ -130,7 +130,7 @@ function CodeCells({
       >
         {characters.map((char, i) => (
           <span key={`${code}-${i}`} className="contents">
-            <span className="flex h-9 w-7 items-center justify-center border border-rule text-[0.9375rem] font-semibold tabular-nums sm:w-8">
+            <span className="flex h-9 w-7 items-center justify-center border border-rule max-sm:rounded-[0.5rem] text-[0.9375rem] font-semibold tabular-nums sm:w-8">
               {char}
             </span>
             {i === group - 1 && (

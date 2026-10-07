@@ -261,7 +261,7 @@ export function ArrangeFavourites({
         })}
         {Array.from({ length: max - order.length }, (_, i) => (
           <li key={`empty-${i}`} aria-hidden="true" className="flex flex-col">
-            <div className="flex-1 border border-rule" />
+            <div className="flex-1 border border-rule max-sm:aspect-[2/3] max-sm:flex-none max-sm:rounded-[0.875rem] max-sm:border-dashed" />
           </li>
         ))}
       </ol>

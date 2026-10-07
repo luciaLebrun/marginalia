@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { bookPath, matchesFilter, publishedLabel, showsFilter } from "./client-safe";
+import { bookPath, matchesFilter, publishedLabel, showsFilter, unquote } from "./client-safe";
 
 describe("bookPath", () => {
   it("addresses the book page by bare work key", () => {
@@ -58,5 +58,21 @@ describe("showsFilter", () => {
     expect(showsFilter(7, "")).toBe(false);
     expect(showsFilter(8, "")).toBe(true);
     expect(showsFilter(3, "dune")).toBe(true);
+  });
+});
+
+describe("unquote", () => {
+  it("strips one wrapping pair of double marks, straight or curly", () => {
+    expect(unquote('"Fear is the mind-killer."')).toBe("Fear is the mind-killer.");
+    expect(unquote("“Fear is the mind-killer.”")).toBe("Fear is the mind-killer.");
+    expect(unquote("«Le Messie de Dune»")).toBe("Le Messie de Dune");
+  });
+
+  it("leaves words without a wrapping pair alone", () => {
+    expect(unquote("Fear is the mind-killer.")).toBe("Fear is the mind-killer.");
+    expect(unquote("“Only opened")).toBe("“Only opened");
+    expect(unquote("the dogs'")).toBe("the dogs'");
+    // Dialogue opens and closes on marks that are not one wrapping pair.
+    expect(unquote('"Come," she said. "Now."')).toBe('"Come," she said. "Now."');
   });
 });

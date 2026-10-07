@@ -2,7 +2,7 @@
 version: 1
 slug: "src-app-page-tsx"
 primary_target: "src/app/page.tsx"
-related_targets: ["src/app/[handle]/page.tsx","src/components/Masthead.tsx","src/app/dev/profile/page.tsx","src/components/Entry.tsx","src/components/Shelf.tsx","src/components/Favourites.tsx","src/components/ArrangeFavourites.tsx"]
+related_targets: ["src/app/[handle]/page.tsx","src/components/Masthead.tsx","src/app/dev/profile/page.tsx","src/components/Entry.tsx","src/components/Shelf.tsx","src/components/Favourites.tsx","src/components/ArrangeFavourites.tsx","src/app/layout.tsx","src/components/BottomBar.tsx"]
 ---
 
 Scope: the reading diary grid — `/` for the signed-in reader and `/@[username]`
@@ -201,3 +201,20 @@ no concept roll, no new tone, type step or motion.
 ## Unresolved
 
 - None blocking.
+
+## Mobile direction contract (MRG-108, below 40rem) — new world, confirmed with the user
+
+Desktop stays Tri-band. Below 40rem the phone gets its own world; motion (view
+transitions, reveals, feedback) runs at every width.
+
+THESIS: Now Reading. Each book floods the screen with its own jacket colour and every surface is a sheet on springs; refuses both the printed-paper page and the generic dark cover grid with a stock tab bar.
+
+OWN-WORLD: Night ground #0E0E10, raised #1A1A1D, text #F5F5F2 / #A19E98. Jacket colour (bandColor) as full-field washes; Archivo wide display; 18–28px sheet radii, soft offset shadows, frosted tab bar.
+
+STORY: Opening the app after closing a book, the reader sees their latest read glowing in its own colour, thumbs Log, and is back on the shelf in seconds.
+
+FIRST VIEWPORT: Latest read's jacket large on a field of its colour with name and tally; the shelf as rounded jackets two-up; a floating 5-slot bar (Diary · Search · Log · To read · Account), Log a raised colour pill, a sliding indicator.
+
+FORM: Now Reading, my top grounded candidate (Impeccable's pick), seed 0c1c3e74. Signature: a jacket morphs from shelf to book page while its colour floods.
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

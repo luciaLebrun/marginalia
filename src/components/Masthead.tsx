@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { WordmarkBand } from "./WordmarkBand";
-import { ACCOUNT_LINK, TO_READ_LINK, type MastheadLink } from "@/lib/masthead-link";
+import { ACCOUNT_LINK, MARGINS_LINK, TO_READ_LINK, type MastheadLink } from "@/lib/masthead-link";
 
 /**
  * The masthead is a tri-band at page scale — colour, field, record — so the
@@ -18,7 +18,7 @@ export function Masthead({
   handle = null,
   bio = null,
   // The reader's own diary: their list, then their account.
-  link = [TO_READ_LINK, ACCOUNT_LINK],
+  link = [TO_READ_LINK, MARGINS_LINK, ACCOUNT_LINK],
   tally,
 }: Readonly<{
   name: string | null;
@@ -59,9 +59,9 @@ export function Masthead({
           the name's baseline at every width. On a profile the handle and the
           bio follow under that row — inside it, a phone would wrap the span
           below the bio, where it reads as a stray line. */}
-      <div className="px-4 py-6 sm:px-6 sm:py-8">
+      <div className="px-4 py-6 max-sm:px-5 max-sm:pt-4 sm:px-6 sm:py-8">
         <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-          <h1 tabIndex={-1} className="min-w-0 text-[2.25rem] leading-[0.95] font-semibold tracking-[-0.02em] break-words sm:text-[3.5rem]">
+          <h1 tabIndex={-1} className="min-w-0 text-[2.25rem] leading-[0.95] font-semibold tracking-[-0.02em] break-words max-sm:text-[2.75rem] max-sm:font-bold max-sm:tracking-[-0.035em] max-sm:[font-stretch:112%] sm:text-[3.5rem]">
             {name ?? "Your reading"}
           </h1>
           <p className="text-[1rem] font-medium text-ink-soft tabular-nums sm:text-[1.375rem]">
@@ -81,10 +81,10 @@ export function Masthead({
       {/* The record band carries the tally and, where there is one, the next
           step. A separate nav bar would be a fourth band this page does not
           have, and this one is already the page's ruled foot. */}
-      <div className="flex items-center justify-between gap-4 bg-ink px-4 py-3 text-paper sm:px-6">
+      <div className="flex items-center justify-between gap-4 bg-ink px-4 py-3 text-paper max-sm:bg-transparent max-sm:px-5 max-sm:pt-0 max-sm:pb-2 max-sm:text-ink-soft sm:px-6">
         <p className="band-label">{record}</p>
         {links.length > 0 && (
-          <nav aria-label="Your pages" className="flex items-center gap-5">
+          <nav aria-label="Your pages" className="m-hidden flex items-center gap-5">
             {links.map((item) => (
               <Link
                 key={item.href}

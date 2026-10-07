@@ -20,6 +20,7 @@ export function Shelf({
   canLog = true,
   linkBooks = true,
   readerName,
+  heroKey,
 }: Readonly<{
   entries: DiaryEntry[];
   /** How the shelf is grouped (MRG-072), from the page's `?by=`. */
@@ -32,15 +33,20 @@ export function Shelf({
   linkBooks?: boolean;
   /** Whose shelf this is, for the empty state on a public profile. */
   readerName?: string;
+  /** The book the phone's hero already carries; its jacket travels from there. */
+  heroKey?: string;
 }>) {
   if (entries.length === 0) {
     return canLog ? <EmptyShelf /> : <EmptyProfile name={readerName} />;
   }
 
   const groups = groupShelf(entries, by);
+  // One jacket per book may travel to its page: a reread on the shelf, or the
+  // hero's own book, would share its name and spoil the morph for both.
+  const named = new Set<string>(heroKey ? [heroKey] : []);
 
   return (
-    <div className="flex flex-col gap-6 px-4 py-6 sm:px-6">
+    <div className="flex flex-col gap-6 px-4 py-6 max-sm:gap-5 sm:px-6">
       <ShelfOrderLine by={by} path={path} />
       <div className="flex flex-col gap-10">
         {groups.map((group, groupIndex) => (
@@ -54,9 +60,11 @@ export function Shelf({
               {/* Capture belongs to the chronology. Author and Category are
                   for looking back, so they show books alone. */}
               {groupIndex === 0 && canLog && by === "year" && <LogCell />}
-              {group.entries.map((entry) => (
-                <Entry key={entry.id} entry={entry} linked={linkBooks} />
-              ))}
+              {group.entries.map((entry) => {
+                const morph = !named.has(entry.sourceKey);
+                named.add(entry.sourceKey);
+                return <Entry key={entry.id} entry={entry} linked={linkBooks} morph={morph} />;
+              })}
             </div>
           </section>
         ))}
@@ -79,8 +87,8 @@ const ORDER_LABELS: Record<ShelfOrder, string> = {
  */
 function ShelfOrderLine({ by, path }: Readonly<{ by: ShelfOrder; path: string }>) {
   return (
-    <nav aria-label="Shelf order" className="flex flex-wrap items-baseline gap-x-5 gap-y-2">
-      <span className="band-label text-ink-soft">Shelved by</span>
+    <nav aria-label="Shelf order" className="flex flex-wrap items-baseline gap-x-5 gap-y-2 max-sm:items-center max-sm:gap-x-1.5">
+      <span className="band-label text-ink-soft max-sm:mr-1.5">Shelved by</span>
       {(Object.keys(ORDER_LABELS) as ShelfOrder[]).map((order) => (
         <Link
           key={order}
@@ -88,7 +96,7 @@ function ShelfOrderLine({ by, path }: Readonly<{ by: ShelfOrder; path: string }>
           scroll={false}
           prefetch={false}
           aria-current={order === by ? "true" : undefined}
-          className="band-label underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink aria-[current]:decoration-ink aria-[current]:decoration-2"
+          className="band-label underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink aria-[current]:decoration-ink aria-[current]:decoration-2 max-sm:rounded-full max-sm:px-3.5 max-sm:py-2.5 max-sm:no-underline max-sm:transition-[background-color,color,transform] max-sm:duration-300 max-sm:active:scale-95 max-sm:aria-[current]:bg-ink max-sm:aria-[current]:text-paper"
         >
           {ORDER_LABELS[order]}
         </Link>
@@ -123,7 +131,7 @@ function EmptyProfile({ name }: Readonly<{ name?: string }>) {
 
 function EmptyShelf() {
   return (
-    <div className="px-4 py-6 sm:px-6">
+    <div className="m-hidden px-4 py-6 sm:px-6">
       <div className="shelf-grid max-w-[24rem] !grid-cols-1">
         <LogCell emphatic />
       </div>

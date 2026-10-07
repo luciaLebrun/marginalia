@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useActionState, useEffect, useRef, useTransition } from "react";
 
 import { moveFavouriteAction, toggleFavouriteAction, type FavouriteState } from "@/app/actions";
-import { INK } from "@/lib/color";
 
 const INITIAL: FavouriteState = { favourite: null, error: null, signedOut: false };
 
@@ -104,7 +103,7 @@ export function FavouriteToggle({
           <span className="flex items-center gap-3">
             <span className="inline-flex size-5 shrink-0 items-center justify-center border border-ink">
               <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
-                <path d="M5 10.5l3.2 3.2L15 6.5" fill="none" stroke={INK} strokeWidth="1.5" strokeLinecap="square" />
+                <path d="M5 10.5l3.2 3.2L15 6.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" />
               </svg>
             </span>
             <span className="band-label">
@@ -117,7 +116,7 @@ export function FavouriteToggle({
               )}
             </span>
           </span>
-          <span className="ml-auto flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
+          <span className="ml-auto flex flex-wrap items-center justify-end gap-x-4 gap-y-2 max-sm:ml-0 max-sm:w-full max-sm:justify-start">
             {position >= 0 && count > 1 && (
               <>
                 <button
@@ -158,7 +157,7 @@ export function FavouriteToggle({
               onClick={(event) => {
                 if (pending) event.preventDefault();
               }}
-              className="band-label inline-grid underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink aria-disabled:cursor-progress"
+              className="band-label inline-grid underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink aria-disabled:cursor-progress max-sm:justify-items-start max-sm:text-left"
             >
               <span className={`[grid-area:1/1] ${pending ? "invisible" : ""}`}>Take it off</span>
               <span aria-hidden={!pending} className={`[grid-area:1/1] ${pending ? "" : "invisible"}`}>

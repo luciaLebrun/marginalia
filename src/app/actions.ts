@@ -20,6 +20,8 @@ import { requestOrigin } from "@/lib/trusted-origins";
 import { entryPath, parseLogId } from "@/lib/entry";
 import { createRead, removeRead, updateRead } from "@/lib/read";
 import { removeToRead, saveToRead } from "@/lib/to-read";
+import { keepPassage, removePassage, updatePassage } from "@/lib/passage";
+import { passageSchema } from "@/lib/passage-schema";
 import { addFavourite, moveFavourite, removeFavourite } from "@/lib/favourites";
 import { isLogReadField, readSchema, type LogReadField } from "@/lib/read-schema";
 import {
@@ -607,3 +609,107 @@ function revalidateFavourites(username: string | null | undefined) {
   if (username) revalidatePath(handlePath(username));
 }
 
+
+/* -------------------------------------------------------------------------- */
+/* Margins: passages kept from a book                                          */
+/* -------------------------------------------------------------------------- */
+
+export interface PassageState {
+  /** Counts passages kept (or corrected), so the form can reset and announce. */
+  kept: number;
+  error: string | null;
+  signedOut: boolean;
+  fieldErrors?: Partial<Record<"words" | "page" | "note", string>>;
+}
+
+function revalidateMargins() {
+  revalidatePath("/margins");
+  revalidatePath("/book/[bookKey]", "page");
+}
+
+/** Parse the passage fields; the first refusal per field, or the clean input. */
+function readPassageForm(formData: FormData, bookId = formText(formData, "bookId")) {
+  const parsed = passageSchema.safeParse({
+    bookId,
+    words: formText(formData, "words"),
+    page: formText(formData, "page"),
+    note: formText(formData, "note"),
+  });
+  if (parsed.success) return { data: parsed.data };
+
+  const fieldErrors: NonNullable<PassageState["fieldErrors"]> = {};
+  for (const issue of parsed.error.issues) {
+    const field = issue.path[0];
+    if ((field === "words" || field === "page" || field === "note") && !fieldErrors[field]) {
+      fieldErrors[field] = issue.message;
+    }
+  }
+  const message = Object.values(fieldErrors)[0] ?? parsed.error.issues[0]?.message ?? "Invalid input.";
+  return { fieldErrors, message };
+}
+
+/** Keep a passage from a book in the signed-in reader's margins (MRG-110). */
+export async function keepPassageAction(
+  previous: PassageState,
+  formData: FormData,
+): Promise<PassageState> {
+  const reader = await requireReader();
+  if (!reader) {
+    return { ...previous, error: "Not kept: you’re signed out.", signedOut: true };
+  }
+
+  const form = readPassageForm(formData);
+  if (!form.data) {
+    return { ...previous, error: form.message, signedOut: false, fieldErrors: form.fieldErrors };
+  }
+
+  const result = await keepPassage(reader.id, form.data);
+  if (!result.ok) {
+    return {
+      ...previous,
+      error: "Not kept: this book is no longer here. Find it again from search.",
+      signedOut: false,
+    };
+  }
+
+  revalidateMargins();
+  return { kept: previous.kept + 1, error: null, signedOut: false };
+}
+
+/** Correct one of the signed-in reader's own passages. */
+export async function editPassageAction(
+  previous: PassageState,
+  formData: FormData,
+): Promise<PassageState> {
+  const reader = await requireReader();
+  if (!reader) {
+    return { ...previous, error: "Not changed: you’re signed out.", signedOut: true };
+  }
+
+  // The book is not editable; the schema wants one, so a placeholder satisfies it.
+  const form = readPassageForm(formData, "-");
+  if (!form.data) {
+    return { ...previous, error: form.message, signedOut: false, fieldErrors: form.fieldErrors };
+  }
+
+  const { words, page, note } = form.data;
+  const changed = await updatePassage(reader.id, formText(formData, "id"), { words, page, note });
+  if (!changed) {
+    return {
+      ...previous,
+      error: "Not changed: this passage is no longer here. It may have been removed.",
+      signedOut: false,
+    };
+  }
+
+  revalidateMargins();
+  return { kept: previous.kept + 1, error: null, signedOut: false };
+}
+
+/** Remove one of the signed-in reader's own passages for good. */
+export async function removePassageAction(formData: FormData): Promise<void> {
+  const reader = await requireReader();
+  if (!reader) return;
+
+  if (await removePassage(reader.id, formText(formData, "id"))) revalidateMargins();
+}

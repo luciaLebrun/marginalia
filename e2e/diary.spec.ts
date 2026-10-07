@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page, type TestInfo } from "@playwright/test";
 
 /**
  * The diary surface, in a real browser at both device classes.
@@ -9,18 +9,33 @@ import { expect, test } from "@playwright/test";
  * browser built.
  */
 test.describe("reading diary", () => {
+  // MRG-108: below 40rem the diary is the Now Reading world. The masthead and
+  // the grid's log cell give way to NowReading and the bottom bar ("Places"),
+  // so a few tests below keep their intent and change their witness.
+  const onPhone = (testInfo: TestInfo) => testInfo.project.name === "mobile";
+  const bar = (page: Page) => page.getByRole("navigation", { name: "Places" });
+
   test.beforeEach(async ({ page }) => {
     await page.goto("/dev/shelf", { waitUntil: "networkidle" });
   });
 
   test("renders the shelf with its masthead and year rules", async ({ page }) => {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await expect(page.getByText(/books logged/)).toBeVisible();
+    // The phone's NowReading hero and the laptop masthead both print the
+    // tally, one hidden per width: count the one that is actually shown.
+    await expect(page.getByText(/books logged/).locator("visible=true")).toBeVisible();
     await expect(page.getByRole("heading", { level: 2 }).first()).toBeVisible();
     expect(await page.locator("article").count()).toBeGreaterThan(0);
   });
 
-  test("offers logging a book as the first cell of the grid", async ({ page }) => {
+  test("offers logging a book as the first cell of the grid", async ({ page }, testInfo) => {
+    if (onPhone(testInfo)) {
+      // The grid's log cell is hidden on a phone; capture is the bar's raised
+      // middle pill, one thumb away on every page.
+      await expect(page.getByRole("link", { name: /log a book/i })).toBeHidden();
+      await expect(bar(page).getByRole("link", { name: "Log" })).toHaveAttribute("href", "/search?log=1");
+      return;
+    }
     const log = page.getByRole("link", { name: /log a book/i });
     await expect(log).toBeVisible();
     await expect(log).toHaveAttribute("href", "/search");
@@ -30,7 +45,13 @@ test.describe("reading diary", () => {
    * The reader's own diary keeps its way into the account; only the profile
    * changes what the record band offers, by who is looking.
    */
-  test("keeps the account link on the reader's own diary", async ({ page }) => {
+  test("keeps the account link on the reader's own diary", async ({ page }, testInfo) => {
+    if (onPhone(testInfo)) {
+      // The masthead's "Your pages" nav is hidden on a phone; the bar's
+      // Account slot is the way into settings.
+      await expect(bar(page).getByRole("link", { name: "Account" })).toHaveAttribute("href", "/settings");
+      return;
+    }
     await expect(page.getByRole("link", { name: "Your account" })).toHaveAttribute(
       "href",
       "/settings",
@@ -42,7 +63,7 @@ test.describe("reading diary", () => {
    * whole cell is the link, named as one sentence, and its state is printed:
    * the border goes to ink, nothing fills.
    */
-  test("every entry cell opens its book page", async ({ page }) => {
+  test("every entry cell opens its book page", async ({ page }, testInfo) => {
     const cells = page.locator("article > a");
     expect(await cells.count()).toBe(await page.locator("article").count());
     for (const href of await cells.evaluateAll((as) => as.map((a) => a.getAttribute("href")))) {
@@ -52,6 +73,16 @@ test.describe("reading diary", () => {
 
     const first = cells.first();
     await expect(first).toHaveAttribute("aria-label", /, (rated [\d.]+ out of 5|unrated)/);
+    if (onPhone(testInfo)) {
+      // On the night ground a cell has no frame to print its state on: no
+      // border, no fill. Focus still raises it above its neighbour so the
+      // ring is never painted over.
+      await expect(first).toHaveCSS("border-top-width", "0px");
+      await expect(first).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+      await first.focus();
+      await expect(first).toHaveCSS("z-index", "1");
+      return;
+    }
     await expect(first).toHaveCSS("border-color", "rgba(22, 19, 15, 0.15)");
     await first.focus();
     // toHaveCSS retries, so the 150ms colour transition cannot race it.
@@ -66,7 +97,10 @@ test.describe("reading diary", () => {
    * MRG-072: the shelf regroups by author or category through a plain link,
    * and logging stays with the chronology.
    */
-  test("regroups the shelf by author and by category", async ({ page }) => {
+  test("regroups the shelf by author and by category", async ({ page }, testInfo) => {
+    // The log cell is hidden on a phone, so its absence/presence is only a
+    // signal on desktop; the bar's Log link is on every page and every order.
+    const phone = onPhone(testInfo);
     const order = page.getByRole("navigation", { name: "Shelf order" });
     await expect(order.getByRole("link", { name: "Year" })).toHaveAttribute("aria-current", "true");
 
@@ -74,7 +108,7 @@ test.describe("reading diary", () => {
     await expect(page).toHaveURL(/\?by=author$/);
     await expect(order.getByRole("link", { name: "Author" })).toHaveAttribute("aria-current", "true");
     await expect(page.getByRole("heading", { level: 2, name: "Frank Herbert" })).toBeVisible();
-    await expect(page.getByRole("link", { name: /log a book/i })).toHaveCount(0);
+    if (!phone) await expect(page.getByRole("link", { name: /log a book/i })).toHaveCount(0);
 
     await order.getByRole("link", { name: "Category" }).click();
     await expect(page).toHaveURL(/\?by=category$/);
@@ -82,7 +116,7 @@ test.describe("reading diary", () => {
 
     await order.getByRole("link", { name: "Year" }).click();
     await expect(page).toHaveURL(/\/dev\/shelf$/);
-    await expect(page.getByRole("link", { name: /log a book/i })).toBeVisible();
+    if (!phone) await expect(page.getByRole("link", { name: /log a book/i })).toBeVisible();
   });
 
   test("never addresses a cover by ISBN", async ({ page }) => {
@@ -128,7 +162,7 @@ test.describe("reading diary", () => {
     expect(broken).toBe(0);
   });
 
-  test("a partial row leaves ruled paper, not a flooded gutter", async ({ page }) => {
+  test("a partial row leaves ruled paper, not a flooded gutter", async ({ page }, testInfo) => {
     // The grid once used its own background as gridlines, which looked correct
     // on a full row and flooded the whole remainder of a partial one. It now
     // paints paper with hairline column rules, so the unfilled slots read as a
@@ -137,6 +171,14 @@ test.describe("reading diary", () => {
     const backgrounds = await grids.evaluateAll((nodes) =>
       nodes.map((n) => getComputedStyle(n).backgroundColor),
     );
+    if (onPhone(testInfo)) {
+      // The phone's grid paints nothing at all: jackets float on the night
+      // with gaps between them, so a partial row can never flood either.
+      const images = await grids.evaluateAll((nodes) => nodes.map((n) => getComputedStyle(n).backgroundImage));
+      for (const bg of backgrounds) expect(bg).toBe("rgba(0, 0, 0, 0)");
+      for (const image of images) expect(image).toBe("none");
+      return;
+    }
     for (const bg of backgrounds) {
       // #f4f1e8
       expect(bg).toBe("rgb(244, 241, 232)");
@@ -150,8 +192,10 @@ test.describe("reading diary", () => {
     expect(overflow).toBeLessThanOrEqual(1);
   });
 
-  test("the log action is reachable and focusable by keyboard", async ({ page }) => {
-    const log = page.getByRole("link", { name: /log a book/i });
+  test("the log action is reachable and focusable by keyboard", async ({ page }, testInfo) => {
+    const log = onPhone(testInfo)
+      ? bar(page).getByRole("link", { name: "Log" })
+      : page.getByRole("link", { name: /log a book/i });
     await log.focus();
     await expect(log).toBeFocused();
     const outline = await log.evaluate((el) => getComputedStyle(el).outlineStyle);

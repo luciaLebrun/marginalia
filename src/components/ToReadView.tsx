@@ -1,6 +1,8 @@
 import type { ComponentProps } from "react";
 
+import { BottomBar } from "./BottomBar";
 import { Masthead } from "./Masthead";
+import { Place } from "./Place";
 import { ToReadStack } from "./ToReadStack";
 import { DIARY_LINK } from "@/lib/masthead-link";
 import type { ToReadBook } from "@/lib/to-read";
@@ -9,6 +11,8 @@ import type { ToReadBook } from "@/lib/to-read";
 export function ToReadView({ books, action }: Readonly<{ books: ToReadBook[]; action?: ComponentProps<typeof ToReadStack>["action"] }>) {
   const noun = books.length === 1 ? "book" : "books";
   return (
+    <>
+    <Place>
     <main className="flex-1">
       <Masthead
         name="To read"
@@ -19,5 +23,8 @@ export function ToReadView({ books, action }: Readonly<{ books: ToReadBook[]; ac
       />
       <ToReadStack books={books} action={action} />
     </main>
+    </Place>
+    <BottomBar />
+    </>
   );
 }

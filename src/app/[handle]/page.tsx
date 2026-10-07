@@ -1,7 +1,9 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
+import { BottomBar } from "@/components/BottomBar";
 import { Favourites } from "@/components/Favourites";
+import { Place } from "@/components/Place";
 import { Masthead } from "@/components/Masthead";
 import { Shelf } from "@/components/Shelf";
 import { getAuth } from "@/lib/auth";
@@ -45,6 +47,8 @@ export default async function ProfilePage({
   ]);
 
   return (
+    <>
+    <Place>
     <main className="flex-1">
       <Masthead
         name={profile.name}
@@ -66,6 +70,9 @@ export default async function ProfilePage({
         readerName={profile.name}
       />
     </main>
+    </Place>
+    {session && <BottomBar />}
+    </>
   );
 }
 
