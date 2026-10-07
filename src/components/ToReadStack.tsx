@@ -146,7 +146,7 @@ function Spine({
           a phone, a rem and a half on a laptop — and gives up that width, so
           both its edges move and the pile never runs past its measure. */}
       <div
-        className="group/spine ml-[calc(var(--step)*0.1667rem)] flex w-[calc(100%-0.5rem)] items-stretch bg-ink text-paper sm:ml-[calc(var(--step)*0.5rem)] sm:w-[calc(100%-1.5rem)]"
+        className="press reveal group/spine ml-[calc(var(--step)*0.1667rem)] flex w-[calc(100%-0.5rem)] items-stretch bg-ink text-paper max-sm:mb-2 max-sm:ml-0 max-sm:w-full max-sm:overflow-hidden max-sm:rounded-2xl sm:ml-[calc(var(--step)*0.5rem)] sm:w-[calc(100%-1.5rem)]"
         style={{ minHeight: `${height}rem` }}
       >
         {/* The spine's words are the link; its ring is paper, drawn inside the

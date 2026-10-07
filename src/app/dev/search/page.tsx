@@ -1,3 +1,4 @@
+import { BottomBar } from "@/components/BottomBar";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
@@ -74,6 +75,7 @@ export default async function DevSearchPage({
       : "fixture";
 
   return (
+    <>
     <main className="flex-1">
       <WordmarkBand />
       <h1 className="sr-only">Search for a book</h1>
@@ -89,5 +91,7 @@ export default async function DevSearchPage({
         />
       </Suspense>
     </main>
+    <BottomBar />
+    </>
   );
 }

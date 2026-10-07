@@ -23,8 +23,8 @@ export function DeleteAccount({ username }: Readonly<{ username: string }>) {
   const matches = typed.trim().replace(/^@/, "").toLowerCase() === username;
 
   return (
-    <section aria-labelledby="delete-heading" className="m-4 border border-ink sm:m-6">
-      <h2 id="delete-heading" className="band-label bg-ink px-2.5 py-2 text-paper">
+    <section aria-labelledby="delete-heading" className="m-4 border border-ink max-sm:mt-4 max-sm:rounded-[1.25rem] max-sm:border-rule max-sm:bg-paper-sunk sm:m-6">
+      <h2 id="delete-heading" className="band-label bg-ink px-2.5 py-2 text-paper max-sm:bg-transparent max-sm:px-4 max-sm:pt-5 max-sm:pb-0">
         Delete this account
       </h2>
 

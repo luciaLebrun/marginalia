@@ -5,6 +5,8 @@ import { Suspense } from "react";
 
 import { BookOpening, BookUnavailable } from "@/components/BookStates";
 import { BookTitlePage } from "@/components/BookTitlePage";
+import { BottomBar } from "@/components/BottomBar";
+import { Place } from "@/components/Place";
 import { WordmarkBand } from "@/components/WordmarkBand";
 import { getAuth } from "@/lib/auth";
 import { findStoredBook, openBook, parseBookKey } from "@/lib/book";
@@ -31,23 +33,42 @@ export default async function BookPage({ params, searchParams }: PageProps<"/boo
   // Before the stream starts, so a malformed address is a real 404 status.
   if (!parseBookKey(bookKey)) notFound();
 
+  const opened = (
+    <OpenedBook
+      bookKey={bookKey}
+      userId={session.user.id}
+      username={session.user.username}
+      searchHref={backToSearchHref(from)}
+      fromSearch={fromSearchParams(parseQuery(from), parseShown(from.shown))}
+    />
+  );
+
   return (
-    <main className="flex-1">
-      <WordmarkBand />
-      {/* A first open waits on the source for a second or three, so the page
-          streams its frame first. The trade: a book that turns out not to
-          exist, or a stub that redirects, is decided after the 200 has been
-          sent — a soft 404 with noindex, or a client-side redirect. */}
-      <Suspense key={bookKey} fallback={<BookOpening />}>
-        <OpenedBook
-          bookKey={bookKey}
-          userId={session.user.id}
-          username={session.user.username}
-          searchHref={backToSearchHref(from)}
-          fromSearch={fromSearchParams(parseQuery(from), parseShown(from.shown))}
-        />
-      </Suspense>
-    </main>
+    <>
+      <Place>
+        <main className="flex-1">
+          <div className="m-hidden">
+            <WordmarkBand />
+          </div>
+          {/* A first open waits on the source for a second or three, so the
+              page streams its frame first. The trade: a book that turns out
+              not to exist, or a stub that redirects, is decided after the 200
+              has been sent — a soft 404 with noindex, or a client-side
+              redirect. A book already stored renders in one indexed query, so
+              it skips the frame: the page then arrives in the same commit as
+              the navigation, which is what lets its jacket travel from the
+              shelf. */}
+          {(await findStoredBook(bookKey)) ? (
+            opened
+          ) : (
+            <Suspense key={bookKey} fallback={<BookOpening />}>
+              {opened}
+            </Suspense>
+          )}
+        </main>
+      </Place>
+      <BottomBar />
+    </>
   );
 }
 

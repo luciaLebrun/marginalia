@@ -3,6 +3,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
+import { BottomBar } from "@/components/BottomBar";
+import { Place } from "@/components/Place";
 import { SearchField } from "@/components/SearchField";
 import { SearchPending, SearchResults } from "@/components/SearchResults";
 import { WordmarkBand } from "@/components/WordmarkBand";
@@ -23,10 +25,18 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
   const params = await searchParams;
   const query = parseQuery(params);
 
+  // The bar's Log slot lands here with ?log=1: the same search, asked as the
+  // question the reader is actually answering.
+  const logging = params.log === "1" && isBlank(query);
+
   return (
+    <>
+    <Place>
     <main className="flex-1">
       <WordmarkBand />
-      <h1 className="sr-only">Search for a book</h1>
+      <h1 className="px-5 pt-4 text-[2.25rem] leading-[0.95] font-bold tracking-[-0.03em] text-balance [font-stretch:108%] sm:sr-only">
+        {logging ? "What did you just finish?" : "Search for a book"}
+      </h1>
       <SearchField query={query} />
       {/* Keyed on the query so every new search shows its pending state rather
           than holding the previous results on screen while the sources work.
@@ -36,6 +46,9 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
         <SearchResults query={query} shown={parseShown(params.shown)} />
       </Suspense>
     </main>
+    </Place>
+    <BottomBar />
+    </>
   );
 }
 

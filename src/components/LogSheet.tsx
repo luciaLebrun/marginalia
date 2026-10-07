@@ -6,7 +6,6 @@ import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { Rating } from "./Rating";
 import { logReadAction, type LogReadState } from "@/app/actions";
 import type { Read } from "@/lib/book-view";
-import { INK } from "@/lib/color";
 import { REVIEW_MAX } from "@/lib/client-safe";
 import type { LogReadField } from "@/lib/read-schema";
 import { slipDate } from "@/lib/slip-date";
@@ -249,7 +248,7 @@ function Sheet({
                 them has no visible box of its own to ring. */}
             <div className="relative inline-flex has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink">
               <span aria-hidden="true" className="flex">
-                <Rating value={rating} tone={INK} size={32} />
+                <Rating value={rating} tone="currentColor" size={32} />
               </span>
               <input
                 id={`${ids}-rating`}
@@ -317,7 +316,7 @@ function Sheet({
               <path
                 d="M5 10.5l3.2 3.2L15 6.5"
                 fill="none"
-                stroke={INK}
+                stroke="currentColor"
                 strokeWidth="1.5"
                 strokeLinecap="square"
               />

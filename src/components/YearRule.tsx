@@ -15,11 +15,11 @@ export function YearRule({
   rest?: boolean;
 }>) {
   return (
-    <div className="flex items-baseline justify-between gap-4 border-y border-ink bg-paper-sunk px-3 py-2">
+    <div className="flex items-baseline justify-between gap-4 border-y border-ink bg-paper-sunk px-3 py-2 max-sm:sticky max-sm:top-0 max-sm:z-10 max-sm:-mx-4 max-sm:border-0 max-sm:bg-paper/75 max-sm:px-5 max-sm:py-3 max-sm:backdrop-blur-xl">
       {/* An author or a category can run long; it wraps balanced rather than
           pushing the count off the band. */}
       <h2
-        className={`min-w-0 text-[1.75rem] leading-none font-semibold tracking-[-0.02em] text-balance sm:text-[2.25rem] ${rest ? "text-ink-soft" : ""}`}
+        className={`min-w-0 text-[1.75rem] leading-none font-semibold tracking-[-0.02em] text-balance max-sm:font-bold max-sm:tracking-[-0.03em] max-sm:[font-stretch:112%] sm:text-[2.25rem] ${rest ? "text-ink-soft" : ""}`}
       >
         {year}
       </h2>

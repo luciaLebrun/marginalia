@@ -6,5 +6,17 @@
       "maxFindings": 5,
       "maxChars": 8000
     }
+  },
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0.34, 1.36, 0.5, 1)",
+        "createdAt": "2026-10-06T22:29:27.722Z",
+        "reason": "Impeccable finish reviewer (MRG-108 round 1): mild spring on the bar pill holds the 'sheets on springs' thesis of the Now Reading mobile world"
+      }
+    ]
   }
 }

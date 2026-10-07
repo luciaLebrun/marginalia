@@ -39,7 +39,7 @@ export function SearchResult({
   return (
     // Stretched to the row, so the year pins to one baseline across a row
     // where one title runs to two lines.
-    <li className="self-stretch">
+    <li className="reveal self-stretch">
       <Link
         // The search rides along so the book page can offer the way back (MRG-086).
         href={`${bookPath(book.sourceKey)}?${fromSearchParams(query, shown)}`}
@@ -47,17 +47,18 @@ export function SearchResult({
         // Opening a book copies it into our database (MRG-014). Prefetching
         // would do that for every result in view, not the one the reader chose.
         prefetch={false}
-        className="group flex h-full flex-col border border-rule bg-paper transition-colors hover:border-ink focus-visible:border-ink"
+        transitionTypes={["sheet-up"]}
+        className="press group flex h-full flex-col border border-rule bg-paper transition-colors hover:border-ink focus-visible:border-ink max-sm:border-0 max-sm:bg-transparent"
       >
         {/* Band one: ink, not colour — this book is not on the shelf yet. */}
-        <div className="flex bg-ink px-2.5 py-2 text-paper">
+        <div className="flex bg-ink px-2.5 py-2 text-paper max-sm:hidden">
           <span className="band-label truncate">
             {author ?? "Author unknown"}
           </span>
         </div>
 
         {/* Band two: the jacket, or its typographic stand-in. */}
-        <div className="aspect-[2/3] overflow-hidden bg-paper-sunk">
+        <div className="m-jacket aspect-[2/3] overflow-hidden bg-paper-sunk">
           <Cover
             coverId={book.coverId ?? null}
             coverUrl={book.coverUrl ?? null}
@@ -67,10 +68,11 @@ export function SearchResult({
         </div>
 
         {/* Band three: the record — what is known before anyone has read it. */}
-        <div className="flex flex-1 flex-col gap-1.5 border-t border-rule px-2.5 py-2 transition-colors group-hover:border-ink group-focus-visible:border-ink">
-          <h2 className="text-[0.8125rem] leading-tight font-semibold text-balance">
+        <div className="flex flex-1 flex-col gap-1.5 border-t border-rule px-2.5 py-2 transition-colors group-hover:border-ink group-focus-visible:border-ink max-sm:gap-1 max-sm:border-0 max-sm:px-0.5 max-sm:pt-3">
+          <h2 className="text-[0.8125rem] leading-tight font-semibold text-balance max-sm:text-[0.9375rem] max-sm:tracking-[-0.01em]">
             {book.title}
           </h2>
+          <p className="m-only truncate text-[0.75rem] text-ink-soft">{author ?? "Author unknown"}</p>
           <p className="mt-auto pt-1 text-[0.6875rem] font-medium text-ink-soft">
             {year ?? "—"}
           </p>

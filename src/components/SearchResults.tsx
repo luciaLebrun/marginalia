@@ -164,7 +164,7 @@ function RecordBand({
   diaryHref,
 }: Readonly<{ text: string; diaryHref: string }>) {
   return (
-    <div className="flex items-center justify-between gap-4 bg-ink px-4 py-3 text-paper sm:px-6">
+    <div className="flex items-center justify-between gap-4 bg-ink px-4 py-3 text-paper max-sm:bg-transparent max-sm:px-5 max-sm:pt-6 max-sm:pb-1 max-sm:text-ink-soft sm:px-6">
       {/* "First 20 — add the author to narrow it" does not fit beside the
           link at 390, so it wraps as balanced lines with real leading rather
           than orphaning its last word at the band voice's line-height of 1.

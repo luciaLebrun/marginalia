@@ -75,11 +75,20 @@ test.describe("search", () => {
     /*
      * Colour on the shelf means "a book you read". A result has not earned it.
      */
-    test("carries no colour: every result's band is ink", async ({ page }) => {
+    test("carries no colour: every result's band is ink", async ({ page }, testInfo) => {
       const bands = await page
         .locator("ol.shelf-grid > li > a > div:first-child")
         .evaluateAll((nodes) => nodes.map((n) => getComputedStyle(n).backgroundColor));
       expect(bands.length).toBeGreaterThan(0);
+      if (testInfo.project.name === "mobile") {
+        // MRG-108: a phone result has no band at all, so there is no colour to
+        // earn: the band is not displayed.
+        const shown = await page
+          .locator("ol.shelf-grid > li > a > div:first-child")
+          .evaluateAll((nodes) => nodes.map((n) => getComputedStyle(n).display));
+        for (const display of shown) expect(display).toBe("none");
+        return;
+      }
       for (const bg of bands) {
         expect(bg).toBe(INK);
       }

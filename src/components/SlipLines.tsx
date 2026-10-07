@@ -7,7 +7,6 @@ import { EditSheet, counted } from "./LogSheet";
 import { Rating } from "./Rating";
 import { removeReadAction, type RemoveReadState } from "@/app/actions";
 import type { Read } from "@/lib/book-view";
-import { INK } from "@/lib/color";
 
 /** A read as the slip prints it, with what the server alone can work out. */
 export interface SlipRead extends Read {
@@ -138,7 +137,7 @@ function SlipLine({
           {read.rating === null ? (
             <span className="text-[0.6875rem] font-medium text-ink-soft">Unrated</span>
           ) : (
-            <Rating value={read.rating} tone={INK} />
+            <Rating value={read.rating} tone="currentColor" />
           )}
         </span>
       </Link>

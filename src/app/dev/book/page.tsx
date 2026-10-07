@@ -1,3 +1,4 @@
+import { BottomBar } from "@/components/BottomBar";
 import { notFound } from "next/navigation";
 
 import google from "../../../../tests/fixtures/google-books-dune.json";
@@ -196,13 +197,18 @@ export default async function DevBookPage({ searchParams }: PageProps<"/dev/book
   const { state } = params;
 
   return (
+    <>
     <main className="flex-1">
-      <WordmarkBand />
+      <div className="m-hidden">
+        <WordmarkBand />
+      </div>
       <State
         state={typeof state === "string" ? state : "new"}
         searchHref={backToSearchHref(params, "/dev/search", { source: "fixture" })}
       />
     </main>
+    <BottomBar />
+    </>
   );
 }
 

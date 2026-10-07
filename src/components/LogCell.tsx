@@ -19,7 +19,7 @@ export function LogCell({ emphatic }: Readonly<{ emphatic?: boolean }>) {
   return (
     <Link
       href="/search"
-      className="group flex flex-col border border-ink bg-paper transition-colors hover:bg-[var(--log-band)] focus-visible:bg-[var(--log-band)]"
+      className="group flex flex-col border border-ink bg-paper transition-colors max-sm:hidden hover:bg-[var(--log-band)] focus-visible:bg-[var(--log-band)]"
       style={
         { "--log-band": BAND, "--log-tone": tone } as React.CSSProperties
       }

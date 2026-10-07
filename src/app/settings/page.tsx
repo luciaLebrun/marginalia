@@ -2,6 +2,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { AccountHeader } from "@/components/AccountHeader";
+import { BottomBar } from "@/components/BottomBar";
+import { Place } from "@/components/Place";
 import { AccountSheet } from "@/components/AccountSheet";
 import { DeleteAccount } from "@/components/DeleteAccount";
 import { InviteRun } from "@/components/InviteRun";
@@ -33,6 +35,8 @@ export default async function SettingsPage() {
   const invites = owner ? await listInvitesWithState(session.user.id) : [];
 
   return (
+    <>
+    <Place>
     <main className="flex-1">
       <AccountHeader username={session.user.username} />
 
@@ -45,10 +49,10 @@ export default async function SettingsPage() {
       >
         {owner && <InviteRun invites={invites} />}
 
-        <section aria-labelledby="device-heading" className="border-t border-ink">
+        <section aria-labelledby="device-heading" className="border-t border-ink max-sm:mx-4 max-sm:mt-4 max-sm:rounded-[1.25rem] max-sm:border-0 max-sm:bg-paper-sunk">
           <h2
             id="device-heading"
-            className="band-label bg-ink px-4 py-3 text-paper sm:px-6"
+            className="band-label bg-ink px-4 py-3 text-paper max-sm:bg-transparent max-sm:pt-5 max-sm:pb-0 sm:px-6"
           >
             This device
           </h2>
@@ -60,5 +64,8 @@ export default async function SettingsPage() {
         <DeleteAccount username={session.user.username} />
       </AccountSheet>
     </main>
+    </Place>
+    <BottomBar />
+    </>
   );
 }

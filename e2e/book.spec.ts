@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type TestInfo } from "@playwright/test";
 
 /**
  * The book page, in a real browser at both device classes.
@@ -9,6 +9,22 @@ import { expect, test, type Page } from "@playwright/test";
  */
 const INK = "rgb(22, 19, 15)";
 const PAPER = "rgb(244, 241, 232)";
+
+/*
+ * MRG-108: below 40rem the page is the night world. Its ink is the night text
+ * and its alarm the night alarm, and the author band is transparent over the
+ * jacket's flood — the band's colour lives in the article's --flood instead.
+ */
+const phone = (info: TestInfo) => info.project.name === "mobile";
+const ink = (info: TestInfo) => (phone(info) ? "rgb(245, 245, 242)" : INK);
+const flood = (page: Page) =>
+  page.locator("article").evaluate((node) => getComputedStyle(node).getPropertyValue("--flood").trim().toLowerCase());
+
+/** The band's colour: its own ground on a laptop, the flood under it on a phone. */
+async function expectBand(page: Page, info: TestInfo, rgb: string, hex: string) {
+  if (phone(info)) expect(await flood(page)).toBe(hex);
+  else await expect(authorBand(page)).toHaveCSS("background-color", rgb);
+}
 
 const slip = (page: Page) => page.getByRole("region", { name: "Your reads" });
 const authorBand = (page: Page) => page.locator("article > div").first();
@@ -28,8 +44,8 @@ test.describe("book page", () => {
      * Colour on the author band means "a book you read". It is withheld here,
      * exactly as it is on a search result.
      */
-    test("wears ink, not colour, on the author band", async ({ page }) => {
-      await expect(authorBand(page)).toHaveCSS("background-color", INK);
+    test("wears ink, not colour, on the author band", async ({ page }, info) => {
+      await expectBand(page, info, INK, "#16130f");
       await expect(authorBand(page)).toHaveCSS("color", PAPER);
       await expect(authorBand(page)).toContainText("Frank Herbert");
     });
@@ -86,17 +102,19 @@ test.describe("book page", () => {
       await expect(lines.nth(1)).toContainText("2 May 2019");
     });
 
-    test("wears the jacket colour extracted when it was logged", async ({ page }) => {
-      await expect(authorBand(page)).toHaveCSS("background-color", "rgb(112, 99, 31)");
+    test("wears the jacket colour extracted when it was logged", async ({ page }, info) => {
+      await expectBand(page, info, "rgb(112, 99, 31)", "#70631f");
     });
 
     /*
      * A fallback band can be the wordmark's own orange. Over a hairline the two
      * read as one block, so a coloured author band sits under a 2px ink rule.
      */
-    test("rules a coloured author band off from the wordmark band", async ({ page }) => {
+    test("rules a coloured author band off from the wordmark band", async ({ page }, info) => {
       await page.goto("/dev/book?state=fallback", { waitUntil: "networkidle" });
-      await expect(authorBand(page)).toHaveCSS("background-color", "rgb(232, 80, 27)");
+      await expectBand(page, info, "rgb(232, 80, 27)", "#e8501b");
+      // The phone hides the wordmark band, so there is nothing to rule off.
+      if (phone(info)) return;
       await expect(authorBand(page)).toHaveCSS("border-top-width", "2px");
       await expect(authorBand(page)).toHaveCSS("border-top-color", INK);
     });
@@ -333,7 +351,7 @@ test.describe("book page", () => {
       await expect(page.getByText("Logs as 14 Aug 2026")).toBeVisible();
     });
 
-    test("clears the date to Undated, and says so", async ({ page }) => {
+    test("clears the date to Undated, and says so", async ({ page }, info) => {
       await openSheet(page);
 
       await page.getByRole("button", { name: "Undated" }).click();
@@ -341,7 +359,7 @@ test.describe("book page", () => {
       await expect(page.getByText("Logs as Undated")).toBeVisible();
       // An empty field's "mm/dd/yyyy" is set in soft ink, so it never reads as
       // a date — the slip prints Undated the same way.
-      await expect(page.getByLabel("Finished")).toHaveCSS("color", "rgb(93, 86, 76)");
+      await expect(page.getByLabel("Finished")).toHaveCSS("color", phone(info) ? "rgb(161, 158, 152)" : "rgb(93, 86, 76)");
 
       // Unavailable is ruled through, never only greyed.
       const undated = page.getByRole("button", { name: "Undated" });
@@ -457,19 +475,19 @@ test.describe("book page", () => {
       await expect(line(page).getByLabel("Rating")).toHaveAttribute("aria-valuetext", "Unrated");
     });
 
-    test("arms removal into a sentence in alarm, and Keep it stands it down", async ({ page }) => {
+    test("arms removal into a sentence in alarm, and Keep it stands it down", async ({ page }, info) => {
       await openEdit(page);
       const sheet = line(page);
 
       await sheet.getByRole("button", { name: "Remove this read" }).click();
       const warning = sheet.getByText("Remove this read for good? Its page goes too.");
       await expect(warning).toBeVisible();
-      await expect(warning).toHaveCSS("color", "rgb(149, 29, 16)");
+      await expect(warning).toHaveCSS("color", phone(info) ? "rgb(255, 107, 91)" : "rgb(149, 29, 16)");
       // Focus lands on the way out, never on the irreversible control.
       await expect(sheet.getByRole("button", { name: "Keep it" })).toBeFocused();
       await expect(sheet.getByRole("button", { name: "Remove", exact: true })).toHaveCSS(
         "border-color",
-        "rgb(149, 29, 16)",
+        phone(info) ? "rgb(255, 107, 91)" : "rgb(149, 29, 16)",
       );
 
       await sheet.getByRole("button", { name: "Keep it" }).click();
@@ -493,12 +511,12 @@ test.describe("book page", () => {
       await expect(slip(page).locator("li")).toHaveCount(2);
     });
 
-    test("draws the open line's rule in ink, as the log line does", async ({ page }) => {
+    test("draws the open line's rule in ink, as the log line does", async ({ page }, info) => {
       await page.goto("/dev/book?state=shelf", { waitUntil: "networkidle" });
       const link = line(page).locator("a");
       await expect(link).toHaveCSS("border-bottom-color", "rgba(0, 0, 0, 0)");
       await line(page).locator("summary", { hasText: "Edit" }).click();
-      await expect(link).toHaveCSS("border-bottom-color", INK);
+      await expect(link).toHaveCSS("border-bottom-color", ink(info));
     });
 
     test("gives Edit a tap target the height of its line", async ({ page }) => {
