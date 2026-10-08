@@ -43,15 +43,19 @@ function create() {
         // Unique in the database; a unique index permits many NULLs.
         username: { type: "string", required: false, input: false },
         bio: { type: "string", required: false, input: false },
-        // Read on every diary render to decide which entries are new. Must be
-        // declared here or the session will not carry it.
-        lastSeenAt: { type: "date", required: false, input: false },
       },
     },
 
     session: {
       expiresIn: 60 * 60 * 24 * 30, // 30 days — this is a low-stakes diary
       updateAge: 60 * 60 * 24, // refresh at most daily
+      // Saves a database read on every page and action: the session is read from
+      // a cookie for 5 minutes. Strictly necessary for authentication, so exempt
+      // from consent (ePrivacy Art. 5(3)). "jwe" encrypts the copy of the user
+      // (email, name) rather than leaving it readable; like the session token it
+      // is httpOnly, SameSite=Lax and Secure on https. Anything that writes the
+      // user row must refresh it — see refreshSession() in actions.ts.
+      cookieCache: { enabled: true, maxAge: 300, strategy: "jwe" },
     },
 
     databaseHooks: {

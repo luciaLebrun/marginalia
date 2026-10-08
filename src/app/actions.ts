@@ -68,6 +68,18 @@ async function resolveClaimant(formData: FormData): Promise<string | null> {
   return devUserId.startsWith("dev-") ? devUserId : null;
 }
 
+/**
+ * Re-read the session from the database and rewrite the cookie cache. Call
+ * after anything that changes the user row, or the cached copy (username, name,
+ * bio) stays stale for up to five minutes. Safe with no session.
+ */
+async function refreshSession() {
+  await getAuth().api.getSession({
+    headers: await headers(),
+    query: { disableCookieCache: true },
+  });
+}
+
 /** Claim a username for the signed-in reader. */
 export async function claimUsernameAction(
   _previous: ClaimState,
@@ -92,6 +104,7 @@ export async function claimUsernameAction(
   const result = await claimUsername(userId, input);
 
   if (result.ok) {
+    await refreshSession();
     // `/` and `/settings` redirect or prompt a handle-less reader to claim one;
     // a cached copy of either would keep saying so after this.
     revalidatePath("/");
@@ -240,6 +253,8 @@ export async function saveAccountAction(
         return { error: "That account no longer exists.", field: null, saved: false };
     }
   }
+
+  await refreshSession();
 
   // The handle is a public address, and the diary the reader is looking at may
   // be at the old one. Re-render whatever is showing them.
