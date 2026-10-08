@@ -33,7 +33,7 @@ export default async function DevShelfPage({ searchParams }: PageProps<"/dev/she
   if (!user) return <NoDevReader />;
 
   const [diary, count, stored] = await Promise.all([
-    getDiary(user.id, user.lastSeenAt),
+    getDiary(user.id, true),
     getDiaryCount(user.id),
     getFavourites(user.id),
   ]);

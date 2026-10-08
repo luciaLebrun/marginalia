@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 /**
  * A full-width ruled band, not a hairline. Chronology is the structure this
  * shelf is ordered by, so it is drawn at a scale that carries across a
@@ -7,12 +9,15 @@ export function YearRule({
   year,
   count,
   rest = false,
+  href,
 }: Readonly<{
   /** The group's name: a year, or an author or category (MRG-072). */
   year: string;
   count: number;
   /** The group with nothing to file it under — "Undated" and its kin. */
   rest?: boolean;
+  /** Makes the name a link — the author order's search (MRG-116). */
+  href?: string;
 }>) {
   return (
     <div className="flex items-baseline justify-between gap-4 border-y border-ink bg-paper-sunk px-3 py-2 max-sm:sticky max-sm:top-0 max-sm:z-10 max-sm:-mx-4 max-sm:border-0 max-sm:bg-paper/75 max-sm:px-5 max-sm:py-3 max-sm:backdrop-blur-xl">
@@ -21,7 +26,13 @@ export function YearRule({
       <h2
         className={`min-w-0 text-[1.75rem] leading-none font-semibold tracking-[-0.02em] text-balance max-sm:font-bold max-sm:tracking-[-0.03em] max-sm:[font-stretch:112%] sm:text-[2.25rem] ${rest ? "text-ink-soft" : ""}`}
       >
-        {year}
+        {href ? (
+          <Link href={href} prefetch={false} className="underline decoration-rule underline-offset-4 transition-colors hover:decoration-ink">
+            {year}
+          </Link>
+        ) : (
+          year
+        )}
       </h2>
       <span className="band-label shrink-0 text-ink-soft">
         {count} {count === 1 ? "book" : "books"}

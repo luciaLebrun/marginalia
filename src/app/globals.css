@@ -506,6 +506,22 @@
     260ms ease-out 60ms both vt-fade,
     380ms cubic-bezier(0.16, 1, 0.3, 1) both vt-rise;
 }
+/*
+  A tap that lands on a loading frame (aria-busy, MRG-120) cuts to it: the old
+  page fading under the frame's entrance read as two pages merged. The real
+  page then replaces the frame in a plain reveal. /book has no loading frame,
+  so the sheet and the jacket morph are untouched.
+*/
+html:has(main[aria-busy="true"])::view-transition-old(.nav-swap),
+html:has(main[aria-busy="true"])::view-transition-old(.nav-forward),
+html:has(main[aria-busy="true"])::view-transition-old(.nav-back) {
+  display: none;
+}
+html:has(main[aria-busy="true"])::view-transition-new(.nav-swap),
+html:has(main[aria-busy="true"])::view-transition-new(.nav-forward),
+html:has(main[aria-busy="true"])::view-transition-new(.nav-back) {
+  animation: none !important;
+}
 /* The book's page rises as a sheet over the shelf. */
 ::view-transition-new(.sheet-up) {
   --rise: 64px;

@@ -112,6 +112,21 @@ describe.skipIf(!hasRealDb)("diary (integration)", () => {
     expect(reread.readAt).toBeNull();
   });
 
+  it("marks entries new only against the reader's stored last_seen_at", async () => {
+    const db = getDb();
+    const isNew = async () => (await getDiary(USER, true)).map((e) => e.isNew);
+    const seen = (lastSeenAt: Date | null) =>
+      db.update(schema.user).set({ lastSeenAt }).where(eq(schema.user.id, USER));
+
+    await seen(null); // a first visit inks in nothing
+    expect(await isNew()).toEqual([false, false, false]);
+    await seen(new Date("2000-01-01"));
+    expect(await isNew()).toEqual([true, true, true]);
+    await seen(new Date("2999-01-01"));
+    expect(await isNew()).toEqual([false, false, false]);
+    expect((await getDiary(USER)).some((e) => e.isNew)).toBe(false);
+  });
+
   it("counts every entry, rereads included", async () => {
     await expect(getDiaryCount(USER)).resolves.toBe(3);
   });

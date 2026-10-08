@@ -16,7 +16,7 @@ test.describe("reading diary", () => {
   const bar = (page: Page) => page.getByRole("navigation", { name: "Places" });
 
   test.beforeEach(async ({ page }) => {
-    await page.goto("/dev/shelf", { waitUntil: "networkidle" });
+    await page.goto("/dev/shelf");
   });
 
   test("renders the shelf with its masthead and year rules", async ({ page }) => {

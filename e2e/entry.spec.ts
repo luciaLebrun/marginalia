@@ -12,7 +12,7 @@ const PERMALINK = /\/@[a-z][a-z0-9_]*\/log\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-
 test.describe("review permalink", () => {
   test.describe("the card", () => {
     test.beforeEach(async ({ page }) => {
-      await page.goto("/dev/entry", { waitUntil: "networkidle" });
+      await page.goto("/dev/entry");
     });
 
     /*
@@ -50,7 +50,7 @@ test.describe("review permalink", () => {
       const record = page.locator("article > div").last();
       await expect(record.getByRole("link", { name: "Your diary" })).toHaveCount(0);
 
-      await page.goto("/dev/entry?signedin=1", { waitUntil: "networkidle" });
+      await page.goto("/dev/entry?signedin=1");
       await expect(record.getByRole("link", { name: "Your diary" })).toHaveAttribute("href", "/");
     });
 
@@ -61,7 +61,7 @@ test.describe("review permalink", () => {
     test("links the title only for a signed-in reader", async ({ page }) => {
       await expect(page.getByRole("link", { name: "Dune" })).toHaveCount(0);
 
-      await page.goto("/dev/entry?signedin=1", { waitUntil: "networkidle" });
+      await page.goto("/dev/entry?signedin=1");
       await expect(page.getByRole("link", { name: "Dune" })).toHaveAttribute(
         "href",
         "/book/OL893414W",
@@ -69,7 +69,7 @@ test.describe("review permalink", () => {
     });
 
     test("says so when the read has no words", async ({ page }) => {
-      await page.goto("/dev/entry?state=bare", { waitUntil: "networkidle" });
+      await page.goto("/dev/entry?state=bare");
 
       await expect(page.getByText(/No review — Lucia logged this read/)).toBeVisible();
       await expect(page.getByText("Undated")).toBeVisible();
@@ -79,7 +79,7 @@ test.describe("review permalink", () => {
     });
 
     test("gives a coverless book the type-only jacket", async ({ page }) => {
-      await page.goto("/dev/entry?state=nocover", { waitUntil: "networkidle" });
+      await page.goto("/dev/entry?state=nocover");
 
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       await expect(page.locator("article img")).toHaveCount(0);
@@ -90,7 +90,7 @@ test.describe("review permalink", () => {
      * The stamp block holds its size and the message column grows instead.
      */
     test("holds a review at the limit without scrolling sideways", async ({ page }) => {
-      await page.goto("/dev/entry?state=long", { waitUntil: "networkidle" });
+      await page.goto("/dev/entry?state=long");
 
       const overflow = await page.evaluate(
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -107,7 +107,7 @@ test.describe("review permalink", () => {
      * address, the book and the signature all agree.
      */
     test("opens a seeded entry at its reader's own address", async ({ page }) => {
-      await page.goto("/dev/entry/latest", { waitUntil: "networkidle" });
+      await page.goto("/dev/entry/latest");
 
       expect(page.url()).toMatch(PERMALINK);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
@@ -121,7 +121,7 @@ test.describe("review permalink", () => {
     });
 
     test("is public: no session, no redirect to the door", async ({ page }) => {
-      const response = await page.goto("/dev/entry/latest", { waitUntil: "networkidle" });
+      const response = await page.goto("/dev/entry/latest");
       expect(response?.status()).toBe(200);
       expect(page.url()).toMatch(PERMALINK);
     });
