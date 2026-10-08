@@ -17,6 +17,16 @@ const nextConfig: NextConfig = {
   output: "standalone",
 
   /*
+   * The client router cache keeps a dynamic page for 30s, so Back to a tab you
+   * just left is instant instead of a refetch (the default is 0). Still
+   * experimental in Next 16. Safe only because every server action revalidates
+   * the routes showing what it wrote — revalidatePath purges this cache — and
+   * sign-out clears the session cookie in an action, which purges it too. A new
+   * action must do the same (MRG-121).
+   */
+  experimental: { staleTimes: { dynamic: 30 } },
+
+  /*
    * Vercel's production deployment is retired: production is the VM at
    * marginalia.dpdns.org (MRG-081), so every page there redirects to it. Only
    * production builds get this — Vercel sets VERCEL_ENV at build time, so
