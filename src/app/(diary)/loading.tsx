@@ -1,8 +1,9 @@
 import { FloodFrame, HeadFrame, LoadingFrame, ShelfFrame } from "@/components/LoadingFrame";
 
 /**
- * The diary's, and the fallback for any segment without its own. `/book`,
- * `/claim` and `/dev` have theirs, so nothing else is drawn as a diary.
+ * The diary's alone: the (diary) group keeps it from wrapping every other
+ * route. In particular `/book` has no loading file, so a stored book renders
+ * whole and its jacket flies from the shelf rather than landing on a frame.
  */
 export default function Loading() {
   return (
