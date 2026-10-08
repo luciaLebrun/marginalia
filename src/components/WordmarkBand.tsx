@@ -13,7 +13,7 @@ export function WordmarkBand() {
       style={{ background: BAND, color: readableOn(BAND) }}
     >
       <p className="band-wordmark text-[1rem] max-sm:text-[0.75rem] sm:text-[1.375rem]">Marginalia</p>
-      <p className="band-label opacity-80 max-sm:hidden">A reading diary</p>
+      <p className="band-label max-sm:hidden">A reading diary</p>
     </div>
   );
 }
