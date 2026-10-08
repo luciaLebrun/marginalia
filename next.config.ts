@@ -23,6 +23,12 @@ const nextConfig: NextConfig = {
    * the routes showing what it wrote — revalidatePath purges this cache — and
    * sign-out clears the session cookie in an action, which purges it too. A new
    * action must do the same (MRG-121).
+   *
+   * The bar's fully prefetched places (MRG-123) live under `static`, left at
+   * its 5-minute default: a phone never hovers, so a link that stays on screen
+   * is not prefetched again, and a shorter life sends taps back to the loading
+   * frame. The reader's own writes still purge it at once; only a change made
+   * from another device can be up to 5 minutes old there.
    */
   experimental: { staleTimes: { dynamic: 30 } },
 
