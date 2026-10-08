@@ -14,8 +14,12 @@ import { slipDate } from "@/lib/slip-date";
  */
 export async function getDiary(
   userId: string,
-  /** Entries logged after this are new to the reader. Null means all are. */
-  lastSeenAt: Date | null = null,
+  /**
+   * Mark entries logged since the reader's last visit as new. Read from the
+   * user row in this same statement, not from the session: the cookie cache
+   * would freeze it for minutes.
+   */
+  markNew = false,
 ): Promise<DiaryEntry[]> {
   const rows = await getDb()
     .select({
@@ -32,6 +36,12 @@ export async function getDiary(
       coverColor: schema.book.coverColor,
       sourceKey: schema.book.sourceKey,
       category: schema.book.category,
+      // A first visit (null last_seen_at) is not "everything is new" — that
+      // would ink in the whole shelf, which is the entrance the craft floor
+      // refuses. A null comparison yields null, hence the coalesce.
+      isNew: markNew
+        ? sql<boolean>`coalesce(${schema.log.createdAt} > (select ${schema.user.lastSeenAt} from ${schema.user} where ${schema.user.id} = ${userId}), false)`
+        : sql<boolean>`false`,
     })
     .from(schema.log)
     .innerJoin(schema.book, eq(schema.log.bookId, schema.book.id))
@@ -60,9 +70,7 @@ export async function getDiary(
     readAt: row.readAt === null ? null : new Date(row.readAt),
     isReread: row.isReread,
     hasReview: Boolean(row.reviewText?.trim()),
-    // A first visit (no lastSeenAt) is not "everything is new" — that would
-    // ink in the whole shelf, which is the entrance the craft floor refuses.
-    isNew: lastSeenAt !== null && row.createdAt > lastSeenAt,
+    isNew: row.isNew,
   }));
 }
 

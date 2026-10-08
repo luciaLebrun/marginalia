@@ -26,7 +26,7 @@ export default async function DiaryPage({ searchParams }: PageProps<"/">) {
   if (!session.user.username) redirect("/claim");
 
   const [entries, count, favourites] = await Promise.all([
-    getDiary(session.user.id, session.user.lastSeenAt ?? null),
+    getDiary(session.user.id, true),
     getDiaryCount(session.user.id),
     getFavourites(session.user.id),
   ]);
