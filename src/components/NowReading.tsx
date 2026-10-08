@@ -8,6 +8,9 @@ import { bandColor, readableOn } from "@/lib/color";
 import { bookPath } from "@/lib/client-safe";
 import { cellDate } from "@/lib/slip-date";
 
+/** The hero's ground before any book is logged; the loading frame borrows it. */
+export const NO_BOOK_FLOOD = "#2a2a2e";
+
 /**
  * The phone's first viewport on a reader's own diary (MRG-108): the last book
  * they finished, its jacket lit on a field of its own colour. On a laptop the
@@ -24,7 +27,7 @@ export function NowReading({
   span: string;
   latest: DiaryEntry | null;
 }>) {
-  const flood = latest ? bandColor(latest.coverColor, latest.sourceKey) : "#2a2a2e";
+  const flood = latest ? bandColor(latest.coverColor, latest.sourceKey) : NO_BOOK_FLOOD;
   const tone = readableOn(flood);
   const noun = count === 1 ? "book" : "books";
 
