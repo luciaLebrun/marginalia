@@ -32,7 +32,7 @@
     "better-auth": "^1.7.6",
     "drizzle-orm": "^0.45.3",
     "jpeg-js": "^0.4.4",
-    "next": "16.3.6",
+    "next": "16.4.2",
     "postgres": "^3.4.9",
     "react": "19.3.0",
     "react-dom": "19.3.0",
@@ -46,19 +46,19 @@
     "@types/node": "^22.20.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "@vitest/coverage-v8": "^5.0.2",
+    "@vitest/coverage-v8": "^5.0.5",
     "cspell": "^10.3.6",
     "dotenv": "^18.0.4",
     "drizzle-kit": "^0.31.11",
     "eslint": "^9.39.5",
-    "eslint-config-next": "16.3.6",
+    "eslint-config-next": "16.4.2",
     "eslint-plugin-jsx-a11y": "6.10.2",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.70.1",
-    "vitest": "^5.0.2"
+    "vitest": "^5.0.5"
   },
   "packageManager": "pnpm@10.34.6",
   "engines": {
@@ -69,7 +69,8 @@
     "overrides": {
       "@esbuild-kit/esm-loader": "npm:tsx@^4.23.13",
       "@esbuild-kit/core-utils": "npm:tsx@^4.23.13",
-      "esbuild": "0.28.2"
+      "esbuild": "0.28.2",
+      "vite": "^8.2.4"
     }
   }
 }
