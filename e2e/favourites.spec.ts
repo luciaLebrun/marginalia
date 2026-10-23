@@ -10,7 +10,7 @@ const cells = (page: Page) => band(page).locator("ol > li:not([aria-hidden])");
 
 test.describe("the favourites band", () => {
   test("sits between the masthead and the shelf, ruled to four", async ({ page }) => {
-    await page.goto("/dev/shelf", { waitUntil: "networkidle" });
+    await page.goto("/dev/shelf");
     await expect(band(page)).toBeVisible();
     await expect(band(page).getByText("3 of 4")).toBeVisible();
     await expect(cells(page)).toHaveCount(3);
@@ -25,7 +25,7 @@ test.describe("the favourites band", () => {
   });
 
   test("says how to arrange them, and names no buttons for it", async ({ page }) => {
-    await page.goto("/dev/shelf", { waitUntil: "networkidle" });
+    await page.goto("/dev/shelf");
     await expect(band(page).getByRole("button")).toHaveCount(0);
     await expect(band(page).locator("#favourites-arrange-hint")).toBeVisible();
     await expect(cells(page).first().getByRole("link")).toHaveAttribute(
@@ -40,7 +40,7 @@ test.describe("the favourites band", () => {
    */
   test("drags a favourite onto another position, the rest closing up", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "mutates the shared dev reader");
-    await page.goto("/dev/shelf", { waitUntil: "networkidle" });
+    await page.goto("/dev/shelf");
     const titles = () => cells(page).locator("h3").allTextContents();
     const before = await titles();
 
@@ -77,7 +77,7 @@ test.describe("the favourites band", () => {
 
   test("moves a favourite with Alt and an arrow key, keeping focus on it", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "mutates the shared dev reader");
-    await page.goto("/dev/shelf", { waitUntil: "networkidle" });
+    await page.goto("/dev/shelf");
     const titles = () => cells(page).locator("h3").allTextContents();
     const before = await titles();
 
@@ -95,7 +95,7 @@ test.describe("the favourites band", () => {
   });
 
   test("a plain click still opens the book", async ({ page }) => {
-    await page.goto("/dev/shelf", { waitUntil: "networkidle" });
+    await page.goto("/dev/shelf");
     const link = cells(page).first().getByRole("link");
     const href = must(await link.getAttribute("href"));
     // The real book route sends a signed-out harness on to the door, so what
@@ -108,7 +108,7 @@ test.describe("the favourites band", () => {
   test("shows on the public profile in the owner's order, with nothing to arrange", async ({
     page,
   }) => {
-    await page.goto("/dev/profile?viewer=visitor", { waitUntil: "networkidle" });
+    await page.goto("/dev/profile?viewer=visitor");
     await expect(cells(page)).toHaveCount(3);
     await expect(band(page).getByText("3 books")).toBeVisible();
     await expect(band(page).getByRole("button")).toHaveCount(0);
@@ -117,43 +117,43 @@ test.describe("the favourites band", () => {
   });
 
   test("links a signed-in viewer's cells to the book page", async ({ page }) => {
-    await page.goto("/dev/profile?viewer=friend", { waitUntil: "networkidle" });
+    await page.goto("/dev/profile?viewer=friend");
     await expect(band(page).getByRole("link")).toHaveCount(3);
   });
 });
 
 test.describe("the favourite control on a book page", () => {
   test("is not offered before a book is read", async ({ page }) => {
-    await page.goto("/dev/book?state=new", { waitUntil: "networkidle" });
+    await page.goto("/dev/book?state=new");
     await expect(page.getByRole("button", { name: "Add to favourites" })).toHaveCount(0);
   });
 
   test("is an Outline Button once the book is read", async ({ page }) => {
-    await page.goto("/dev/book?state=shelf", { waitUntil: "networkidle" });
+    await page.goto("/dev/book?state=shelf");
     await expect(page.getByRole("button", { name: "Add to favourites" })).toBeEnabled();
   });
 
   test("prints the line once it is a favourite", async ({ page }) => {
-    await page.goto("/dev/book?state=favourite", { waitUntil: "networkidle" });
+    await page.goto("/dev/book?state=favourite");
     await expect(page.getByText("One of your favourites")).toBeVisible();
     await expect(page.getByRole("button", { name: "Take it off" })).toBeVisible();
   });
 
   /* WCAG 2.5.7: the band is arranged by dragging, so taps must do it too. */
   test("offers Earlier and Later on a favourite, ruled through at an end", async ({ page }) => {
-    await page.goto("/dev/book?state=favourite", { waitUntil: "networkidle" });
+    await page.goto("/dev/book?state=favourite");
     await expect(page.getByText("· 2 of 3")).toBeVisible();
     await expect(page.getByRole("button", { name: /earlier/i })).toBeEnabled();
     await expect(page.getByRole("button", { name: /later/i })).toBeEnabled();
 
-    await page.goto("/dev/book?state=favourite-first", { waitUntil: "networkidle" });
+    await page.goto("/dev/book?state=favourite-first");
     await expect(page.getByText("· 1 of 3")).toBeVisible();
     await expect(page.getByRole("button", { name: /earlier/i })).toBeDisabled();
     await expect(page.getByRole("button", { name: /later/i })).toBeEnabled();
   });
 
   test("at four, stays ruled through beside its reason", async ({ page }) => {
-    await page.goto("/dev/book?state=full", { waitUntil: "networkidle" });
+    await page.goto("/dev/book?state=full");
     await expect(page.getByRole("button", { name: "Add to favourites" })).toBeDisabled();
     await expect(page.getByText(/You have four already/)).toBeVisible();
     await expect(page.getByRole("link", { name: "Your favourites" })).toBeVisible();
@@ -167,7 +167,7 @@ test.describe("the favourite control on a book page", () => {
     page.on("console", (message) => {
       if (message.type() === "error") errors.push(message.text());
     });
-    await page.goto("/dev/book?state=shelf", { waitUntil: "networkidle" });
+    await page.goto("/dev/book?state=shelf");
     const add = page.getByRole("button", { name: "Add to favourites" });
     await add.focus();
     await page.keyboard.press("Enter");

@@ -10,7 +10,7 @@ import { expect, test } from "@playwright/test";
  */
 test.describe("the door", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/");
   });
 
   test("says it is closed and offers the way in", async ({ page }) => {
@@ -55,7 +55,7 @@ test.describe("the door", () => {
 
 test.describe("the account sheet", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/dev/settings", { waitUntil: "networkidle" });
+    await page.goto("/dev/settings");
   });
 
   test("shows no commit band while nothing is pending", async ({ page }) => {
@@ -119,7 +119,7 @@ test.describe("the account sheet", () => {
 
 test.describe("deleting an account", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/dev/settings", { waitUntil: "networkidle" });
+    await page.goto("/dev/settings");
   });
 
   test("stays disarmed until the handle is typed back", async ({ page }) => {

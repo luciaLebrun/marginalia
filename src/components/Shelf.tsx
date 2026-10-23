@@ -3,6 +3,7 @@ import { LogCell } from "./LogCell";
 import { YearRule } from "./YearRule";
 import Link from "next/link";
 
+import { authorSearchHref } from "@/lib/search";
 import { groupShelf, type ShelfOrder } from "@/lib/diary";
 
 /**
@@ -55,6 +56,8 @@ export function Shelf({
               year={group.label}
               count={group.entries.length}
               rest={group.rest}
+              // Search is signed-in only, like the book page.
+              href={by === "author" && !group.rest && linkBooks ? authorSearchHref(group.label) : undefined}
             />
             <div className="shelf-grid">
               {/* Capture belongs to the chronology. Author and Category are

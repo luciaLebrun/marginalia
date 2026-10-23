@@ -39,7 +39,7 @@ export default async function DevProfilePage({ searchParams }: PageProps<"/dev/p
   if (!user?.username) return <NoDevReader />;
 
   const [entries, count, favourites] = await Promise.all([
-    getDiary(user.id, null),
+    getDiary(user.id),
     getDiaryCount(user.id),
     getFavourites(user.id),
   ]);

@@ -18,7 +18,6 @@ export async function getDevReader() {
       name: schema.user.name,
       username: schema.user.username,
       bio: schema.user.bio,
-      lastSeenAt: schema.user.lastSeenAt,
     })
     .from(schema.user)
     .where(eq(schema.user.id, DEV_READER_ID));

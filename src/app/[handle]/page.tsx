@@ -38,9 +38,9 @@ export default async function ProfilePage({
   if (!profile) notFound();
 
   const [entries, count, favourites, session] = await Promise.all([
-    // No lastSeenAt: nothing on someone else's diary is "new to you", so the
+    // No markNew: nothing on someone else's diary is "new to you", so the
     // ink-in never fires here.
-    getDiary(profile.id, null),
+    getDiary(profile.id),
     getDiaryCount(profile.id),
     getFavourites(profile.id),
     getAuth().api.getSession({ headers: await headers() }),

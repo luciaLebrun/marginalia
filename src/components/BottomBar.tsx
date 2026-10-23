@@ -82,6 +82,11 @@ export function BottomBar() {
             <li key={slot.label} className="relative">
               <Link
                 href={slot.href}
+                // Five places, read from Postgres alone: prefetching them whole
+                // (data too, not just the loading frame) costs a few small
+                // renders and makes a tap land on the real page (MRG-123).
+                // The bar is display:none from 40rem, so desktop never fetches.
+                prefetch
                 aria-current={here ? "page" : undefined}
                 transitionTypes={["nav-swap"]}
                 className={`bar-slot flex flex-col items-center gap-1 py-2 ${log ? "bar-log" : ""}`}

@@ -14,7 +14,7 @@ test.describe("the bedside stack", () => {
   const spines = (page: import("@playwright/test").Page) => page.locator("ol > li > div > a:not([aria-hidden])");
 
   test("lays each saved book as a spine that opens its book page, newest first", async ({ page }) => {
-    await page.goto("/dev/to-read", { waitUntil: "networkidle" });
+    await page.goto("/dev/to-read");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("To read");
     await expect(page.getByText("5 books")).toBeVisible();
     await expect(spines(page)).toHaveCount(5);
@@ -23,12 +23,12 @@ test.describe("the bedside stack", () => {
   });
 
   test("shows no filter on a short list", async ({ page }) => {
-    await page.goto("/dev/to-read", { waitUntil: "networkidle" });
+    await page.goto("/dev/to-read");
     await expect(page.getByRole("searchbox")).toHaveCount(0);
   });
 
   test("filters a long pile, folded, and clearing a no-match returns focus to the field", async ({ page }) => {
-    await page.goto("/dev/to-read?state=long", { waitUntil: "networkidle" });
+    await page.goto("/dev/to-read?state=long");
     const field = page.getByRole("searchbox", { name: "Find in your list" });
     await expect(spines(page)).toHaveCount(10);
     await field.fill("FREAKONOMICS");
@@ -43,7 +43,7 @@ test.describe("the bedside stack", () => {
   });
 
   test("sets a thick book thicker in the pile than a thin one", async ({ page }) => {
-    await page.goto("/dev/to-read", { waitUntil: "networkidle" });
+    await page.goto("/dev/to-read");
     // 256 pages against 604. Matched on the whole title: "Dune" alone is in
     // three of these titles.
     const height = async (title: string) =>
@@ -53,7 +53,7 @@ test.describe("the bedside stack", () => {
   });
 
   test("never wears a jacket colour: a waiting book has not earned one", async ({ page }, testInfo) => {
-    await page.goto("/dev/to-read", { waitUntil: "networkidle" });
+    await page.goto("/dev/to-read");
     // MRG-108: on a phone ink chips become the raised night surface (#232327),
     // one neutral for every spine; still no jacket colour.
     const spine = testInfo.project.name === "mobile" ? "rgb(35, 35, 39)" : "rgb(22, 19, 15)";
@@ -63,13 +63,13 @@ test.describe("the bedside stack", () => {
   });
 
   test("keeps Take it off outside the spine's link, named for its book", async ({ page }) => {
-    await page.goto("/dev/to-read", { waitUntil: "networkidle" });
+    await page.goto("/dev/to-read");
     await expect(page.locator("ol > li a button")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Take Dune off your list" })).toBeVisible();
   });
 
   test("refuses to take a book off without a signed-in reader", async ({ page }) => {
-    await page.goto("/dev/to-read", { waitUntil: "networkidle" });
+    await page.goto("/dev/to-read");
     await page.getByRole("button", { name: "Take Dune off your list" }).click();
     // Under its own spine, in its own words. Filtered: Next's dev overlay
     // renders a role="alert" node of its own.
@@ -83,7 +83,7 @@ test.describe("the bedside stack", () => {
      next spine's control, the previous one's if it was last, else the heading
      (MRG-079). */
   test("keeps focus while taking a book off, then hands it to a neighbour or the heading", async ({ page }) => {
-    await page.goto("/dev/to-read?stub=1", { waitUntil: "networkidle" });
+    await page.goto("/dev/to-read?stub=1");
     const buttons = page.locator("[data-take-off]");
     // evaluateAll's callback runs in the browser, where must() does not exist:
     // read the raw attributes there, narrow them here.
@@ -125,7 +125,7 @@ test.describe("the bedside stack", () => {
   });
 
   test("still announces a filter's count after a book has been taken off", async ({ page }) => {
-    await page.goto("/dev/to-read?state=long&stub=1", { waitUntil: "networkidle" });
+    await page.goto("/dev/to-read?state=long&stub=1");
     const buttons = page.locator("[data-take-off]");
     await buttons.nth(0).focus();
     await page.keyboard.press("Enter");
@@ -138,7 +138,7 @@ test.describe("the bedside stack", () => {
   });
 
   test("hands focus to the heading when clearing leaves a list too short for the field", async ({ page }) => {
-    await page.goto("/dev/to-read?state=eight&stub=1", { waitUntil: "networkidle" });
+    await page.goto("/dev/to-read?state=eight&stub=1");
     const field = page.getByRole("searchbox", { name: "Find in your list" });
     const title = must(await page.locator("ol > li > div > a:not([aria-hidden]) span").first().textContent());
     await field.fill(title);
@@ -153,7 +153,7 @@ test.describe("the bedside stack", () => {
   });
 
   test("leaves focus alone when the reader has moved on while a spine is taken off", async ({ page }) => {
-    await page.goto("/dev/to-read?stub=1", { waitUntil: "networkidle" });
+    await page.goto("/dev/to-read?stub=1");
     const buttons = page.locator("[data-take-off]");
     await buttons.nth(0).focus();
     await page.keyboard.press("Enter");
@@ -165,14 +165,14 @@ test.describe("the bedside stack", () => {
   });
 
   test("says nothing is waiting, and how to put a book here", async ({ page }) => {
-    await page.goto("/dev/to-read?state=empty", { waitUntil: "networkidle" });
+    await page.goto("/dev/to-read?state=empty");
     await expect(page.getByText("Nothing waiting")).toBeVisible();
     await expect(page.getByRole("link", { name: "Search for a book" })).toHaveAttribute("href", "/search");
   });
 
   test("sets the whole spine off true, not just its left edge", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === "mobile", "phone layout (MRG-108): spines are full width and square, the pile is not offset");
-    await page.goto("/dev/to-read", { waitUntil: "networkidle" });
+    await page.goto("/dev/to-read");
     const rights = await page
       .locator("ol > li > div")
       .evaluateAll((nodes) => nodes.map((n) => Math.round(n.getBoundingClientRect().right)));
@@ -180,13 +180,13 @@ test.describe("the bedside stack", () => {
   });
 
   test("leaves a book with no cover without an empty jacket well", async ({ page }) => {
-    await page.goto("/dev/to-read", { waitUntil: "networkidle" });
+    await page.goto("/dev/to-read");
     const spine = page.locator("ol > li > div").filter({ has: page.getByText("Children of Dune", { exact: true }) });
     await expect(spine.locator("a[aria-hidden]")).toHaveCount(0);
   });
 
   test("never scrolls sideways", async ({ page }) => {
-    await page.goto("/dev/to-read", { waitUntil: "networkidle" });
+    await page.goto("/dev/to-read");
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
@@ -196,12 +196,12 @@ test.describe("the bedside stack", () => {
 
 test.describe("Want to read on the book page", () => {
   test("offers Want to read on a book not on the list", async ({ page }) => {
-    await page.goto("/dev/book?state=new", { waitUntil: "networkidle" });
+    await page.goto("/dev/book?state=new");
     await expect(page.getByRole("button", { name: "Want to read" })).toBeVisible();
   });
 
   test("prints a saved book as on the list, with the way to it and the way off", async ({ page }) => {
-    await page.goto("/dev/book?state=saved", { waitUntil: "networkidle" });
+    await page.goto("/dev/book?state=saved");
     await expect(page.getByText("On your to-read list")).toBeVisible();
     await expect(page.getByRole("link", { name: "Your list" })).toHaveAttribute("href", "/to-read");
     await expect(page.getByRole("button", { name: "Take it off" })).toBeVisible();
@@ -210,7 +210,7 @@ test.describe("Want to read on the book page", () => {
   /* Pending, the pressed control keeps focus at its width; after, focus goes to
      the replacement, not the page (MRG-074). */
   test("keeps keyboard focus while it runs, then hands it on", async ({ page }) => {
-    await page.goto("/dev/book?state=saved", { waitUntil: "networkidle" });
+    await page.goto("/dev/book?state=saved");
     const off = page.getByRole("button", { name: "Take it off" });
     const offWidth = (await off.boundingBox())?.width;
     await off.focus();
@@ -230,7 +230,7 @@ test.describe("Want to read on the book page", () => {
   });
 
   test("refuses to save without a signed-in reader", async ({ page }) => {
-    await page.goto("/dev/book?state=new", { waitUntil: "networkidle" });
+    await page.goto("/dev/book?state=new");
     await page.getByRole("button", { name: "Want to read" }).click();
     await expect(page.getByRole("alert").filter({ hasText: "signed out" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Want to read" })).toBeVisible();
@@ -238,7 +238,7 @@ test.describe("Want to read on the book page", () => {
 });
 
 test("the diary's masthead leads to the to-read list, then the account", async ({ page }, testInfo) => {
-  await page.goto("/dev/shelf", { waitUntil: "networkidle" });
+  await page.goto("/dev/shelf");
   if (testInfo.project.name === "mobile") {
     // MRG-108: the masthead's nav is hidden on a phone; the bar carries the
     // same two places, in the same order (To read, then Account).

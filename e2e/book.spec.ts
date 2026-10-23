@@ -32,7 +32,7 @@ const authorBand = (page: Page) => page.locator("article > div").first();
 test.describe("book page", () => {
   test.describe("a book not on the shelf", () => {
     test.beforeEach(async ({ page }) => {
-      await page.goto("/dev/book", { waitUntil: "networkidle" });
+      await page.goto("/dev/book");
     });
 
     test("opens on its title page: the title at display scale beside the jacket", async ({ page }) => {
@@ -81,7 +81,7 @@ test.describe("book page", () => {
 
   test.describe("a book on the shelf", () => {
     test.beforeEach(async ({ page }) => {
-      await page.goto("/dev/book?state=shelf", { waitUntil: "networkidle" });
+      await page.goto("/dev/book?state=shelf");
     });
 
     test("wears a colour on the author band once it has been read", async ({ page }) => {
@@ -111,7 +111,7 @@ test.describe("book page", () => {
      * read as one block, so a coloured author band sits under a 2px ink rule.
      */
     test("rules a coloured author band off from the wordmark band", async ({ page }, info) => {
-      await page.goto("/dev/book?state=fallback", { waitUntil: "networkidle" });
+      await page.goto("/dev/book?state=fallback");
       await expectBand(page, info, "rgb(232, 80, 27)", "#e8501b");
       // The phone hides the wordmark band, so there is nothing to rule off.
       if (phone(info)) return;
@@ -139,7 +139,7 @@ test.describe("book page", () => {
   });
 
   test("says Undated and Unrated rather than inventing either", async ({ page }) => {
-    await page.goto("/dev/book?state=undated", { waitUntil: "networkidle" });
+    await page.goto("/dev/book?state=undated");
 
     const line = slip(page).getByRole("listitem");
     await expect(line).toContainText("Undated");
@@ -154,7 +154,7 @@ test.describe("book page", () => {
    */
   test.describe("a book from Google Books", () => {
     test.beforeEach(async ({ page }) => {
-      await page.goto("/dev/book?state=google", { waitUntil: "networkidle" });
+      await page.goto("/dev/book?state=google");
     });
 
     /*
@@ -236,7 +236,7 @@ test.describe("book page", () => {
    */
   test.describe("a Google record written by a publicist", () => {
     test.beforeEach(async ({ page }) => {
-      await page.goto("/dev/book?state=banner", { waitUntil: "networkidle" });
+      await page.goto("/dev/book?state=banner");
     });
 
     test("sets the blurb as paragraphs, with no markup showing", async ({ page }) => {
@@ -256,7 +256,7 @@ test.describe("book page", () => {
   });
 
   test("gives a coverless book a type-only jacket, not a broken image", async ({ page }) => {
-    await page.goto("/dev/book?state=nocover", { waitUntil: "networkidle" });
+    await page.goto("/dev/book?state=nocover");
 
     const title = (await page.getByRole("heading", { level: 1 }).textContent()) ?? "";
     expect(title.length).toBeGreaterThan(0);
@@ -269,7 +269,7 @@ test.describe("book page", () => {
   });
 
   test("sets a subtitle under the title, in the supporting voice", async ({ page }) => {
-    await page.goto("/dev/book?state=subtitle", { waitUntil: "networkidle" });
+    await page.goto("/dev/book?state=subtitle");
 
     const subtitle = page.locator("h1 + p");
     await expect(subtitle).toBeVisible();
@@ -277,7 +277,7 @@ test.describe("book page", () => {
   });
 
   test("names three authors in the band as one sentence, without overflow", async ({ page }) => {
-    await page.goto("/dev/book?state=authors", { waitUntil: "networkidle" });
+    await page.goto("/dev/book?state=authors");
 
     await expect(authorBand(page).locator("p")).toHaveText(/^[^,]+, [^,]+ and [^,]+$/);
     const overflow = await page.evaluate(
@@ -287,7 +287,7 @@ test.describe("book page", () => {
   });
 
   test("while opening, says so over an empty ruled frame", async ({ page }) => {
-    await page.goto("/dev/book?state=opening", { waitUntil: "networkidle" });
+    await page.goto("/dev/book?state=opening");
 
     await expect(page.getByRole("status")).toHaveText("Opening this book…");
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(0);
@@ -298,7 +298,7 @@ test.describe("book page", () => {
    * be mistaken for the other.
    */
   test("when Open Library is down, says unavailable — never not found", async ({ page }) => {
-    await page.goto("/dev/book?state=down", { waitUntil: "networkidle" });
+    await page.goto("/dev/book?state=down");
 
     await expect(page.getByRole("heading", { level: 1, name: "Book unavailable" })).toBeVisible();
     await expect(page.getByText(/Open Library isn’t answering/)).toBeVisible();
@@ -306,7 +306,7 @@ test.describe("book page", () => {
   });
 
   test("when the book does not exist, says so and offers search", async ({ page }) => {
-    await page.goto("/dev/book?state=missing", { waitUntil: "networkidle" });
+    await page.goto("/dev/book?state=missing");
 
     await expect(page.getByRole("heading", { level: 1, name: "Book not found" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Search for a book" })).toHaveAttribute(
@@ -318,7 +318,7 @@ test.describe("book page", () => {
 
   test.describe("the log sheet", () => {
     const openSheet = async (page: Page, state = "new") => {
-      await page.goto(`/dev/book?state=${state}`, { waitUntil: "networkidle" });
+      await page.goto(`/dev/book?state=${state}`);
       await page.locator("summary", { hasText: "Log a read" }).click();
     };
 
@@ -443,7 +443,7 @@ test.describe("book page", () => {
   test.describe("editing a read", () => {
     const line = (page: Page) => slip(page).locator("li").first();
     const openEdit = async (page: Page) => {
-      await page.goto("/dev/book?state=shelf", { waitUntil: "networkidle" });
+      await page.goto("/dev/book?state=shelf");
       await line(page).locator("summary", { hasText: "Edit" }).click();
     };
 
@@ -463,14 +463,14 @@ test.describe("book page", () => {
     });
 
     test("keeps the line one link to its permalink, with Edit outside it", async ({ page }) => {
-      await page.goto("/dev/book?state=shelf", { waitUntil: "networkidle" });
+      await page.goto("/dev/book?state=shelf");
       await expect(line(page).locator("a summary")).toHaveCount(0);
       await expect(line(page).locator("summary")).toHaveAccessibleName("Edit");
       await expect(line(page).locator("a")).toHaveAttribute("href", /\/log\//);
     });
 
     test("an undated, unrated read opens as Undated and Unrated", async ({ page }) => {
-      await page.goto("/dev/book?state=undated", { waitUntil: "networkidle" });
+      await page.goto("/dev/book?state=undated");
       await line(page).locator("summary", { hasText: "Edit" }).click();
       await expect(line(page).getByLabel("Finished")).toHaveValue("");
       await expect(line(page).getByLabel("Rating")).toHaveAttribute("aria-valuetext", "Unrated");
@@ -513,7 +513,7 @@ test.describe("book page", () => {
     });
 
     test("draws the open line's rule in ink, as the log line does", async ({ page }, info) => {
-      await page.goto("/dev/book?state=shelf", { waitUntil: "networkidle" });
+      await page.goto("/dev/book?state=shelf");
       const link = line(page).locator("a");
       await expect(link).toHaveCSS("border-bottom-color", "rgba(0, 0, 0, 0)");
       await line(page).locator("summary", { hasText: "Edit" }).click();
@@ -521,7 +521,7 @@ test.describe("book page", () => {
     });
 
     test("gives Edit a tap target the height of its line", async ({ page }) => {
-      await page.goto("/dev/book?state=shelf", { waitUntil: "networkidle" });
+      await page.goto("/dev/book?state=shelf");
       const box = await line(page).locator("summary").boundingBox();
       expect(box?.width).toBeGreaterThanOrEqual(44);
       expect(box?.height).toBeGreaterThanOrEqual(44);
@@ -578,7 +578,7 @@ test.describe("book page", () => {
 
 /* MRG-086: opened from a search, the book leads back to that same search. */
 test("a book opened from a search leads back to it, both fields kept", async ({ page }) => {
-  await page.goto("/dev/book?from=search&title=dune&author=herbert", { waitUntil: "networkidle" });
+  await page.goto("/dev/book?from=search&title=dune&author=herbert");
 
   await page.getByRole("link", { name: "Your search" }).click();
 
@@ -588,26 +588,26 @@ test("a book opened from a search leads back to it, both fields kept", async ({ 
 });
 
 test("a book opened any other way offers no way back to a search", async ({ page }) => {
-  await page.goto("/dev/book", { waitUntil: "networkidle" });
+  await page.goto("/dev/book");
   await expect(page.getByRole("link", { name: "Your diary" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Your search" })).toHaveCount(0);
 });
 
 /* MRG-090: the author's name searches that author, and only that author. */
 test("each author's name links to a search scoped by that author", async ({ page }) => {
-  await page.goto("/dev/book", { waitUntil: "networkidle" });
+  await page.goto("/dev/book");
   const link = page.locator("article a[href^='/dev/search?author=']");
   await expect(link).toHaveAttribute("href", "/dev/search?author=Frank+Herbert");
   await link.click();
   await expect(page.getByRole("searchbox", { name: "Author" })).toHaveValue("Frank Herbert");
   await expect(page.getByRole("searchbox", { name: "Title" })).toHaveValue("");
 
-  await page.goto("/dev/book?state=authors", { waitUntil: "networkidle" });
+  await page.goto("/dev/book?state=authors");
   await expect(page.locator("article a[href^='/dev/search?author=']")).toHaveCount(3);
 });
 
 test("past three authors, two are linked and the count is plain text", async ({ page }) => {
-  await page.goto("/dev/book?state=many-authors", { waitUntil: "networkidle" });
+  await page.goto("/dev/book?state=many-authors");
   const band = page.locator("article > div").first().locator("p");
   await expect(band.locator("a")).toHaveCount(2);
   await expect(band).toHaveText(/ and 3 others$/);
