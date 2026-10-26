@@ -113,7 +113,7 @@ function FavouriteCell({
         <span className="band-label truncate">{author}</span>
       </div>
       <div className="m-jacket aspect-[2/3] overflow-hidden bg-paper-sunk" style={{ "--flood": band } as React.CSSProperties}>
-        <Cover coverId={book.coverId} coverUrl={book.coverUrl} title={book.title} authors={book.authors} scale="band" />
+        <Cover coverId={book.coverId} coverUrl={book.coverUrl} title={book.title} authors={book.authors} scale="band" decorative={linked} />
       </div>
       <div className="flex-1 border-t border-rule px-2.5 py-2 transition-colors group-hover:border-ink group-focus-visible:border-ink max-sm:border-0 max-sm:px-0.5 max-sm:pt-3">
         <h3 className="text-[0.9375rem] leading-tight font-semibold text-balance max-sm:tracking-[-0.01em]">{book.title}</h3>
@@ -125,7 +125,6 @@ function FavouriteCell({
   return linked ? (
     <Link
       href={bookPath(book.sourceKey)}
-      aria-label={`${book.title}, ${author}`}
       aria-describedby={describedBy}
       prefetch={false}
       transitionTypes={["sheet-up"]}

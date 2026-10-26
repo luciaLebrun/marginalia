@@ -65,12 +65,12 @@ test.describe("the bedside stack", () => {
   test("keeps Take it off outside the spine's link, named for its book", async ({ page }) => {
     await page.goto("/dev/to-read");
     await expect(page.locator("ol > li a button")).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Take Dune off your list" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Take it off, Dune", exact: true })).toBeVisible();
   });
 
   test("refuses to take a book off without a signed-in reader", async ({ page }) => {
     await page.goto("/dev/to-read");
-    await page.getByRole("button", { name: "Take Dune off your list" }).click();
+    await page.getByRole("button", { name: "Take it off, Dune", exact: true }).click();
     // Under its own spine, in its own words. Filtered: Next's dev overlay
     // renders a role="alert" node of its own.
     const refusal = page.locator("ol > li", { hasText: /^Dune/ }).getByRole("alert");
@@ -105,7 +105,7 @@ test.describe("the bedside stack", () => {
     await expect(buttons).toHaveCount(4);
     await expect(page.getByRole("button", { name: before[3] })).toBeFocused();
     // The live region names the book, so the next take-off reads differently.
-    const taken = must(before[2]).replace(/^Take (.*) off your list$/, "$1");
+    const taken = must(before[2]).replace(/^Take it off, /, "");
     await expect(page.locator("output")).toHaveText(`${taken} taken off your to-read list.`);
 
     // The last spine: focus goes to the one above it.

@@ -212,6 +212,7 @@ function Spine({
 /** Its own component so only the spine being taken off says so. */
 function TakeOffButton({ bookId, title }: Readonly<{ bookId: string; title: string }>) {
   const { pending } = useFormStatus();
+  const words = pending ? "Taking off…" : "Take it off";
   return (
     <button
       type="submit"
@@ -222,11 +223,12 @@ function TakeOffButton({ bookId, title }: Readonly<{ bookId: string; title: stri
       onClick={(event) => {
         if (pending) event.preventDefault();
       }}
-      aria-label={`Take ${title} off your list`}
+      // The name opens with the visible words (WCAG 2.5.3) so voice control matches.
+      aria-label={`${words}, ${title}`}
       // Words on the ink band: paper, underlined at 40%, the paper ring.
       className="band-label text-paper underline decoration-paper/40 underline-offset-4 transition-colors hover:decoration-paper focus-visible:outline-paper aria-disabled:cursor-progress"
     >
-      {pending ? "Taking off…" : "Take it off"}
+      {words}
     </button>
   );
 }

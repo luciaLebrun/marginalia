@@ -26,6 +26,7 @@ export function Cover({
   authors,
   sizes = GRID_SIZES,
   scale = "cell",
+  decorative = false,
 }: Readonly<{
   coverId: number | null;
   /** A Google Books jacket URL. Set instead of coverId, never as well. */
@@ -38,6 +39,9 @@ export function Cover({
    * page; "band" a step up from a cell on a laptop, for the favourites band.
    */
   scale?: Scale;
+  /** Inside a link that already names the book, so its alt text would be read
+   * (and counted against the link's accessible name, WCAG 2.5.3) twice. */
+  decorative?: boolean;
 }>) {
   const art = jacket({ coverId, coverUrl });
 
@@ -54,7 +58,7 @@ export function Cover({
       src={art.src}
       srcSet={art.srcSet}
       sizes={sizes}
-      alt={authors.length ? `${title} by ${authors[0]}` : title}
+      alt={decorative ? "" : authors.length ? `${title} by ${authors[0]}` : title}
       // A page-scale jacket is the page's lead image and sits above the fold,
       // so it is the LCP: fetch it at once. Grid covers wait for the scroll.
       loading={scale === "page" ? "eager" : "lazy"}
