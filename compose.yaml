@@ -54,7 +54,7 @@ services:
   # never starts it; the VM passes --profile tunnel.
   tunnel:
     profiles: ["tunnel"]
-    image: cloudflare/cloudflared:2026.9.3
+    image: cloudflare/cloudflared:2026.10.3
     restart: unless-stopped
     command: tunnel --no-autoupdate run
     volumes:
