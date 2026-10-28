@@ -8,7 +8,7 @@
 # login or pull-rate limit, and on Google Cloud it is the nearby registry.
 
 # Node major (22) must match .nvmrc; Docker cannot read it.
-FROM mirror.gcr.io/library/node:22-bookworm-slim AS deps
+FROM mirror.gcr.io/library/node:25-bookworm-slim AS deps
 WORKDIR /app
 # Debian's security fixes land before the node image is rebuilt (perl-base
 # CVE-2026-13221 et al., 2026-10-06), and the scan gate refuses a fixable
